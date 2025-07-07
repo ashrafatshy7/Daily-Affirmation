@@ -9,7 +9,7 @@ struct PrivacyPolicyView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     // Header
                     HStack {
-                        Text("Privacy Policy")
+                        Text(NSLocalizedString("privacy_policy_title", comment: ""))
                             .font(.largeTitle)
                             .fontWeight(.bold)
                             .foregroundColor(.primary)
@@ -31,12 +31,12 @@ struct PrivacyPolicyView: View {
                     VStack(alignment: .leading, spacing: 25) {
                         // Introduction
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Introduction")
+                            Text(NSLocalizedString("privacy_introduction_title", comment: ""))
                                 .font(.title2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                             
-                            Text("Welcome to Daily Affirmation. We are committed to protecting your privacy and ensuring you have a positive experience while using our app. This Privacy Policy explains how we collect, use, and protect your information when you use our mobile application.")
+                            Text(NSLocalizedString("privacy_introduction_text", comment: ""))
                                 .font(.body)
                                 .foregroundColor(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -44,29 +44,29 @@ struct PrivacyPolicyView: View {
                         
                         // Information We Collect
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Information We Collect")
+                            Text(NSLocalizedString("privacy_info_collect_title", comment: ""))
                                 .font(.title2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                             
-                            Text("Daily Affirmation is designed with privacy in mind. We collect minimal information:")
+                            Text(NSLocalizedString("privacy_info_collect_text", comment: ""))
                                 .font(.body)
                                 .foregroundColor(.secondary)
                             
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("• App Preferences: Your theme settings (light/dark mode), font size preferences, and notification settings are stored locally on your device")
+                                Text(NSLocalizedString("privacy_info_collect_preferences", comment: ""))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                 
-                                Text("• Notification Data: If you enable notifications, we store your preferred notification time locally on your device")
+                                Text(NSLocalizedString("privacy_info_collect_notification", comment: ""))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                 
-                                Text("• No Personal Data: We do not collect names, email addresses, phone numbers, or any personally identifiable information")
+                                Text(NSLocalizedString("privacy_info_collect_no_personal", comment: ""))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                 
-                                Text("• No Usage Tracking: We do not track your app usage, reading habits, or behavior within the app")
+                                Text(NSLocalizedString("privacy_info_collect_no_tracking", comment: ""))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                             }
@@ -74,25 +74,25 @@ struct PrivacyPolicyView: View {
                         
                         // How We Use Your Information
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("How We Use Your Information")
+                            Text(NSLocalizedString("privacy_how_use_title", comment: ""))
                                 .font(.title2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                             
-                            Text("The limited information we collect is used solely to:")
+                            Text(NSLocalizedString("privacy_how_use_text", comment: ""))
                                 .font(.body)
                                 .foregroundColor(.secondary)
                             
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("• Provide you with a personalized app experience")
+                                Text(NSLocalizedString("privacy_how_use_personalized", comment: ""))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                 
-                                Text("• Remember your preferences between app sessions")
+                                Text(NSLocalizedString("privacy_how_use_remember", comment: ""))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                 
-                                Text("• Send you daily inspiration notifications (if enabled)")
+                                Text(NSLocalizedString("privacy_how_use_notifications", comment: ""))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                             }
@@ -100,48 +100,48 @@ struct PrivacyPolicyView: View {
                         
                         // Data Security
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Data Security")
+                            Text(NSLocalizedString("privacy_data_security_title", comment: ""))
                                 .font(.title2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                             
-                            Text("All your preferences and settings are stored locally on your device using iOS's secure storage mechanisms. We do not transmit any personal data to external servers.")
+                            Text(NSLocalizedString("privacy_data_security_text", comment: ""))
                                 .font(.body)
                                 .foregroundColor(.secondary)
                         }
                         
                         // Third-Party Services
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Third-Party Services")
+                            Text(NSLocalizedString("privacy_third_party_title", comment: ""))
                                 .font(.title2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                             
-                            Text("Daily Affirmation does not integrate with any third-party analytics, advertising, or tracking services. Your data stays on your device.")
+                            Text(NSLocalizedString("privacy_third_party_text", comment: ""))
                                 .font(.body)
                                 .foregroundColor(.secondary)
                         }
                         
                         // Contact Information
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Contact Us")
+                            Text(NSLocalizedString("privacy_contact_title", comment: ""))
                                 .font(.title2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                             
-                            Text("If you have any questions about this Privacy Policy, please contact us at ashrafatshy7@gmail.com")
+                            Text(NSLocalizedString("privacy_contact_text", comment: ""))
                                 .font(.body)
                                 .foregroundColor(.secondary)
                         }
                         
                         // Last Updated
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Last Updated")
+                            Text(NSLocalizedString("privacy_last_updated_title", comment: ""))
                                 .font(.title2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                             
-                            Text("This Privacy Policy was last updated on July 7, 2025.")
+                            Text(NSLocalizedString("privacy_last_updated_text", comment: ""))
                                 .font(.body)
                                 .foregroundColor(.secondary)
                         }

@@ -1,0 +1,64 @@
+/* 
+  Localizable.strings
+  Daily Affirmation - Arabic
+*/
+
+// Settings
+"settings" = "الإعدادات";
+"dark_mode" = "الوضع الداكن";
+"daily_notifications" = "الإشعارات اليومية";
+"notification_time" = "وقت الإشعار";
+"font_size" = "حجم الخط";
+"language" = "اللغة";
+"privacy_policy" = "سياسة الخصوصية";
+
+// Font sizes
+"font_small" = "صغير";
+"font_medium" = "متوسط";
+"font_large" = "كبير";
+
+// Languages
+"english" = "الإنجليزية";
+"hebrew" = "العبرية";
+"arabic" = "العربية";
+
+// Navigation
+"prev" = "السابق";
+"next" = "التالي";
+"share" = "مشاركة";
+
+// Notifications
+"daily_inspiration" = "الإلهام اليومي";
+
+// Share
+"share_suffix" = "- الإلهام اليومي";
+
+// Loading
+"loading" = "جاري التحميل...";
+
+// Fallback
+"stay_inspired" = "ابق ملهمًا!";
+
+// Privacy Policy
+"privacy_policy_title" = "سياسة الخصوصية";
+"privacy_introduction_title" = "مقدمة";
+"privacy_introduction_text" = "مرحبًا بكم في الإلهام اليومي. نحن ملتزمون بحماية خصوصيتكم وضمان حصولكم على تجربة إيجابية أثناء استخدام تطبيقنا. توضح سياسة الخصوصية هذه كيفية جمعنا واستخدامنا وحماية معلوماتكم عند استخدام تطبيق الهاتف المحمول الخاص بنا.";
+"privacy_info_collect_title" = "المعلومات التي نجمعها";
+"privacy_info_collect_text" = "تم تصميم الإلهام اليومي مع مراعاة الخصوصية. نحن نجمع معلومات قليلة:";
+"privacy_info_collect_preferences" = "• تفضيلات التطبيق: إعدادات النمط الخاصة بكم (الوضع الفاتح/الداكن)، تفضيلات حجم الخط، وإعدادات الإشعارات مخزنة محليًا على جهازكم";
+"privacy_info_collect_notification" = "• بيانات الإشعارات: إذا قمتم بتمكين الإشعارات، نقوم بتخزين وقت الإشعار المفضل لديكم محليًا على جهازكم";
+"privacy_info_collect_no_personal" = "• لا توجد بيانات شخصية: نحن لا نجمع الأسماء أو عناوين البريد الإلكتروني أو أرقام الهاتف أو أي معلومات تحديد شخصية";
+"privacy_info_collect_no_tracking" = "• لا يوجد تتبع للاستخدام: نحن لا نتتبع استخدامكم للتطبيق أو عادات القراءة أو السلوك داخل التطبيق";
+"privacy_how_use_title" = "كيف نستخدم معلوماتكم";
+"privacy_how_use_text" = "المعلومات المحدودة التي نجمعها تُستخدم فقط من أجل:";
+"privacy_how_use_personalized" = "• تزويدكم بتجربة تطبيق مخصصة";
+"privacy_how_use_remember" = "• تذكر تفضيلاتكم بين جلسات التطبيق";
+"privacy_how_use_notifications" = "• إرسال إشعارات الإلهام اليومية (إذا تم تمكينها)";
+"privacy_data_security_title" = "أمان البيانات";
+"privacy_data_security_text" = "جميع تفضيلاتكم وإعداداتكم مخزنة محليًا على جهازكم باستخدام آليات التخزين الآمنة في iOS. نحن لا ننقل أي بيانات شخصية إلى خوادم خارجية.";
+"privacy_third_party_title" = "خدمات الطرف الثالث";
+"privacy_third_party_text" = "الإلهام اليومي لا يتكامل مع أي خدمات تحليلات أو إعلانات أو تتبع من طرف ثالث. بياناتكم تبقى على جهازكم.";
+"privacy_contact_title" = "اتصل بنا";
+"privacy_contact_text" = "إذا كان لديكم أي أسئلة حول سياسة الخصوصية هذه، يرجى الاتصال بنا على ashrafatshy7@gmail.com";
+"privacy_last_updated_title" = "آخر تحديث";
+"privacy_last_updated_text" = "تم آخر تحديث لسياسة الخصوصية هذه في 7 يوليو 2025.";

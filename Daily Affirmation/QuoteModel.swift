@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import SwiftUI
 
 class QuoteManager: ObservableObject {
     @Published var quotes: [String] = []
@@ -28,6 +29,44 @@ class QuoteManager: ObservableObject {
         }
     }
     @Published var fontSize: FontSize = .medium
+    @Published var selectedLanguage: AppLanguage = .english {
+        didSet {
+            if selectedLanguage != oldValue {
+                loadQuotes()
+                setDailyQuote()
+                saveSettings()
+                if dailyNotifications {
+                    scheduleNotification()
+                }
+            }
+        }
+    }
+    
+    enum AppLanguage: String, CaseIterable {
+        case english = "en"
+        case hebrew = "he"
+        case arabic = "ar"
+        
+        var displayName: String {
+            switch self {
+            case .english: return NSLocalizedString("english", comment: "")
+            case .hebrew: return NSLocalizedString("hebrew", comment: "")
+            case .arabic: return NSLocalizedString("arabic", comment: "")
+            }
+        }
+        
+        var isRTL: Bool {
+            return self == .hebrew || self == .arabic
+        }
+        
+        var quotesFileName: String {
+            switch self {
+            case .english: return "quotes"
+            case .hebrew: return "quotes_he"
+            case .arabic: return "quotes_ar"
+            }
+        }
+    }
     
     enum FontSize: String, CaseIterable {
         case small = "small"
@@ -36,9 +75,9 @@ class QuoteManager: ObservableObject {
         
         var displayName: String {
             switch self {
-            case .small: return "Small"
-            case .medium: return "Medium"
-            case .large: return "Large"
+            case .small: return NSLocalizedString("font_small", comment: "")
+            case .medium: return NSLocalizedString("font_medium", comment: "")
+            case .large: return NSLocalizedString("font_large", comment: "")
             }
         }
         
@@ -68,10 +107,10 @@ class QuoteManager: ObservableObject {
     }
     
     private func loadQuotes() {
-        guard let url = Bundle.main.url(forResource: "quotes", withExtension: "json"),
+        guard let url = Bundle.main.url(forResource: selectedLanguage.quotesFileName, withExtension: "json"),
               let data = try? Data(contentsOf: url),
               let quotesArray = try? JSONDecoder().decode([String].self, from: data) else {
-            print("Failed to load quotes")
+            print("Failed to load quotes for language: \(selectedLanguage.rawValue)")
             return
         }
         
@@ -101,7 +140,7 @@ class QuoteManager: ObservableObject {
     }
     
     var currentQuote: String {
-        guard !quotes.isEmpty else { return "Loading..." }
+        guard !quotes.isEmpty else { return NSLocalizedString("loading", comment: "") }
         return quotes[currentIndex]
     }
     
@@ -117,6 +156,7 @@ class QuoteManager: ObservableObject {
         UserDefaults.standard.set(notificationTime, forKey: "notificationTime")
         UserDefaults.standard.set(isDarkMode, forKey: "isDarkMode")
         UserDefaults.standard.set(fontSize.rawValue, forKey: "fontSize")
+        UserDefaults.standard.set(selectedLanguage.rawValue, forKey: "selectedLanguage")
     }
     
     private func loadSettings() {
@@ -125,6 +165,10 @@ class QuoteManager: ObservableObject {
         
         if let savedFontSize = FontSize(rawValue: UserDefaults.standard.string(forKey: "fontSize") ?? "") {
             fontSize = savedFontSize
+        }
+        
+        if let savedLanguage = AppLanguage(rawValue: UserDefaults.standard.string(forKey: "selectedLanguage") ?? "") {
+            selectedLanguage = savedLanguage
         }
         
         // If notifications were enabled, check permission and schedule
@@ -177,7 +221,7 @@ class QuoteManager: ObservableObject {
         }
         
         let content = UNMutableNotificationContent()
-        content.title = "Daily Inspiration"
+        content.title = NSLocalizedString("daily_inspiration", comment: "")
         content.body = getDailyQuote()
         content.sound = .default
         content.badge = 1
@@ -203,7 +247,7 @@ class QuoteManager: ObservableObject {
     }
     
     private func getDailyQuote() -> String {
-        guard !quotes.isEmpty else { return "Stay inspired!" }
+        guard !quotes.isEmpty else { return NSLocalizedString("stay_inspired", comment: "") }
         
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -214,8 +258,8 @@ class QuoteManager: ObservableObject {
     }
     
     private func getRandomQuote() -> String {
-        guard !quotes.isEmpty else { return "Stay inspired!" }
-        return quotes.randomElement() ?? "Stay inspired!"
+        guard !quotes.isEmpty else { return NSLocalizedString("stay_inspired", comment: "") }
+        return quotes.randomElement() ?? NSLocalizedString("stay_inspired", comment: "")
     }
     
     var formattedNotificationTime: String {

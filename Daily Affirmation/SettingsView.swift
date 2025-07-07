@@ -10,7 +10,7 @@ struct SettingsView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Text("Settings")
+                    Text(NSLocalizedString("settings", comment: ""))
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
@@ -32,7 +32,7 @@ struct SettingsView: View {
                 VStack(spacing: 30) {
                     // Dark Mode Toggle
                     HStack {
-                        Text("Dark Mode")
+                        Text(NSLocalizedString("dark_mode", comment: ""))
                             .font(.headline)
                             .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
                         
@@ -47,7 +47,7 @@ struct SettingsView: View {
                     // Daily Notifications Section
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
-                            Text("Daily Notifications")
+                            Text(NSLocalizedString("daily_notifications", comment: ""))
                                 .font(.headline)
                                 .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
                             
@@ -61,7 +61,7 @@ struct SettingsView: View {
                         if quoteManager.dailyNotifications {
                             VStack(spacing: 10) {
                                 HStack {
-                                    Text("Notification Time")
+                                    Text(NSLocalizedString("notification_time", comment: ""))
                                         .font(.subheadline)
                                         .foregroundColor(quoteManager.isDarkMode ? .white.opacity(0.8) : .secondary)
                                     Spacer()
@@ -78,10 +78,45 @@ struct SettingsView: View {
                         }
                     }
                     
+                    // Language Section
+                    VStack(alignment: .leading, spacing: 15) {
+                        HStack {
+                            Text(NSLocalizedString("language", comment: ""))
+                                .font(.headline)
+                                .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 30)
+                        
+                        VStack(spacing: 10) {
+                            ForEach(QuoteManager.AppLanguage.allCases, id: \.self) { language in
+                                Button(action: {
+                                    quoteManager.selectedLanguage = language
+                                }) {
+                                    HStack {
+                                        Text(language.displayName)
+                                            .font(.headline)
+                                            .foregroundColor(quoteManager.selectedLanguage == language ? .white : (quoteManager.isDarkMode ? .white : .primary))
+                                        Spacer()
+                                    }
+                                    .padding(.horizontal, 30)
+                                    .padding(.vertical, 15)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(quoteManager.selectedLanguage == language ? 
+                                                  Color(red: 0.4, green: 0.8, blue: 0.8) : 
+                                                  Color.clear)
+                                    )
+                                }
+                                .padding(.horizontal, 30)
+                            }
+                        }
+                    }
+                    
                     // Font Size Section
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
-                            Text("Font Size")
+                            Text(NSLocalizedString("font_size", comment: ""))
                                 .font(.headline)
                                 .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
                             Spacer()
@@ -122,7 +157,7 @@ struct SettingsView: View {
                         HStack {
                             Image(systemName: "doc.text")
                                 .foregroundColor(.secondary)
-                            Text("Privacy Policy")
+                            Text(NSLocalizedString("privacy_policy", comment: ""))
                                 .font(.headline)
                                 .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
                             Spacer()

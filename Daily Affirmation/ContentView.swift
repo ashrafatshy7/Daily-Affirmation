@@ -104,8 +104,13 @@ struct ContentView: View {
                             }
                         }) {
                             HStack {
-                                Image(systemName: "chevron.left")
-                                Text("PREV")
+                                if quoteManager.selectedLanguage.isRTL {
+                                    Text(NSLocalizedString("prev", comment: ""))
+                                    Image(systemName: "chevron.right")
+                                } else {
+                                    Image(systemName: "chevron.left")
+                                    Text(NSLocalizedString("prev", comment: ""))
+                                }
                             }
                             .font(.headline)
                             .foregroundColor(.white)
@@ -119,8 +124,13 @@ struct ContentView: View {
                             }
                         }) {
                             HStack {
-                                Text("NEXT")
-                                Image(systemName: "chevron.right")
+                                if quoteManager.selectedLanguage.isRTL {
+                                    Image(systemName: "chevron.left")
+                                    Text(NSLocalizedString("next", comment: ""))
+                                } else {
+                                    Text(NSLocalizedString("next", comment: ""))
+                                    Image(systemName: "chevron.right")
+                                }
                             }
                             .font(.headline)
                             .foregroundColor(.white)
@@ -132,8 +142,13 @@ struct ContentView: View {
                             shareQuote()
                         }) {
                             HStack {
-                                Image(systemName: "square.and.arrow.up")
-                                Text("SHARE")
+                                if quoteManager.selectedLanguage.isRTL {
+                                    Text(NSLocalizedString("share", comment: ""))
+                                    Image(systemName: "square.and.arrow.up")
+                                } else {
+                                    Image(systemName: "square.and.arrow.up")
+                                    Text(NSLocalizedString("share", comment: ""))
+                                }
                             }
                             .font(.headline)
                             .foregroundColor(.white)
@@ -146,13 +161,16 @@ struct ContentView: View {
         }
         .preferredColorScheme(quoteManager.isDarkMode ? .dark : .light)
         .animation(.easeInOut(duration: 0.3), value: quoteManager.isDarkMode)
+        .environment(\.layoutDirection, quoteManager.selectedLanguage.isRTL ? .rightToLeft : .leftToRight)
         .sheet(isPresented: $showSettings) {
             SettingsView(quoteManager: quoteManager)
+                .environment(\.layoutDirection, quoteManager.selectedLanguage.isRTL ? .rightToLeft : .leftToRight)
         }
     }
     
     private func shareQuote() {
-        let text = "\(quoteManager.currentQuote)\n\n- Daily Inspiration"
+        let shareSuffix = NSLocalizedString("share_suffix", comment: "")
+        let text = "\(quoteManager.currentQuote)\n\n\(shareSuffix)"
         let activityViewController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
         
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
