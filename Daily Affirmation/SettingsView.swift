@@ -4,13 +4,14 @@ struct SettingsView: View {
     @ObservedObject var quoteManager: QuoteManager
     @Environment(\.dismiss) private var dismiss
     @State private var showPrivacyPolicy = false
+    @State private var showTimePicker = false
     
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Header
+                // Header - Fixed at top
                 HStack {
-                    Text(NSLocalizedString("settings", comment: ""))
+                    Text(quoteManager.localizedString("settings"))
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
@@ -27,12 +28,15 @@ struct SettingsView: View {
                 }
                 .padding(.horizontal, 30)
                 .padding(.top, 20)
+                .padding(.bottom, 10)
+                .background(quoteManager.isDarkMode ? Color(red: 0.176, green: 0.216, blue: 0.282) : Color(.systemBackground))
                 
-                // Settings content
-                VStack(spacing: 30) {
+                // Settings content - Scrollable
+                ScrollView {
+                    VStack(spacing: 30) {
                     // Dark Mode Toggle
                     HStack {
-                        Text(NSLocalizedString("dark_mode", comment: ""))
+                        Text(quoteManager.localizedString("dark_mode"))
                             .font(.headline)
                             .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
                         
@@ -47,7 +51,7 @@ struct SettingsView: View {
                     // Daily Notifications Section
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
-                            Text(NSLocalizedString("daily_notifications", comment: ""))
+                            Text(quoteManager.localizedString("daily_notifications"))
                                 .font(.headline)
                                 .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
                             
@@ -61,19 +65,32 @@ struct SettingsView: View {
                         if quoteManager.dailyNotifications {
                             VStack(spacing: 10) {
                                 HStack {
-                                    Text(NSLocalizedString("notification_time", comment: ""))
+                                    Text(quoteManager.localizedString("notification_time"))
                                         .font(.subheadline)
                                         .foregroundColor(quoteManager.isDarkMode ? .white.opacity(0.8) : .secondary)
                                     Spacer()
                                 }
                                 .padding(.horizontal, 30)
                                 
-                                DatePicker("", selection: $quoteManager.notificationTime, displayedComponents: .hourAndMinute)
-                                    .datePickerStyle(WheelDatePickerStyle())
-                                    .labelsHidden()
-                                    .frame(height: 120)
+                                Button(action: {
+                                    showTimePicker = true
+                                }) {
+                                    HStack {
+                                        Text(DateFormatter.timeFormatter.string(from: quoteManager.notificationTime))
+                                            .font(.headline)
+                                            .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
+                                        Spacer()
+                                        Image(systemName: "clock")
+                                            .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                                    }
                                     .padding(.horizontal, 30)
-                                    .colorScheme(quoteManager.isDarkMode ? .dark : .light)
+                                    .padding(.vertical, 15)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                                    )
+                                }
+                                .padding(.horizontal, 30)
                             }
                         }
                     }
@@ -81,7 +98,7 @@ struct SettingsView: View {
                     // Language Section
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
-                            Text(NSLocalizedString("language", comment: ""))
+                            Text(quoteManager.localizedString("language"))
                                 .font(.headline)
                                 .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
                             Spacer()
@@ -116,7 +133,7 @@ struct SettingsView: View {
                     // Font Size Section
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
-                            Text(NSLocalizedString("font_size", comment: ""))
+                            Text(quoteManager.localizedString("font_size"))
                                 .font(.headline)
                                 .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
                             Spacer()
@@ -129,7 +146,7 @@ struct SettingsView: View {
                                     quoteManager.fontSize = size
                                 }) {
                                     HStack {
-                                        Text(size.displayName)
+                                        Text(size.displayName(using: quoteManager))
                                             .font(.headline)
                                             .foregroundColor(quoteManager.fontSize == size ? .white : (quoteManager.isDarkMode ? .white : .primary))
                                         Spacer()
@@ -157,7 +174,7 @@ struct SettingsView: View {
                         HStack {
                             Image(systemName: "doc.text")
                                 .foregroundColor(.secondary)
-                            Text(NSLocalizedString("privacy_policy", comment: ""))
+                            Text(quoteManager.localizedString("privacy_policy"))
                                 .font(.headline)
                                 .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
                             Spacer()
@@ -173,18 +190,65 @@ struct SettingsView: View {
                     }
                     .padding(.horizontal, 30)
                     .padding(.bottom, 30)
+                    }
+                    .padding(.top, 20)
                 }
-                .padding(.top, 30)
             }
             .background(quoteManager.isDarkMode ? Color(red: 0.176, green: 0.216, blue: 0.282) : Color(.systemBackground))
             .navigationBarHidden(true)
         }
         .preferredColorScheme(quoteManager.isDarkMode ? .dark : .light)
+        .sheet(isPresented: $showTimePicker) {
+            TimePickerModal(selectedTime: $quoteManager.notificationTime, isPresented: $showTimePicker, isDarkMode: quoteManager.isDarkMode, quoteManager: quoteManager)
+                .presentationDetents([.height(300)])
+                .presentationDragIndicator(.visible)
+        }
         .sheet(isPresented: $showPrivacyPolicy) {
             PrivacyPolicyView()
                 .preferredColorScheme(quoteManager.isDarkMode ? .dark : .light)
         }
     }
+}
+
+struct TimePickerModal: View {
+    @Binding var selectedTime: Date
+    @Binding var isPresented: Bool
+    let isDarkMode: Bool
+    let quoteManager: QuoteManager
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            DatePicker("", selection: $selectedTime, displayedComponents: .hourAndMinute)
+                .datePickerStyle(WheelDatePickerStyle())
+                .labelsHidden()
+                .colorScheme(isDarkMode ? .dark : .light)
+            
+            Button(action: {
+                isPresented = false
+            }) {
+                Text(quoteManager.localizedString("done"))
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 15)
+                    .background(Color(red: 0.4, green: 0.8, blue: 0.8))
+                    .cornerRadius(12)
+            }
+            .padding(.horizontal, 30)
+        }
+        .padding(.top, 20)
+        .padding(.bottom, 30)
+        .background(isDarkMode ? Color(red: 0.176, green: 0.216, blue: 0.282) : Color(.systemBackground))
+        .preferredColorScheme(isDarkMode ? .dark : .light)
+    }
+}
+
+extension DateFormatter {
+    static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter
+    }()
 }
 
 #Preview {

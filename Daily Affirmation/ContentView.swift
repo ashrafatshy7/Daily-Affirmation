@@ -77,15 +77,30 @@ struct ContentView: View {
                         DragGesture()
                             .onChanged { value in
                                 cardOffset = value.translation
-                                cardRotation = Double(value.translation.width / 10)
+                                // For RTL, reverse the rotation to match swipe direction
+                                if quoteManager.selectedLanguage.isRTL {
+                                    cardRotation = -Double(value.translation.width / 10)
+                                } else {
+                                    cardRotation = Double(value.translation.width / 10)
+                                }
                             }
                             .onEnded { value in
                                 withAnimation(.spring()) {
                                     if abs(value.translation.width) > 100 {
-                                        if value.translation.width > 0 {
-                                            quoteManager.previousQuote()
+                                        if quoteManager.selectedLanguage.isRTL {
+                                            // RTL: swipe right = next, swipe left = previous
+                                            if value.translation.width > 0 {
+                                                quoteManager.nextQuote()
+                                            } else {
+                                                quoteManager.previousQuote()
+                                            }
                                         } else {
-                                            quoteManager.nextQuote()
+                                            // LTR: swipe right = previous, swipe left = next
+                                            if value.translation.width > 0 {
+                                                quoteManager.previousQuote()
+                                            } else {
+                                                quoteManager.nextQuote()
+                                            }
                                         }
                                     }
                                     cardOffset = .zero
@@ -105,11 +120,11 @@ struct ContentView: View {
                         }) {
                             HStack {
                                 if quoteManager.selectedLanguage.isRTL {
-                                    Text(NSLocalizedString("prev", comment: ""))
+                                    Text(quoteManager.localizedString("prev"))
                                     Image(systemName: "chevron.right")
                                 } else {
                                     Image(systemName: "chevron.left")
-                                    Text(NSLocalizedString("prev", comment: ""))
+                                    Text(quoteManager.localizedString("prev"))
                                 }
                             }
                             .font(.headline)
@@ -126,9 +141,9 @@ struct ContentView: View {
                             HStack {
                                 if quoteManager.selectedLanguage.isRTL {
                                     Image(systemName: "chevron.left")
-                                    Text(NSLocalizedString("next", comment: ""))
+                                    Text(quoteManager.localizedString("next"))
                                 } else {
-                                    Text(NSLocalizedString("next", comment: ""))
+                                    Text(quoteManager.localizedString("next"))
                                     Image(systemName: "chevron.right")
                                 }
                             }
@@ -143,11 +158,11 @@ struct ContentView: View {
                         }) {
                             HStack {
                                 if quoteManager.selectedLanguage.isRTL {
-                                    Text(NSLocalizedString("share", comment: ""))
+                                    Text(quoteManager.localizedString("share"))
                                     Image(systemName: "square.and.arrow.up")
                                 } else {
                                     Image(systemName: "square.and.arrow.up")
-                                    Text(NSLocalizedString("share", comment: ""))
+                                    Text(quoteManager.localizedString("share"))
                                 }
                             }
                             .font(.headline)
@@ -169,9 +184,19 @@ struct ContentView: View {
     }
     
     private func shareQuote() {
-        let shareSuffix = NSLocalizedString("share_suffix", comment: "")
+        let shareSuffix = quoteManager.localizedString("share_suffix")
         let text = "\(quoteManager.currentQuote)\n\n\(shareSuffix)"
         let activityViewController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        
+        // Configure popover presentation for iPad
+        if let popoverController = activityViewController.popoverPresentationController {
+            popoverController.sourceView = UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .first?.windows
+                .first { $0.isKeyWindow }
+            popoverController.sourceRect = CGRect(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY, width: 0, height: 0)
+            popoverController.permittedArrowDirections = []
+        }
         
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let window = windowScene.windows.first {

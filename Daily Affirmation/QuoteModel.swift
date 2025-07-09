@@ -49,9 +49,9 @@ class QuoteManager: ObservableObject {
         
         var displayName: String {
             switch self {
-            case .english: return NSLocalizedString("english", comment: "")
-            case .hebrew: return NSLocalizedString("hebrew", comment: "")
-            case .arabic: return NSLocalizedString("arabic", comment: "")
+            case .english: return "English"
+            case .hebrew: return "עברית"
+            case .arabic: return "العربية"
             }
         }
         
@@ -73,11 +73,11 @@ class QuoteManager: ObservableObject {
         case medium = "medium"
         case large = "large"
         
-        var displayName: String {
+        func displayName(using quoteManager: QuoteManager) -> String {
             switch self {
-            case .small: return NSLocalizedString("font_small", comment: "")
-            case .medium: return NSLocalizedString("font_medium", comment: "")
-            case .large: return NSLocalizedString("font_large", comment: "")
+            case .small: return quoteManager.localizedString("font_small")
+            case .medium: return quoteManager.localizedString("font_medium")
+            case .large: return quoteManager.localizedString("font_large")
             }
         }
         
@@ -266,5 +266,14 @@ class QuoteManager: ObservableObject {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         return formatter.string(from: notificationTime)
+    }
+    
+    // MARK: - Custom Localization
+    func localizedString(_ key: String) -> String {
+        guard let bundle = Bundle.main.path(forResource: selectedLanguage.rawValue, ofType: "lproj"),
+              let localizationBundle = Bundle(path: bundle) else {
+            return NSLocalizedString(key, comment: "")
+        }
+        return NSLocalizedString(key, bundle: localizationBundle, comment: "")
     }
 }

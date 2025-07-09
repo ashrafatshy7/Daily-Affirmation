@@ -26,6 +26,7 @@
 "prev" = "PREV";
 "next" = "NEXT";
 "share" = "SHARE";
+"done" = "Done";
 
 // Notifications
 "daily_inspiration" = "Daily Inspiration";
