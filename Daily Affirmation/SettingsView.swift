@@ -15,6 +15,8 @@ struct SettingsView: View {
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
+                        .accessibilityIdentifier("settings_title")
+                        .accessibilityLabel("Settings")
                     
                     Spacer()
                     
@@ -25,6 +27,8 @@ struct SettingsView: View {
                             .font(.title2)
                             .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
                     }
+                    .accessibilityIdentifier("close_settings_button")
+                    .accessibilityLabel("Close settings")
                 }
                 .padding(.horizontal, 30)
                 .padding(.top, 20)
@@ -45,6 +49,7 @@ struct SettingsView: View {
                         Toggle("", isOn: $quoteManager.isDarkMode)
                             .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.4, green: 0.8, blue: 0.8)))
                             .animation(.easeInOut(duration: 0.3), value: quoteManager.isDarkMode)
+                            .accessibilityLabel("Dark Mode")
                     }
                     .padding(.horizontal, 30)
                     
@@ -101,14 +106,24 @@ struct SettingsView: View {
                             Text(quoteManager.localizedString("language"))
                                 .font(.headline)
                                 .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
+                                .accessibilityLabel("Language")
                             Spacer()
                         }
+                        .accessibilityIdentifier("language_section")
+                        .accessibilityLabel("Language")
                         .padding(.horizontal, 30)
                         
                         VStack(spacing: 10) {
                             ForEach(QuoteManager.AppLanguage.allCases, id: \.self) { language in
                                 Button(action: {
+                                    let wasChanged = quoteManager.selectedLanguage != language
                                     quoteManager.selectedLanguage = language
+                                    // Auto-dismiss settings after language change
+                                    if wasChanged {
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                            dismiss()
+                                        }
+                                    }
                                 }) {
                                     HStack {
                                         Text(language.displayName)
@@ -125,6 +140,7 @@ struct SettingsView: View {
                                                   Color.clear)
                                     )
                                 }
+                                .accessibilityLabel(language.displayName)
                                 .padding(.horizontal, 30)
                             }
                         }
@@ -136,8 +152,11 @@ struct SettingsView: View {
                             Text(quoteManager.localizedString("font_size"))
                                 .font(.headline)
                                 .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
+                                .accessibilityLabel("Font Size")
                             Spacer()
                         }
+                        .accessibilityIdentifier("font_size_section")
+                        .accessibilityLabel("Font Size")
                         .padding(.horizontal, 30)
                         
                         VStack(spacing: 10) {
@@ -160,6 +179,8 @@ struct SettingsView: View {
                                                   Color.clear)
                                     )
                                 }
+                                .accessibilityLabel(size.displayName(using: quoteManager))
+                                .accessibilityIdentifier("font_size_\(size.rawValue)")
                                 .padding(.horizontal, 30)
                             }
                         }

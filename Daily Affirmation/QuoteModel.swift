@@ -5,38 +5,58 @@ import SwiftUI
 class QuoteManager: ObservableObject {
     @Published var quotes: [String] = []
     @Published var currentIndex: Int = 0
+    private var isInitializing = true
+    
     @Published var isDarkMode: Bool = false {
-        willSet {
-            objectWillChange.send()
+        didSet {
+            if !isInitializing {
+                saveSettings()
+            }
         }
     }
     @Published var dailyNotifications: Bool = false {
         didSet {
-            saveSettings()
-            if dailyNotifications {
-                requestNotificationPermission()
-            } else {
-                cancelNotifications()
+            if !isInitializing {
+                saveSettings()
+                if dailyNotifications {
+                    requestNotificationPermission()
+                } else {
+                    cancelNotifications()
+                }
             }
         }
     }
-    @Published var notificationTime: Date = QuoteManager.loadSavedNotificationTime() {
+    @Published var notificationTime: Date = {
+        let calendar = Calendar.current
+        let now = Date()
+        return calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
+    }() {
         didSet {
-            saveSettings()
-            if dailyNotifications {
-                scheduleNotification()
+            if !isInitializing {
+                saveSettings()
+                if dailyNotifications {
+                    scheduleNotification()
+                }
             }
         }
     }
-    @Published var fontSize: FontSize = .medium
+    @Published var fontSize: FontSize = .medium {
+        didSet {
+            if !isInitializing {
+                saveSettings()
+            }
+        }
+    }
     @Published var selectedLanguage: AppLanguage = .english {
         didSet {
             if selectedLanguage != oldValue {
                 loadQuotes()
                 setDailyQuote()
-                saveSettings()
-                if dailyNotifications {
-                    scheduleNotification()
+                if !isInitializing {
+                    saveSettings()
+                    if dailyNotifications {
+                        scheduleNotification()
+                    }
                 }
             }
         }
@@ -90,20 +110,26 @@ class QuoteManager: ObservableObject {
         }
     }
     
-    // MARK: - Static Helper Methods
-    private static func loadSavedNotificationTime() -> Date {
-        if let savedTime = UserDefaults.standard.object(forKey: "notificationTime") as? Date {
-            return savedTime
-        } else {
-            // Default to 9:00 AM if no saved time exists
-            return Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
-        }
+    // MARK: - Helper Methods
+    
+    private func safeCurrentIndex() -> Int {
+        guard !quotes.isEmpty else { return 0 }
+        return max(0, min(currentIndex, quotes.count - 1))
     }
     
+    // MARK: - Static Helper Methods
+    
     init() {
+        isInitializing = true
+        // Set default notification time to 9:00 AM
+        let calendar = Calendar.current
+        let now = Date()
+        notificationTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
+        
+        loadSettings()
         loadQuotes()
         setDailyQuote()
-        loadSettings()
+        isInitializing = false
     }
     
     private func loadQuotes() {
@@ -123,25 +149,37 @@ class QuoteManager: ObservableObject {
         let dayOfYear = calendar.ordinality(of: .day, in: .year, for: today) ?? 1
         
         if !quotes.isEmpty {
-            currentIndex = (dayOfYear - 1) % quotes.count
+            // Ensure safe calculation to prevent overflow
+            let safeDayOfYear = max(1, dayOfYear)
+            currentIndex = (safeDayOfYear - 1) % quotes.count
+        } else {
+            currentIndex = 0
         }
     }
     
     func nextQuote() {
         if !quotes.isEmpty {
-            currentIndex = (currentIndex + 1) % quotes.count
+            // Use safe current index and navigate to next
+            let safeIndex = safeCurrentIndex()
+            currentIndex = (safeIndex + 1) % quotes.count
+        } else {
+            currentIndex = 0
         }
     }
     
     func previousQuote() {
         if !quotes.isEmpty {
-            currentIndex = currentIndex > 0 ? currentIndex - 1 : quotes.count - 1
+            // Use safe current index and navigate to previous
+            let safeIndex = safeCurrentIndex()
+            currentIndex = safeIndex > 0 ? safeIndex - 1 : quotes.count - 1
+        } else {
+            currentIndex = 0
         }
     }
     
     var currentQuote: String {
         guard !quotes.isEmpty else { return NSLocalizedString("loading", comment: "") }
-        return quotes[currentIndex]
+        return quotes[safeCurrentIndex()]
     }
     
     var formattedDate: String {
@@ -167,8 +205,16 @@ class QuoteManager: ObservableObject {
             fontSize = savedFontSize
         }
         
-        if let savedLanguage = AppLanguage(rawValue: UserDefaults.standard.string(forKey: "selectedLanguage") ?? "") {
+        // For language, only load if the key exists and has a valid value
+        if UserDefaults.standard.object(forKey: "selectedLanguage") != nil,
+           let savedLanguage = AppLanguage(rawValue: UserDefaults.standard.string(forKey: "selectedLanguage") ?? "") {
             selectedLanguage = savedLanguage
+        }
+        
+        // For notification time, load saved time if available
+        if UserDefaults.standard.object(forKey: "notificationTime") != nil,
+           let savedTime = UserDefaults.standard.object(forKey: "notificationTime") as? Date {
+            notificationTime = savedTime
         }
         
         // If notifications were enabled, check permission and schedule

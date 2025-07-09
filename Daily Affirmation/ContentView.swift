@@ -44,6 +44,9 @@ struct ContentView: View {
                                 .background(Color.white.opacity(0.2))
                                 .clipShape(Circle())
                         }
+                        .accessibilityIdentifier("settings_button")
+                        .accessibilityLabel("Settings")
+                        .accessibilityHint("Open settings")
                         .padding(.trailing)
                     }
                     
@@ -59,6 +62,9 @@ struct ContentView: View {
                             .padding(.horizontal, 30)
                             .padding(.vertical, 40)
                             .scaleEffect(quoteManager.fontSize.multiplier)
+                            .accessibilityIdentifier("quote_text")
+                            .accessibilityLabel("Daily quote")
+                            .accessibilityValue(quoteManager.currentQuote)
                         
                         Text(quoteManager.formattedDate)
                             .font(.subheadline)
@@ -130,6 +136,9 @@ struct ContentView: View {
                             .font(.headline)
                             .foregroundColor(.white)
                         }
+                        .accessibilityIdentifier("prev_button")
+                        .accessibilityLabel("Previous")
+                        .accessibilityHint("Go to previous quote")
                         
                         Spacer()
                         
@@ -150,6 +159,9 @@ struct ContentView: View {
                             .font(.headline)
                             .foregroundColor(.white)
                         }
+                        .accessibilityIdentifier("next_button")
+                        .accessibilityLabel("Next")
+                        .accessibilityHint("Go to next quote")
                         
                         Spacer()
                         
@@ -168,6 +180,9 @@ struct ContentView: View {
                             .font(.headline)
                             .foregroundColor(.white)
                         }
+                        .accessibilityIdentifier("share_button")
+                        .accessibilityLabel("Share")
+                        .accessibilityHint("Share current quote")
                     }
                     .padding(.horizontal, 30)
                     .padding(.bottom, 50)
@@ -188,14 +203,13 @@ struct ContentView: View {
         let text = "\(quoteManager.currentQuote)\n\n\(shareSuffix)"
         let activityViewController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
         
-        // Configure popover presentation for iPad
-        if let popoverController = activityViewController.popoverPresentationController {
-            popoverController.sourceView = UIApplication.shared.connectedScenes
-                .compactMap { $0 as? UIWindowScene }
-                .first?.windows
-                .first { $0.isKeyWindow }
-            popoverController.sourceRect = CGRect(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY, width: 0, height: 0)
-            popoverController.permittedArrowDirections = []
+        // Configure popover presentation for iPad only if not in test environment
+        if UIDevice.current.userInterfaceIdiom == .pad && !ProcessInfo.processInfo.environment.keys.contains("XCTestConfigurationFilePath") {
+            if let popoverController = activityViewController.popoverPresentationController {
+                popoverController.sourceView = nil
+                popoverController.sourceRect = CGRect(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY, width: 0, height: 0)
+                popoverController.permittedArrowDirections = []
+            }
         }
         
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
