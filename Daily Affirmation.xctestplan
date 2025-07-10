@@ -1,0 +1,37 @@
+{
+  "configurations" : [
+    {
+      "id" : "7E06EA6B-C06A-4E74-96FC-1D401B36CB41",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Daily Affirmation.xcodeproj",
+      "identifier" : "D6B838042E1C757100A34476",
+      "name" : "Daily Affirmation"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:Daily Affirmation.xcodeproj",
+        "identifier" : "D6B838112E1C757100A34476",
+        "name" : "Daily AffirmationTests"
+      }
+    },
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:Daily Affirmation.xcodeproj",
+        "identifier" : "D6B8381B2E1C757100A34476",
+        "name" : "Daily AffirmationUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

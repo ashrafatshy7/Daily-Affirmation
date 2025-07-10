@@ -27,6 +27,7 @@
 		D6B838052E1C757100A34476 /* Daily Affirmation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Daily Affirmation.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6B838122E1C757100A34476 /* Daily AffirmationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Daily AffirmationTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6B8381C2E1C757100A34476 /* Daily AffirmationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Daily AffirmationUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D6E3B41A2E1EC39C00A00E3E /* Daily Affirmation.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Daily Affirmation.xctestplan"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -80,6 +81,7 @@
 		D6B837FC2E1C757100A34476 = {
 			isa = PBXGroup;
 			children = (
+				D6E3B41A2E1EC39C00A00E3E /* Daily Affirmation.xctestplan */,
 				D6B838392E1C763900A34476 /* Icons */,
 				D6B838072E1C757100A34476 /* Daily Affirmation */,
 				D6B838152E1C757100A34476 /* Daily AffirmationTests */,
@@ -405,7 +407,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 29K7998WRR;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -436,7 +438,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 29K7998WRR;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

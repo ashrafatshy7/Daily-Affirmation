@@ -203,19 +203,48 @@ struct ContentView: View {
         let text = "\(quoteManager.currentQuote)\n\n\(shareSuffix)"
         let activityViewController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
         
+        // Get the window scene and root view controller with proper validation
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootViewController = window.rootViewController else {
+            return
+        }
+        
         // Configure popover presentation for iPad only if not in test environment
         if UIDevice.current.userInterfaceIdiom == .pad && !ProcessInfo.processInfo.environment.keys.contains("XCTestConfigurationFilePath") {
             if let popoverController = activityViewController.popoverPresentationController {
-                popoverController.sourceView = nil
-                popoverController.sourceRect = CGRect(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY, width: 0, height: 0)
+                // Ensure we have a valid source view
+                let sourceView = rootViewController.view ?? window
+                popoverController.sourceView = sourceView
+                popoverController.sourceRect = CGRect(x: sourceView.bounds.midX, y: sourceView.bounds.midY, width: 0, height: 0)
                 popoverController.permittedArrowDirections = []
+                
+                // Add delegate to handle popover dismissal
+                popoverController.delegate = makePopoverDelegate()
             }
         }
         
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            window.rootViewController?.present(activityViewController, animated: true, completion: nil)
+        // Present with proper error handling
+        DispatchQueue.main.async {
+            if rootViewController.presentedViewController == nil {
+                rootViewController.present(activityViewController, animated: true, completion: nil)
+            }
         }
+    }
+    
+    private func makePopoverDelegate() -> UIPopoverPresentationControllerDelegate {
+        return PopoverDelegate()
+    }
+}
+
+// Helper class to handle popover presentation
+private class PopoverDelegate: NSObject, UIPopoverPresentationControllerDelegate {
+    func adaptivePresentationStyle(for controller: UIPresentationController) -> UIModalPresentationStyle {
+        return .none
+    }
+    
+    func popoverPresentationControllerShouldDismissPopover(_ popoverPresentationController: UIPopoverPresentationController) -> Bool {
+        return true
     }
 }
 
