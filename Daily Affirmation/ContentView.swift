@@ -18,15 +18,13 @@ struct ContentView: View {
             ZStack {
                 // Background gradient
                 LinearGradient(
-                    gradient: Gradient(colors: quoteManager.isDarkMode ? [
-                        Color(red: 0.278, green: 0.573, blue: 0.573),
-                        Color(red: 0.278, green: 0.573, blue: 0.573)
-                    ] : [
-                        Color(red: 0.4, green: 0.8, blue: 0.8),
-                        Color(red: 0.3, green: 0.7, blue: 0.7)
+                    gradient: Gradient(colors: [
+                        Color(red: 0.659, green: 0.902, blue: 0.812), // #A8E6CF
+                        Color(red: 1.0, green: 0.827, blue: 0.647),   // #FFD3A5
+                        Color(red: 1.0, green: 0.659, blue: 0.659)    // #FFA8A8
                     ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
                 .ignoresSafeArea()
                 
@@ -39,10 +37,11 @@ struct ContentView: View {
                         }) {
                             Image(systemName: "gearshape.fill")
                                 .font(.title2)
-                                .foregroundColor(.white.opacity(0.8))
+                                .foregroundColor(.black)
                                 .padding()
-                                .background(Color.white.opacity(0.2))
+                                .background(Color.white.opacity(0.9))
                                 .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
                         }
                         .accessibilityIdentifier("settings_button")
                         .accessibilityLabel("Settings")
@@ -55,10 +54,10 @@ struct ContentView: View {
                     // Quote card
                     VStack(spacing: 30) {
                         Text(quoteManager.currentQuote)
-                            .font(.title2)
-                            .fontWeight(.medium)
-                            .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
+                            .font(.system(size: 32, weight: .semibold, design: .default))
+                            .foregroundColor(.black)
                             .multilineTextAlignment(.center)
+                            .lineLimit(nil)
                             .padding(.horizontal, 30)
                             .padding(.vertical, 40)
                             .scaleEffect(quoteManager.fontSize.multiplier)
@@ -68,13 +67,13 @@ struct ContentView: View {
                         
                         Text(quoteManager.formattedDate)
                             .font(.subheadline)
-                            .foregroundColor(quoteManager.isDarkMode ? .white.opacity(0.7) : .secondary)
+                            .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.2))
                     }
                     .frame(maxWidth: .infinity, minHeight: 250)
                     .background(
                         RoundedRectangle(cornerRadius: 20)
-                            .fill(quoteManager.isDarkMode ? Color(red: 0.176, green: 0.216, blue: 0.282) : Color.white)
-                            .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+                            .fill(Color.white.opacity(0.9))
+                            .shadow(color: .black.opacity(0.1), radius: 20, x: 0, y: 4)
                     )
                     .padding(.horizontal, 30)
                     .offset(cardOffset)
@@ -134,7 +133,7 @@ struct ContentView: View {
                                 }
                             }
                             .font(.headline)
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                         }
                         .accessibilityIdentifier("prev_button")
                         .accessibilityLabel("Previous")
@@ -157,7 +156,7 @@ struct ContentView: View {
                                 }
                             }
                             .font(.headline)
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                         }
                         .accessibilityIdentifier("next_button")
                         .accessibilityLabel("Next")
@@ -178,7 +177,7 @@ struct ContentView: View {
                                 }
                             }
                             .font(.headline)
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                         }
                         .accessibilityIdentifier("share_button")
                         .accessibilityLabel("Share")
@@ -189,8 +188,7 @@ struct ContentView: View {
                 }
             }
         }
-        .preferredColorScheme(quoteManager.isDarkMode ? .dark : .light)
-        .animation(.easeInOut(duration: 0.3), value: quoteManager.isDarkMode)
+        .preferredColorScheme(.light)
         .environment(\.layoutDirection, quoteManager.selectedLanguage.isRTL ? .rightToLeft : .leftToRight)
         .sheet(isPresented: $showSettings) {
             SettingsView(quoteManager: quoteManager)

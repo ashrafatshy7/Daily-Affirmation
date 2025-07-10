@@ -7,13 +7,6 @@ class QuoteManager: ObservableObject {
     @Published var currentIndex: Int = 0
     private var isInitializing = true
     
-    @Published var isDarkMode: Bool = false {
-        didSet {
-            if !isInitializing {
-                saveSettings()
-            }
-        }
-    }
     @Published var dailyNotifications: Bool = false {
         didSet {
             if !isInitializing {
@@ -192,14 +185,12 @@ class QuoteManager: ObservableObject {
     private func saveSettings() {
         UserDefaults.standard.set(dailyNotifications, forKey: "dailyNotifications")
         UserDefaults.standard.set(notificationTime, forKey: "notificationTime")
-        UserDefaults.standard.set(isDarkMode, forKey: "isDarkMode")
         UserDefaults.standard.set(fontSize.rawValue, forKey: "fontSize")
         UserDefaults.standard.set(selectedLanguage.rawValue, forKey: "selectedLanguage")
     }
     
     private func loadSettings() {
         dailyNotifications = UserDefaults.standard.bool(forKey: "dailyNotifications")
-        isDarkMode = UserDefaults.standard.bool(forKey: "isDarkMode")
         
         if let savedFontSize = FontSize(rawValue: UserDefaults.standard.string(forKey: "fontSize") ?? "") {
             fontSize = savedFontSize

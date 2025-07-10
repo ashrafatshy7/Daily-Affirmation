@@ -14,7 +14,7 @@ struct SettingsView: View {
                     Text(quoteManager.localizedString("settings"))
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                        .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
+                        .foregroundColor(.black)
                         .accessibilityIdentifier("settings_title")
                         .accessibilityLabel("Settings")
                     
@@ -32,50 +32,36 @@ struct SettingsView: View {
                 }
                 .padding(.horizontal, 30)
                 .padding(.top, 20)
-                .padding(.bottom, 10)
-                .background(quoteManager.isDarkMode ? Color(red: 0.176, green: 0.216, blue: 0.282) : Color(.systemBackground))
+                .padding(.bottom, 16)
+                .background(Color.white)
                 
                 // Settings content - Scrollable
                 ScrollView {
-                    VStack(spacing: 30) {
-                    // Dark Mode Toggle
-                    HStack {
-                        Text(quoteManager.localizedString("dark_mode"))
-                            .font(.headline)
-                            .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
-                        
-                        Spacer()
-                        
-                        Toggle("", isOn: $quoteManager.isDarkMode)
-                            .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.4, green: 0.8, blue: 0.8)))
-                            .animation(.easeInOut(duration: 0.3), value: quoteManager.isDarkMode)
-                            .accessibilityLabel("Dark Mode")
-                    }
-                    .padding(.horizontal, 30)
+                    VStack(spacing: 24) {
                     
                     // Daily Notifications Section
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
                             Text(quoteManager.localizedString("daily_notifications"))
                                 .font(.headline)
-                                .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
+                                .foregroundColor(.black)
                             
                             Spacer()
                             
                             Toggle("", isOn: $quoteManager.dailyNotifications)
-                                .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.4, green: 0.8, blue: 0.8)))
+                                .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.659, green: 0.902, blue: 0.812)))
                         }
-                        .padding(.horizontal, 30)
+                        .padding(.horizontal, 24)
                         
                         if quoteManager.dailyNotifications {
                             VStack(spacing: 10) {
                                 HStack {
                                     Text(quoteManager.localizedString("notification_time"))
                                         .font(.subheadline)
-                                        .foregroundColor(quoteManager.isDarkMode ? .white.opacity(0.8) : .secondary)
+                                        .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.2))
                                     Spacer()
                                 }
-                                .padding(.horizontal, 30)
+                                .padding(.horizontal, 24)
                                 
                                 Button(action: {
                                     showTimePicker = true
@@ -83,19 +69,19 @@ struct SettingsView: View {
                                     HStack {
                                         Text(DateFormatter.timeFormatter.string(from: quoteManager.notificationTime))
                                             .font(.headline)
-                                            .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
+                                            .foregroundColor(.black)
                                         Spacer()
                                         Image(systemName: "clock")
-                                            .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                                            .foregroundColor(Color(red: 0.659, green: 0.902, blue: 0.812))
                                     }
-                                    .padding(.horizontal, 30)
-                                    .padding(.vertical, 15)
+                                    .padding(.horizontal, 24)
+                                    .padding(.vertical, 16)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 12)
+                                        RoundedRectangle(cornerRadius: 20)
                                             .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
                                     )
                                 }
-                                .padding(.horizontal, 30)
+                                .padding(.horizontal, 24)
                             }
                         }
                     }
@@ -105,13 +91,13 @@ struct SettingsView: View {
                         HStack {
                             Text(quoteManager.localizedString("language"))
                                 .font(.headline)
-                                .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
+                                .foregroundColor(.black)
                                 .accessibilityLabel("Language")
                             Spacer()
                         }
                         .accessibilityIdentifier("language_section")
                         .accessibilityLabel("Language")
-                        .padding(.horizontal, 30)
+                        .padding(.horizontal, 24)
                         
                         VStack(spacing: 10) {
                             ForEach(QuoteManager.AppLanguage.allCases, id: \.self) { language in
@@ -128,20 +114,20 @@ struct SettingsView: View {
                                     HStack {
                                         Text(language.displayName)
                                             .font(.headline)
-                                            .foregroundColor(quoteManager.selectedLanguage == language ? .white : (quoteManager.isDarkMode ? .white : .primary))
+                                            .foregroundColor(quoteManager.selectedLanguage == language ? .white : .black)
                                         Spacer()
                                     }
-                                    .padding(.horizontal, 30)
-                                    .padding(.vertical, 15)
+                                    .padding(.horizontal, 24)
+                                    .padding(.vertical, 16)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 12)
+                                        RoundedRectangle(cornerRadius: 20)
                                             .fill(quoteManager.selectedLanguage == language ? 
-                                                  Color(red: 0.4, green: 0.8, blue: 0.8) : 
+                                                  Color(red: 0.659, green: 0.902, blue: 0.812) : 
                                                   Color.clear)
                                     )
                                 }
                                 .accessibilityLabel(language.displayName)
-                                .padding(.horizontal, 30)
+                                .padding(.horizontal, 24)
                             }
                         }
                     }
@@ -151,13 +137,13 @@ struct SettingsView: View {
                         HStack {
                             Text(quoteManager.localizedString("font_size"))
                                 .font(.headline)
-                                .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
+                                .foregroundColor(.black)
                                 .accessibilityLabel("Font Size")
                             Spacer()
                         }
                         .accessibilityIdentifier("font_size_section")
                         .accessibilityLabel("Font Size")
-                        .padding(.horizontal, 30)
+                        .padding(.horizontal, 24)
                         
                         VStack(spacing: 10) {
                             ForEach(QuoteManager.FontSize.allCases, id: \.self) { size in
@@ -167,21 +153,21 @@ struct SettingsView: View {
                                     HStack {
                                         Text(size.displayName(using: quoteManager))
                                             .font(.headline)
-                                            .foregroundColor(quoteManager.fontSize == size ? .white : (quoteManager.isDarkMode ? .white : .primary))
+                                            .foregroundColor(quoteManager.fontSize == size ? .white : .black)
                                         Spacer()
                                     }
-                                    .padding(.horizontal, 30)
-                                    .padding(.vertical, 15)
+                                    .padding(.horizontal, 24)
+                                    .padding(.vertical, 16)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 12)
+                                        RoundedRectangle(cornerRadius: 20)
                                             .fill(quoteManager.fontSize == size ? 
-                                                  Color(red: 0.4, green: 0.8, blue: 0.8) : 
+                                                  Color(red: 0.659, green: 0.902, blue: 0.812) : 
                                                   Color.clear)
                                     )
                                 }
                                 .accessibilityLabel(size.displayName(using: quoteManager))
                                 .accessibilityIdentifier("font_size_\(size.rawValue)")
-                                .padding(.horizontal, 30)
+                                .padding(.horizontal, 24)
                             }
                         }
                     }
@@ -197,36 +183,36 @@ struct SettingsView: View {
                                 .foregroundColor(.secondary)
                             Text(quoteManager.localizedString("privacy_policy"))
                                 .font(.headline)
-                                .foregroundColor(quoteManager.isDarkMode ? .white : .primary)
+                                .foregroundColor(.black)
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .foregroundColor(.secondary)
                         }
-                        .padding(.horizontal, 30)
-                        .padding(.vertical, 15)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 16)
                         .background(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: 20)
                                 .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
                         )
                     }
                     .padding(.horizontal, 30)
-                    .padding(.bottom, 30)
+                    .padding(.bottom, 24)
                     }
-                    .padding(.top, 20)
+                    .padding(.top, 24)
                 }
             }
-            .background(quoteManager.isDarkMode ? Color(red: 0.176, green: 0.216, blue: 0.282) : Color(.systemBackground))
+            .background(Color.white)
             .navigationBarHidden(true)
         }
-        .preferredColorScheme(quoteManager.isDarkMode ? .dark : .light)
+        .preferredColorScheme(.light)
         .sheet(isPresented: $showTimePicker) {
-            TimePickerModal(selectedTime: $quoteManager.notificationTime, isPresented: $showTimePicker, isDarkMode: quoteManager.isDarkMode, quoteManager: quoteManager)
+            TimePickerModal(selectedTime: $quoteManager.notificationTime, isPresented: $showTimePicker, quoteManager: quoteManager)
                 .presentationDetents([.height(300)])
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showPrivacyPolicy) {
             PrivacyPolicyView()
-                .preferredColorScheme(quoteManager.isDarkMode ? .dark : .light)
+                .preferredColorScheme(.light)
         }
     }
 }
@@ -234,7 +220,6 @@ struct SettingsView: View {
 struct TimePickerModal: View {
     @Binding var selectedTime: Date
     @Binding var isPresented: Bool
-    let isDarkMode: Bool
     let quoteManager: QuoteManager
     
     var body: some View {
@@ -242,7 +227,7 @@ struct TimePickerModal: View {
             DatePicker("", selection: $selectedTime, displayedComponents: .hourAndMinute)
                 .datePickerStyle(WheelDatePickerStyle())
                 .labelsHidden()
-                .colorScheme(isDarkMode ? .dark : .light)
+                .colorScheme(.light)
             
             Button(action: {
                 isPresented = false
@@ -252,15 +237,15 @@ struct TimePickerModal: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 15)
-                    .background(Color(red: 0.4, green: 0.8, blue: 0.8))
-                    .cornerRadius(12)
+                    .background(Color(red: 0.659, green: 0.902, blue: 0.812))
+                    .cornerRadius(20)
             }
             .padding(.horizontal, 30)
         }
         .padding(.top, 20)
         .padding(.bottom, 30)
-        .background(isDarkMode ? Color(red: 0.176, green: 0.216, blue: 0.282) : Color(.systemBackground))
-        .preferredColorScheme(isDarkMode ? .dark : .light)
+        .background(Color.white)
+        .preferredColorScheme(.light)
     }
 }
 
