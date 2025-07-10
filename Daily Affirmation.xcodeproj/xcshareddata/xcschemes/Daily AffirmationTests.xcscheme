@@ -25,6 +25,17 @@
                ReferencedContainer = "container:Daily Affirmation.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D6E4A9FE2E1FEA51002A8098"
+               BuildableName = "Daily AffirmationUITests.xctest"
+               BlueprintName = "Daily AffirmationUITests"
+               ReferencedContainer = "container:Daily Affirmation.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
@@ -54,15 +65,6 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D6B838042E1C757100A34476"
-            BuildableName = "Daily Affirmation.app"
-            BlueprintName = "Daily Affirmation"
-            ReferencedContainer = "container:Daily Affirmation.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

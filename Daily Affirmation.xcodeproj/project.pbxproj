@@ -7,14 +7,14 @@
 	objects = {
 
 /* Begin PBXContainerItemProxy section */
-		D6B838132E1C757100A34476 /* PBXContainerItemProxy */ = {
+		D6AA2EBD2E206D2300E647B3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D6B837FD2E1C757100A34476 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = D6B838042E1C757100A34476;
 			remoteInfo = "Daily Affirmation";
 		};
-		D6B8381D2E1C757100A34476 /* PBXContainerItemProxy */ = {
+		D6E4AA052E1FEA51002A8098 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D6B837FD2E1C757100A34476 /* Project object */;
 			proxyType = 1;
@@ -24,26 +24,20 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D6AA2EB92E206D2300E647B3 /* Daily AffirmationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Daily AffirmationTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6B838052E1C757100A34476 /* Daily Affirmation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Daily Affirmation.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		D6B838122E1C757100A34476 /* Daily AffirmationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Daily AffirmationTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		D6B8381C2E1C757100A34476 /* Daily AffirmationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Daily AffirmationUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		D6E3B41A2E1EC39C00A00E3E /* Daily Affirmation.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Daily Affirmation.xctestplan"; sourceTree = "<group>"; };
+		D6E4A9FF2E1FEA51002A8098 /* Daily AffirmationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Daily AffirmationUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		D6B838072E1C757100A34476 /* Daily Affirmation */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Daily Affirmation";
-			sourceTree = "<group>";
-		};
-		D6B838152E1C757100A34476 /* Daily AffirmationTests */ = {
+		D6AA2EBA2E206D2300E647B3 /* Daily AffirmationTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Daily AffirmationTests";
 			sourceTree = "<group>";
 		};
-		D6B8381F2E1C757100A34476 /* Daily AffirmationUITests */ = {
+		D6B838072E1C757100A34476 /* Daily Affirmation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Daily AffirmationUITests";
+			path = "Daily Affirmation";
 			sourceTree = "<group>";
 		};
 		D6B838392E1C763900A34476 /* Icons */ = {
@@ -51,9 +45,21 @@
 			path = Icons;
 			sourceTree = "<group>";
 		};
+		D6E4AA002E1FEA51002A8098 /* Daily AffirmationUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Daily AffirmationUITests";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D6AA2EB62E206D2300E647B3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D6B838022E1C757100A34476 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -61,14 +67,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D6B8380F2E1C757100A34476 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D6B838192E1C757100A34476 /* Frameworks */ = {
+		D6E4A9FC2E1FEA51002A8098 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -81,11 +80,10 @@
 		D6B837FC2E1C757100A34476 = {
 			isa = PBXGroup;
 			children = (
-				D6E3B41A2E1EC39C00A00E3E /* Daily Affirmation.xctestplan */,
 				D6B838392E1C763900A34476 /* Icons */,
 				D6B838072E1C757100A34476 /* Daily Affirmation */,
-				D6B838152E1C757100A34476 /* Daily AffirmationTests */,
-				D6B8381F2E1C757100A34476 /* Daily AffirmationUITests */,
+				D6E4AA002E1FEA51002A8098 /* Daily AffirmationUITests */,
+				D6AA2EBA2E206D2300E647B3 /* Daily AffirmationTests */,
 				D6B838062E1C757100A34476 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -94,8 +92,8 @@
 			isa = PBXGroup;
 			children = (
 				D6B838052E1C757100A34476 /* Daily Affirmation.app */,
-				D6B838122E1C757100A34476 /* Daily AffirmationTests.xctest */,
-				D6B8381C2E1C757100A34476 /* Daily AffirmationUITests.xctest */,
+				D6E4A9FF2E1FEA51002A8098 /* Daily AffirmationUITests.xctest */,
+				D6AA2EB92E206D2300E647B3 /* Daily AffirmationTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -103,6 +101,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D6AA2EB82E206D2300E647B3 /* Daily AffirmationTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D6AA2EBF2E206D2300E647B3 /* Build configuration list for PBXNativeTarget "Daily AffirmationTests" */;
+			buildPhases = (
+				D6AA2EB52E206D2300E647B3 /* Sources */,
+				D6AA2EB62E206D2300E647B3 /* Frameworks */,
+				D6AA2EB72E206D2300E647B3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D6AA2EBE2E206D2300E647B3 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D6AA2EBA2E206D2300E647B3 /* Daily AffirmationTests */,
+			);
+			name = "Daily AffirmationTests";
+			packageProductDependencies = (
+			);
+			productName = "Daily AffirmationTests";
+			productReference = D6AA2EB92E206D2300E647B3 /* Daily AffirmationTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		D6B838042E1C757100A34476 /* Daily Affirmation */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D6B838262E1C757100A34476 /* Build configuration list for PBXNativeTarget "Daily Affirmation" */;
@@ -126,50 +147,27 @@
 			productReference = D6B838052E1C757100A34476 /* Daily Affirmation.app */;
 			productType = "com.apple.product-type.application";
 		};
-		D6B838112E1C757100A34476 /* Daily AffirmationTests */ = {
+		D6E4A9FE2E1FEA51002A8098 /* Daily AffirmationUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D6B838292E1C757100A34476 /* Build configuration list for PBXNativeTarget "Daily AffirmationTests" */;
+			buildConfigurationList = D6E4AA072E1FEA51002A8098 /* Build configuration list for PBXNativeTarget "Daily AffirmationUITests" */;
 			buildPhases = (
-				D6B8380E2E1C757100A34476 /* Sources */,
-				D6B8380F2E1C757100A34476 /* Frameworks */,
-				D6B838102E1C757100A34476 /* Resources */,
+				D6E4A9FB2E1FEA51002A8098 /* Sources */,
+				D6E4A9FC2E1FEA51002A8098 /* Frameworks */,
+				D6E4A9FD2E1FEA51002A8098 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				D6B838142E1C757100A34476 /* PBXTargetDependency */,
+				D6E4AA062E1FEA51002A8098 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				D6B838152E1C757100A34476 /* Daily AffirmationTests */,
-			);
-			name = "Daily AffirmationTests";
-			packageProductDependencies = (
-			);
-			productName = "Daily AffirmationTests";
-			productReference = D6B838122E1C757100A34476 /* Daily AffirmationTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		D6B8381B2E1C757100A34476 /* Daily AffirmationUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = D6B8382C2E1C757100A34476 /* Build configuration list for PBXNativeTarget "Daily AffirmationUITests" */;
-			buildPhases = (
-				D6B838182E1C757100A34476 /* Sources */,
-				D6B838192E1C757100A34476 /* Frameworks */,
-				D6B8381A2E1C757100A34476 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				D6B8381E2E1C757100A34476 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				D6B8381F2E1C757100A34476 /* Daily AffirmationUITests */,
+				D6E4AA002E1FEA51002A8098 /* Daily AffirmationUITests */,
 			);
 			name = "Daily AffirmationUITests";
 			packageProductDependencies = (
 			);
 			productName = "Daily AffirmationUITests";
-			productReference = D6B8381C2E1C757100A34476 /* Daily AffirmationUITests.xctest */;
+			productReference = D6E4A9FF2E1FEA51002A8098 /* Daily AffirmationUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -182,14 +180,14 @@
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
-					D6B838042E1C757100A34476 = {
-						CreatedOnToolsVersion = 16.4;
-					};
-					D6B838112E1C757100A34476 = {
+					D6AA2EB82E206D2300E647B3 = {
 						CreatedOnToolsVersion = 16.4;
 						TestTargetID = D6B838042E1C757100A34476;
 					};
-					D6B8381B2E1C757100A34476 = {
+					D6B838042E1C757100A34476 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					D6E4A9FE2E1FEA51002A8098 = {
 						CreatedOnToolsVersion = 16.4;
 						TestTargetID = D6B838042E1C757100A34476;
 					};
@@ -212,13 +210,20 @@
 			projectRoot = "";
 			targets = (
 				D6B838042E1C757100A34476 /* Daily Affirmation */,
-				D6B838112E1C757100A34476 /* Daily AffirmationTests */,
-				D6B8381B2E1C757100A34476 /* Daily AffirmationUITests */,
+				D6E4A9FE2E1FEA51002A8098 /* Daily AffirmationUITests */,
+				D6AA2EB82E206D2300E647B3 /* Daily AffirmationTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D6AA2EB72E206D2300E647B3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D6B838032E1C757100A34476 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -226,14 +231,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D6B838102E1C757100A34476 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D6B8381A2E1C757100A34476 /* Resources */ = {
+		D6E4A9FD2E1FEA51002A8098 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -243,6 +241,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D6AA2EB52E206D2300E647B3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D6B838012E1C757100A34476 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -250,14 +255,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D6B8380E2E1C757100A34476 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D6B838182E1C757100A34476 /* Sources */ = {
+		D6E4A9FB2E1FEA51002A8098 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -267,19 +265,55 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		D6B838142E1C757100A34476 /* PBXTargetDependency */ = {
+		D6AA2EBE2E206D2300E647B3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D6B838042E1C757100A34476 /* Daily Affirmation */;
-			targetProxy = D6B838132E1C757100A34476 /* PBXContainerItemProxy */;
+			targetProxy = D6AA2EBD2E206D2300E647B3 /* PBXContainerItemProxy */;
 		};
-		D6B8381E2E1C757100A34476 /* PBXTargetDependency */ = {
+		D6E4AA062E1FEA51002A8098 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D6B838042E1C757100A34476 /* Daily Affirmation */;
-			targetProxy = D6B8381D2E1C757100A34476 /* PBXContainerItemProxy */;
+			targetProxy = D6E4AA052E1FEA51002A8098 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		D6AA2EC02E206D2300E647B3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 29K7998WRR;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ashrafatshy.Daily-AffirmationTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Daily Affirmation.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Daily Affirmation";
+			};
+			name = Debug;
+		};
+		D6AA2EC12E206D2300E647B3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 29K7998WRR;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ashrafatshy.Daily-AffirmationTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Daily Affirmation.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Daily Affirmation";
+			};
+			name = Release;
+		};
 		D6B838242E1C757100A34476 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -407,11 +441,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 29K7998WRR;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Daily Affirmations";
+				INFOPLIST_KEY_CFBundleDisplayName = ThinkUp;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -423,7 +457,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ashrafatshy.Daily-Affirmation";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -438,11 +472,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 29K7998WRR;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Daily Affirmations";
+				INFOPLIST_KEY_CFBundleDisplayName = ThinkUp;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -454,7 +488,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ashrafatshy.Daily-Affirmation";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -463,45 +497,7 @@
 			};
 			name = Release;
 		};
-		D6B8382A2E1C757100A34476 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 29K7998WRR;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.ashrafatshy.Daily-AffirmationTests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Daily Affirmation.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Daily Affirmation";
-			};
-			name = Debug;
-		};
-		D6B8382B2E1C757100A34476 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 29K7998WRR;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.ashrafatshy.Daily-AffirmationTests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Daily Affirmation.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Daily Affirmation";
-			};
-			name = Release;
-		};
-		D6B8382D2E1C757100A34476 /* Debug */ = {
+		D6E4AA082E1FEA51002A8098 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -518,7 +514,7 @@
 			};
 			name = Debug;
 		};
-		D6B8382E2E1C757100A34476 /* Release */ = {
+		D6E4AA092E1FEA51002A8098 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -538,6 +534,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D6AA2EBF2E206D2300E647B3 /* Build configuration list for PBXNativeTarget "Daily AffirmationTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D6AA2EC02E206D2300E647B3 /* Debug */,
+				D6AA2EC12E206D2300E647B3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D6B838002E1C757100A34476 /* Build configuration list for PBXProject "Daily Affirmation" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -556,20 +561,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D6B838292E1C757100A34476 /* Build configuration list for PBXNativeTarget "Daily AffirmationTests" */ = {
+		D6E4AA072E1FEA51002A8098 /* Build configuration list for PBXNativeTarget "Daily AffirmationUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D6B8382A2E1C757100A34476 /* Debug */,
-				D6B8382B2E1C757100A34476 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		D6B8382C2E1C757100A34476 /* Build configuration list for PBXNativeTarget "Daily AffirmationUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				D6B8382D2E1C757100A34476 /* Debug */,
-				D6B8382E2E1C757100A34476 /* Release */,
+				D6E4AA082E1FEA51002A8098 /* Debug */,
+				D6E4AA092E1FEA51002A8098 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
