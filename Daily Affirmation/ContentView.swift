@@ -10,8 +10,9 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var quoteManager = QuoteManager()
     @State private var showSettings = false
-    @State private var cardOffset: CGSize = .zero
-    @State private var cardRotation: Double = 0
+    @State private var verticalOffset: CGFloat = 0
+    @State private var swipeIndicatorOpacity: Double = 1.0
+    @State private var showSwipeIndicator: Bool = true
     
     var body: some View {
         GeometryReader { geometry in
@@ -29,16 +30,16 @@ struct ContentView: View {
                 .ignoresSafeArea()
                 
                 VStack {
-                    // Settings button
+                    // Top navigation bar
                     HStack {
-                        Spacer()
+                        // Settings button
                         Button(action: {
                             showSettings.toggle()
                         }) {
                             Image(systemName: "gearshape.fill")
                                 .font(.title2)
                                 .foregroundColor(.black)
-                                .padding()
+                                .padding(12)
                                 .background(Color.white.opacity(0.9))
                                 .clipShape(Circle())
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
@@ -46,145 +47,149 @@ struct ContentView: View {
                         .accessibilityIdentifier("settings_button")
                         .accessibilityLabel("Settings")
                         .accessibilityHint("Open settings")
-                        .padding(.trailing)
-                    }
-                    
-                    Spacer()
-                    
-                    // Quote card
-                    VStack(spacing: 30) {
-                        Text(quoteManager.currentQuote)
-                            .font(.system(size: 32, weight: .semibold, design: .default))
-                            .foregroundColor(.black)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(nil)
-                            .padding(.horizontal, 30)
-                            .padding(.vertical, 40)
-                            .scaleEffect(quoteManager.fontSize.multiplier)
-                            .accessibilityIdentifier("quote_text")
-                            .accessibilityLabel("Daily quote")
-                            .accessibilityValue(quoteManager.currentQuote)
-                        
-                        Text(quoteManager.formattedDate)
-                            .font(.subheadline)
-                            .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.2))
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 250)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.white.opacity(0.9))
-                            .shadow(color: .black.opacity(0.1), radius: 20, x: 0, y: 4)
-                    )
-                    .padding(.horizontal, 30)
-                    .offset(cardOffset)
-                    .rotationEffect(.degrees(cardRotation))
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                cardOffset = value.translation
-                                // For RTL, reverse the rotation to match swipe direction
-                                if quoteManager.selectedLanguage.isRTL {
-                                    cardRotation = -Double(value.translation.width / 10)
-                                } else {
-                                    cardRotation = Double(value.translation.width / 10)
-                                }
-                            }
-                            .onEnded { value in
-                                withAnimation(.spring()) {
-                                    if abs(value.translation.width) > 100 {
-                                        if quoteManager.selectedLanguage.isRTL {
-                                            // RTL: swipe right = next, swipe left = previous
-                                            if value.translation.width > 0 {
-                                                quoteManager.nextQuote()
-                                            } else {
-                                                quoteManager.previousQuote()
-                                            }
-                                        } else {
-                                            // LTR: swipe right = previous, swipe left = next
-                                            if value.translation.width > 0 {
-                                                quoteManager.previousQuote()
-                                            } else {
-                                                quoteManager.nextQuote()
-                                            }
-                                        }
-                                    }
-                                    cardOffset = .zero
-                                    cardRotation = 0
-                                }
-                            }
-                    )
-                    
-                    Spacer()
-                    
-                    // Bottom controls
-                    HStack {
-                        Button(action: {
-                            withAnimation(.spring()) {
-                                quoteManager.previousQuote()
-                            }
-                        }) {
-                            HStack {
-                                if quoteManager.selectedLanguage.isRTL {
-                                    Text(quoteManager.localizedString("prev"))
-                                    Image(systemName: "chevron.right")
-                                } else {
-                                    Image(systemName: "chevron.left")
-                                    Text(quoteManager.localizedString("prev"))
-                                }
-                            }
-                            .font(.headline)
-                            .foregroundColor(.black)
-                        }
-                        .accessibilityIdentifier("prev_button")
-                        .accessibilityLabel("Previous")
-                        .accessibilityHint("Go to previous quote")
                         
                         Spacer()
                         
-                        Button(action: {
-                            withAnimation(.spring()) {
-                                quoteManager.nextQuote()
-                            }
-                        }) {
-                            HStack {
-                                if quoteManager.selectedLanguage.isRTL {
-                                    Image(systemName: "chevron.left")
-                                    Text(quoteManager.localizedString("next"))
-                                } else {
-                                    Text(quoteManager.localizedString("next"))
-                                    Image(systemName: "chevron.right")
-                                }
-                            }
-                            .font(.headline)
-                            .foregroundColor(.black)
-                        }
-                        .accessibilityIdentifier("next_button")
-                        .accessibilityLabel("Next")
-                        .accessibilityHint("Go to next quote")
-                        
-                        Spacer()
-                        
+                        // Share button
                         Button(action: {
                             shareQuote()
                         }) {
-                            HStack {
-                                if quoteManager.selectedLanguage.isRTL {
-                                    Text(quoteManager.localizedString("share"))
-                                    Image(systemName: "square.and.arrow.up")
-                                } else {
-                                    Image(systemName: "square.and.arrow.up")
-                                    Text(quoteManager.localizedString("share"))
-                                }
-                            }
-                            .font(.headline)
-                            .foregroundColor(.black)
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.title2)
+                                .foregroundColor(.black)
+                                .padding(12)
+                                .background(Color.white.opacity(0.9))
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
                         }
                         .accessibilityIdentifier("share_button")
                         .accessibilityLabel("Share")
                         .accessibilityHint("Share current quote")
                     }
-                    .padding(.horizontal, 30)
-                    .padding(.bottom, 50)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 10)
+                    
+                    Spacer()
+                    
+                    // Progress indicator
+                    HStack {
+                        Spacer()
+                        Text("\(quoteManager.currentIndex + 1) / \(quoteManager.quotes.count)")
+                            .font(.caption)
+                            .foregroundColor(.black.opacity(0.5))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.white.opacity(0.6))
+                                    .blur(radius: 0.5)
+                            )
+                        Spacer()
+                    }
+                    .padding(.bottom, 20)
+                    .accessibilityLabel("Quote \(quoteManager.currentIndex + 1) of \(quoteManager.quotes.count)")
+                    
+                    // Quote display area
+                    VStack(spacing: 40) {
+                        // Main quote text
+                        Text(quoteManager.currentQuote)
+                            .font(.system(size: 32, weight: .semibold, design: .default))
+                            .foregroundColor(.black)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(nil)
+                            .padding(.horizontal, 40)
+                            .scaleEffect(quoteManager.fontSize.multiplier)
+                            .shadow(color: .white.opacity(0.8), radius: 2, x: 0, y: 1)
+                            .accessibilityIdentifier("quote_text")
+                            .accessibilityLabel("Daily quote")
+                            .accessibilityValue(quoteManager.currentQuote)
+                        
+                        // Date
+                        Text(quoteManager.formattedDate)
+                            .font(.subheadline)
+                            .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.2))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.white.opacity(0.7))
+                                    .blur(radius: 0.5)
+                            )
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 20)
+                    .offset(y: verticalOffset)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                verticalOffset = value.translation.height
+                                // Hide swipe indicator when user starts swiping
+                                if showSwipeIndicator && abs(value.translation.height) > 10 {
+                                    withAnimation(.easeOut(duration: 0.3)) {
+                                        showSwipeIndicator = false
+                                    }
+                                }
+                            }
+                            .onEnded { value in
+                                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                                    // Check if swipe distance is sufficient (reduced threshold)
+                                    if abs(value.translation.height) > 80 {
+                                        if value.translation.height < 0 {
+                                            // Swipe up = next quote
+                                            quoteManager.nextQuote()
+                                        } else {
+                                            // Swipe down = previous quote
+                                            quoteManager.previousQuote()
+                                        }
+                                    }
+                                    verticalOffset = 0
+                                }
+                            }
+                    )
+                    
+                    Spacer()
+                    
+                    // Swipe indicator
+                    if showSwipeIndicator {
+                        VStack(spacing: 12) {
+                            Image(systemName: "chevron.up")
+                                .font(.title2)
+                                .foregroundColor(.black.opacity(0.6))
+                                .scaleEffect(swipeIndicatorOpacity)
+                                .animation(
+                                    Animation.easeInOut(duration: 1.5)
+                                        .repeatForever(autoreverses: true),
+                                    value: swipeIndicatorOpacity
+                                )
+                            
+                            Text(quoteManager.localizedString("swipe_up_next"))
+                                .font(.caption)
+                                .foregroundColor(.black.opacity(0.6))
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 6)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color.white.opacity(0.8))
+                                        .blur(radius: 0.5)
+                                )
+                        }
+                        .opacity(showSwipeIndicator ? 1 : 0)
+                        .animation(.easeInOut(duration: 0.3), value: showSwipeIndicator)
+                        .onAppear {
+                            // Start pulsing animation
+                            withAnimation {
+                                swipeIndicatorOpacity = 0.3
+                            }
+                            // Auto-hide after 5 seconds
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                                withAnimation(.easeOut(duration: 0.5)) {
+                                    showSwipeIndicator = false
+                                }
+                            }
+                        }
+                    }
+                    
+                    Spacer().frame(height: 50)
                 }
             }
         }
@@ -199,8 +204,8 @@ struct ContentView: View {
     private func shareQuote() {
         let shareSuffix = quoteManager.localizedString("share_suffix")
         let text = "\(quoteManager.currentQuote)\n\n\(shareSuffix)"
+
         let activityViewController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
-        
         // Get the window scene and root view controller with proper validation
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first,
