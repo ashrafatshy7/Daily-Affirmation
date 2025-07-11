@@ -4,9 +4,6 @@ struct SettingsView: View {
     @ObservedObject var quoteManager: QuoteManager
     @Environment(\.dismiss) private var dismiss
     @State private var showPrivacyPolicy = false
-    @State private var showStartTimePicker = false
-    @State private var showEndTimePicker = false
-    @State private var showSingleTimePicker = false
     
     var body: some View {
         NavigationView {
@@ -39,89 +36,189 @@ struct SettingsView: View {
                 
                 // Settings content - Scrollable
                 ScrollView {
-                    VStack(spacing: 24) {
-                        // Daily Notifications Section
-                        NotificationSettingsView(
-                            quoteManager: quoteManager,
-                            showStartTimePicker: $showStartTimePicker,
-                            showEndTimePicker: $showEndTimePicker,
-                            showSingleTimePicker: $showSingleTimePicker
-                        )
-                    
-                    
-                    // Font Size Section
-                    VStack(alignment: .leading, spacing: 15) {
-                        HStack {
-                            Text(quoteManager.localizedString("font_size"))
-                                .font(.headline)
-                                .foregroundColor(.black)
-                                .accessibilityLabel("Font Size")
-                            Spacer()
+                    VStack(spacing: 16) {
+                        // Notifications Section
+                        NavigationLink(destination: NotificationSettingsDetailView(quoteManager: quoteManager)) {
+                            SettingsCard(
+                                icon: "bell.fill",
+                                title: quoteManager.localizedString("daily_notifications"),
+                                subtitle: quoteManager.dailyNotifications ? "Enabled" : "Disabled",
+                                iconColor: Color(red: 1.0, green: 0.584, blue: 0.0)
+                            )
                         }
-                        .accessibilityIdentifier("font_size_section")
-                        .accessibilityLabel("Font Size")
-                        .padding(.horizontal, 24)
+                        .accessibilityIdentifier("notifications_section")
                         
-                        VStack(spacing: 10) {
-                            ForEach(QuoteManager.FontSize.allCases, id: \.self) { size in
-                                Button(action: {
-                                    quoteManager.fontSize = size
-                                }) {
-                                    HStack {
-                                        Text(size.displayName(using: quoteManager))
-                                            .font(.headline)
-                                            .foregroundColor(quoteManager.fontSize == size ? .white : .black)
-                                        Spacer()
-                                    }
-                                    .padding(.horizontal, 24)
-                                    .padding(.vertical, 16)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 20)
-                                            .fill(quoteManager.fontSize == size ? 
-                                                  Color(red: 0.659, green: 0.902, blue: 0.812) : 
-                                                  Color.clear)
-                                    )
-                                }
-                                .accessibilityLabel(size.displayName(using: quoteManager))
-                                .accessibilityIdentifier("font_size_\(size.rawValue)")
-                                .padding(.horizontal, 24)
-                            }
+                        // Display Section
+                        NavigationLink(destination: DisplaySettingsView(quoteManager: quoteManager)) {
+                            SettingsCard(
+                                icon: "textformat.size",
+                                title: quoteManager.localizedString("font_size"),
+                                subtitle: quoteManager.fontSize.displayName(using: quoteManager),
+                                iconColor: Color(red: 0.0, green: 0.478, blue: 1.0)
+                            )
                         }
-                    }
-                    
-                    Spacer()
-                    
-                    // Privacy Policy Button
-                    Button(action: {
-                        showPrivacyPolicy.toggle()
-                    }) {
-                        HStack {
-                            Image(systemName: "doc.text")
-                                .foregroundColor(.secondary)
-                            Text(quoteManager.localizedString("privacy_policy"))
-                                .font(.headline)
-                                .foregroundColor(.black)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.secondary)
+                        .accessibilityIdentifier("display_section")
+                        
+                        // Loved Quotes Section
+                        NavigationLink(destination: LovedQuotesDetailView(quoteManager: quoteManager)) {
+                            SettingsCard(
+                                icon: "heart.fill",
+                                title: quoteManager.localizedString("loved_quotes"),
+                                subtitle: "\(quoteManager.lovedQuotes.count) quotes",
+                                iconColor: Color.red
+                            )
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
-                        )
+                        .accessibilityIdentifier("loved_quotes_section")
+                        
+                        // Privacy Policy Section
+                        Button(action: {
+                            showPrivacyPolicy.toggle()
+                        }) {
+                            SettingsCard(
+                                icon: "doc.text.fill",
+                                title: quoteManager.localizedString("privacy_policy"),
+                                subtitle: "App privacy information",
+                                iconColor: Color(red: 0.5, green: 0.5, blue: 0.5)
+                            )
+                        }
+                        .accessibilityIdentifier("privacy_section")
                     }
-                    .padding(.horizontal, 30)
-                    .padding(.bottom, 24)
-                    }
+                    .padding(.horizontal, 24)
                     .padding(.top, 24)
+                    .padding(.bottom, 40)
                 }
             }
             .background(Color.white)
             .navigationBarHidden(true)
         }
         .preferredColorScheme(.light)
+        .sheet(isPresented: $showPrivacyPolicy) {
+            PrivacyPolicyView()
+                .preferredColorScheme(.light)
+        }
+    }
+}
+
+struct SettingsCard: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let iconColor: Color
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Icon
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(iconColor)
+                .frame(width: 40, height: 40)
+                .background(iconColor.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.black)
+                    .multilineTextAlignment(.leading)
+                
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.leading)
+            }
+            
+            Spacer()
+            
+            // Chevron
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+        )
+    }
+}
+
+struct NotificationSettingsDetailView: View {
+    @ObservedObject var quoteManager: QuoteManager
+    @Environment(\.dismiss) private var dismiss
+    @State private var showStartTimePicker = false
+    @State private var showEndTimePicker = false
+    @State private var showSingleTimePicker = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.title2)
+                        .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                }
+                
+                Text(quoteManager.localizedString("daily_notifications"))
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(.black)
+                
+                Spacer()
+            }
+            .padding(.horizontal, 30)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
+            .background(Color.white)
+            
+            // Content
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Notification Toggle
+                    VStack(alignment: .leading, spacing: 15) {
+                        HStack {
+                            Text(quoteManager.localizedString("daily_notifications"))
+                                .font(.headline)
+                                .foregroundColor(.black)
+                            
+                            Spacer()
+                            
+                            Toggle("", isOn: $quoteManager.dailyNotifications)
+                                .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.659, green: 0.902, blue: 0.812)))
+                        }
+                        .padding(.horizontal, 24)
+                        
+                        if quoteManager.dailyNotifications {
+                            VStack(spacing: 15) {
+                                // Notification Mode Selection
+                                NotificationModeSection(quoteManager: quoteManager)
+                                
+                                if quoteManager.notificationMode == .single {
+                                    // Single Notification Time
+                                    SingleTimeSection(quoteManager: quoteManager, showSingleTimePicker: $showSingleTimePicker)
+                                } else {
+                                    // Range Mode Settings
+                                    RangeModeSection(
+                                        quoteManager: quoteManager,
+                                        showStartTimePicker: $showStartTimePicker,
+                                        showEndTimePicker: $showEndTimePicker
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.top, 24)
+                .padding(.bottom, 40)
+            }
+        }
+        .background(Color.white)
+        .navigationBarHidden(true)
         .sheet(isPresented: $showStartTimePicker) {
             TimePickerModal(selectedTime: $quoteManager.startTime, isPresented: $showStartTimePicker, quoteManager: quoteManager, title: "Start Time", isStartTime: true)
                 .presentationDetents([.height(350)])
@@ -136,52 +233,6 @@ struct SettingsView: View {
             TimePickerModal(selectedTime: $quoteManager.singleNotificationTime, isPresented: $showSingleTimePicker, quoteManager: quoteManager, title: "Notification Time", isStartTime: true)
                 .presentationDetents([.height(350)])
                 .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showPrivacyPolicy) {
-            PrivacyPolicyView()
-                .preferredColorScheme(.light)
-        }
-    }
-}
-
-struct NotificationSettingsView: View {
-    @ObservedObject var quoteManager: QuoteManager
-    @Binding var showStartTimePicker: Bool
-    @Binding var showEndTimePicker: Bool
-    @Binding var showSingleTimePicker: Bool
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            HStack {
-                Text(quoteManager.localizedString("daily_notifications"))
-                    .font(.headline)
-                    .foregroundColor(.black)
-                
-                Spacer()
-                
-                Toggle("", isOn: $quoteManager.dailyNotifications)
-                    .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.659, green: 0.902, blue: 0.812)))
-            }
-            .padding(.horizontal, 24)
-            
-            if quoteManager.dailyNotifications {
-                VStack(spacing: 15) {
-                    // Notification Mode Selection
-                    NotificationModeSection(quoteManager: quoteManager)
-                    
-                    if quoteManager.notificationMode == .single {
-                        // Single Notification Time
-                        SingleTimeSection(quoteManager: quoteManager, showSingleTimePicker: $showSingleTimePicker)
-                    } else {
-                        // Range Mode Settings
-                        RangeModeSection(
-                            quoteManager: quoteManager,
-                            showStartTimePicker: $showStartTimePicker,
-                            showEndTimePicker: $showEndTimePicker
-                        )
-                    }
-                }
-            }
         }
     }
 }
@@ -538,6 +589,297 @@ struct TimePickerModal: View {
             }
             if !availableMinutes.contains(selectedMinute) {
                 selectedMinute = availableMinutes.first ?? 0
+            }
+        }
+    }
+}
+
+struct DisplaySettingsView: View {
+    @ObservedObject var quoteManager: QuoteManager
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.title2)
+                        .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                }
+                
+                Text(quoteManager.localizedString("font_size"))
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(.black)
+                
+                Spacer()
+            }
+            .padding(.horizontal, 30)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
+            .background(Color.white)
+            
+            // Content
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Font Size Section
+                    VStack(alignment: .leading, spacing: 15) {
+                        HStack {
+                            Text(quoteManager.localizedString("font_size"))
+                                .font(.headline)
+                                .foregroundColor(.black)
+                                .accessibilityLabel("Font Size")
+                            Spacer()
+                        }
+                        .accessibilityIdentifier("font_size_section")
+                        .accessibilityLabel("Font Size")
+                        .padding(.horizontal, 24)
+                        
+                        VStack(spacing: 10) {
+                            ForEach(QuoteManager.FontSize.allCases, id: \.self) { size in
+                                Button(action: {
+                                    quoteManager.fontSize = size
+                                }) {
+                                    HStack {
+                                        Text(size.displayName(using: quoteManager))
+                                            .font(.headline)
+                                            .foregroundColor(quoteManager.fontSize == size ? .white : .black)
+                                        Spacer()
+                                        
+                                        if quoteManager.fontSize == size {
+                                            Image(systemName: "checkmark")
+                                                .font(.headline)
+                                                .foregroundColor(.white)
+                                        }
+                                    }
+                                    .padding(.horizontal, 24)
+                                    .padding(.vertical, 16)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .fill(quoteManager.fontSize == size ? 
+                                                  Color(red: 0.659, green: 0.902, blue: 0.812) : 
+                                                  Color.clear)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 20)
+                                                    .stroke(quoteManager.fontSize == size ? 
+                                                            Color.clear : 
+                                                            Color.secondary.opacity(0.3), 
+                                                            lineWidth: 1)
+                                            )
+                                    )
+                                }
+                                .accessibilityLabel(size.displayName(using: quoteManager))
+                                .accessibilityIdentifier("font_size_\(size.rawValue)")
+                                .padding(.horizontal, 24)
+                            }
+                        }
+                    }
+                }
+                .padding(.top, 24)
+                .padding(.bottom, 40)
+            }
+        }
+        .background(Color.white)
+        .navigationBarHidden(true)
+    }
+}
+
+struct LovedQuotesDetailView: View {
+    @ObservedObject var quoteManager: QuoteManager
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.title2)
+                        .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                }
+                
+                Text(quoteManager.localizedString("loved_quotes"))
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(.black)
+                
+                Spacer()
+            }
+            .padding(.horizontal, 30)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
+            .background(Color.white)
+            
+            // Content
+            if quoteManager.lovedQuotes.isEmpty {
+                VStack(spacing: 20) {
+                    Spacer()
+                    
+                    Image(systemName: "heart")
+                        .font(.system(size: 60))
+                        .foregroundColor(.secondary)
+                    
+                    Text("No loved quotes yet")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.black)
+                    
+                    Text("Tap the heart button on quotes you love to see them here!")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                    
+                    Spacer()
+                }
+            } else {
+                ScrollView {
+                    VStack(spacing: 16) {
+                        ForEach(quoteManager.lovedQuotesArray, id: \.self) { quote in
+                            HStack(alignment: .top, spacing: 16) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(quote)
+                                        .font(.body)
+                                        .foregroundColor(.black)
+                                        .multilineTextAlignment(.leading)
+                                        .lineLimit(nil)
+                                }
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    quoteManager.toggleLoveQuote(quote)
+                                }) {
+                                    Image(systemName: "heart.fill")
+                                        .font(.title3)
+                                        .foregroundColor(.red)
+                                }
+                                .accessibilityLabel("Remove from loved quotes")
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.white)
+                                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+                    .padding(.bottom, 40)
+                }
+            }
+        }
+        .background(Color.white)
+        .navigationBarHidden(true)
+    }
+}
+
+struct LovedQuotesSection: View {
+    @ObservedObject var quoteManager: QuoteManager
+    @State private var isExpanded = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 15) {
+            HStack {
+                Text(quoteManager.localizedString("loved_quotes"))
+                    .font(.headline)
+                    .foregroundColor(.black)
+                    .accessibilityLabel("Loved Quotes")
+                
+                Spacer()
+                
+                Text("\(quoteManager.lovedQuotes.count)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.secondary.opacity(0.1))
+                    .cornerRadius(8)
+            }
+            .padding(.horizontal, 24)
+            
+            if !quoteManager.lovedQuotes.isEmpty {
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isExpanded.toggle()
+                    }
+                }) {
+                    HStack {
+                        Text(isExpanded ? "Hide Loved Quotes" : "Show Loved Quotes")
+                            .font(.headline)
+                            .foregroundColor(.black)
+                        Spacer()
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                    )
+                }
+                .padding(.horizontal, 24)
+                
+                if isExpanded {
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            ForEach(quoteManager.lovedQuotesArray, id: \.self) { quote in
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(quote)
+                                            .font(.body)
+                                            .foregroundColor(.black)
+                                            .multilineTextAlignment(.leading)
+                                            .lineLimit(3)
+                                        
+                                        Spacer()
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    Button(action: {
+                                        quoteManager.toggleLoveQuote(quote)
+                                    }) {
+                                        Image(systemName: "heart.fill")
+                                            .font(.title3)
+                                            .foregroundColor(.red)
+                                    }
+                                    .accessibilityLabel("Remove from loved quotes")
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color.white)
+                                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                    }
+                    .frame(maxHeight: 200)
+                    .animation(.easeInOut(duration: 0.3), value: isExpanded)
+                }
+            } else {
+                Text("No loved quotes yet. Tap the heart button on quotes you love!")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.secondary.opacity(0.1))
+                    )
+                    .padding(.horizontal, 24)
             }
         }
     }

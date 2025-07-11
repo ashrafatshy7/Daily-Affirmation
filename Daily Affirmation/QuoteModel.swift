@@ -6,6 +6,7 @@ class QuoteHistory {
     private var history: [String] = []
     private var currentIndex: Int = 0
     private let quotes: [String]
+    private var cachedNextQuote: String?
     
     init(initialQuote: String, availableQuotes: [String]) {
         self.quotes = availableQuotes
@@ -32,8 +33,11 @@ class QuoteHistory {
                 // Use existing next quote from history
                 return history[currentIndex + 1]
             } else {
-                // Generate preview of what next quote would be
-                return generateRandomQuote()
+                // Generate and cache preview of what next quote would be
+                if cachedNextQuote == nil {
+                    cachedNextQuote = generateRandomQuote()
+                }
+                return cachedNextQuote!
             }
         } else {
             return currentQuote
@@ -44,12 +48,16 @@ class QuoteHistory {
         if currentIndex + 1 < history.count {
             // Move to existing next quote
             currentIndex += 1
+            // Clear cache since we're moving to existing quote
+            cachedNextQuote = nil
             return history[currentIndex]
         } else {
-            // Generate new quote and add to history
-            let newQuote = generateRandomQuote()
+            // Use cached quote if available, otherwise generate new one
+            let newQuote = cachedNextQuote ?? generateRandomQuote()
             history.append(newQuote)
             currentIndex = history.count - 1
+            // Clear cache since we've used it
+            cachedNextQuote = nil
             return newQuote
         }
     }
@@ -57,6 +65,8 @@ class QuoteHistory {
     func movePrevious() -> String? {
         guard currentIndex > 0 else { return nil }
         currentIndex -= 1
+        // Clear cache when moving backwards since next quote might be different
+        cachedNextQuote = nil
         return history[currentIndex]
     }
     
@@ -179,6 +189,14 @@ class QuoteManager: ObservableObject {
         }
     }
     
+    @Published var lovedQuotes: Set<String> = [] {
+        didSet {
+            if !isInitializing {
+                saveLovedQuotes()
+            }
+        }
+    }
+    
     
     enum FontSize: String, CaseIterable {
         case small = "small"
@@ -224,6 +242,7 @@ class QuoteManager: ObservableObject {
         
         setupNotificationCategories()
         loadSettings()
+        loadLovedQuotes()
         loadQuotes()
         setDailyQuote()
         isInitializing = false
@@ -637,6 +656,34 @@ class QuoteManager: ObservableObject {
             notificationCount = maxAllowed
         }
         // If current count is less than or equal to maximum, don't change it
+    }
+    
+    // MARK: - Loved Quotes Management
+    func toggleLoveQuote(_ quote: String) {
+        if lovedQuotes.contains(quote) {
+            lovedQuotes.remove(quote)
+        } else {
+            lovedQuotes.insert(quote)
+        }
+    }
+    
+    func isQuoteLoved(_ quote: String) -> Bool {
+        return lovedQuotes.contains(quote)
+    }
+    
+    var lovedQuotesArray: [String] {
+        return Array(lovedQuotes).sorted()
+    }
+    
+    private func saveLovedQuotes() {
+        let lovedQuotesArray = Array(lovedQuotes)
+        UserDefaults.standard.set(lovedQuotesArray, forKey: "lovedQuotes")
+    }
+    
+    private func loadLovedQuotes() {
+        if let savedLovedQuotes = UserDefaults.standard.array(forKey: "lovedQuotes") as? [String] {
+            lovedQuotes = Set(savedLovedQuotes)
+        }
     }
     
     // MARK: - Localization

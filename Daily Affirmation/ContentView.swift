@@ -53,28 +53,23 @@ struct ContentView: View {
                                 showSwipeIndicator = false
                             }
                             
-                            // Detect swipe direction and trigger quote change only once
+                            // Detect swipe direction but don't change quote yet
                             let minimumSwipeDistance: CGFloat = 80
                             let currentDrag = value.translation.height
                             
                             if !hasTriggeredSwipe && abs(currentDrag) > minimumSwipeDistance {
                                 if currentDrag < -minimumSwipeDistance && swipeDirection != .up {
-                                    // Swiping up = next quote
+                                    // Swiping up = next quote (but don't change yet)
                                     swipeDirection = .up
                                     hasTriggeredSwipe = true
-                                    quoteManager.nextQuote()
                                 } else if currentDrag > minimumSwipeDistance && swipeDirection != .down {
-                                    // Swiping down = previous quote
+                                    // Swiping down = previous quote (but don't change yet)
                                     swipeDirection = .down
                                     hasTriggeredSwipe = true
-                                    quoteManager.previousQuote()
                                 }
                             }
                         }
                         .onEnded { value in
-                            let minimumSwipeDistance: CGFloat = 80
-                            let currentDrag = value.translation.height
-                            
                             if hasTriggeredSwipe {
                                 // Complete the screen transition
                                 if swipeDirection == .up {
@@ -91,6 +86,13 @@ struct ContentView: View {
                                 
                                 // Reset positions after animation completes
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                    // Now change the quote after the animation is complete
+                                    if swipeDirection == .up {
+                                        quoteManager.nextQuote()
+                                    } else if swipeDirection == .down {
+                                        quoteManager.previousQuote()
+                                    }
+                                    
                                     dragOffset = 0
                                     hasTriggeredSwipe = false
                                     swipeDirection = .none
@@ -152,6 +154,32 @@ struct ContentView: View {
                     Spacer() // Push navigation to top
                 }
                 .zIndex(10) // Ensure buttons stay on top
+                
+                // Fixed bottom right love button overlay
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            let currentQuote = quoteManager.currentQuote
+                            quoteManager.toggleLoveQuote(currentQuote)
+                        }) {
+                            Image(systemName: quoteManager.isQuoteLoved(quoteManager.currentQuote) ? "heart.fill" : "heart")
+                                .font(.title2)
+                                .foregroundColor(quoteManager.isQuoteLoved(quoteManager.currentQuote) ? .red : .black.opacity(0.6))
+                                .padding(12)
+                                .background(Color.white.opacity(0.9))
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
+                        }
+                        .accessibilityIdentifier("love_button")
+                        .accessibilityLabel("Love this quote")
+                        .accessibilityHint("Add or remove from loved quotes")
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 50)
+                }
+                .zIndex(10) // Ensure button stays on top
             }
             .onAppear {
                 // Set initial opacity for swipe indicator
@@ -217,13 +245,13 @@ struct QuoteScreenWithBackgroundView: View {
     private var displayQuote: String {
         // Show different quotes based on screen index for visual swapping
         if screenIndex == -1 {
-            // Previous screen - show previous quote
+            // Previous screen - show previous quote preview
             return quoteManager.getPreviewQuote(offset: -1)
         } else if screenIndex == 1 {
-            // Next screen - show next quote
+            // Next screen - show next quote preview
             return quoteManager.getPreviewQuote(offset: 1)
         } else {
-            // Current screen - show current quote
+            // Current screen (index 0) - always show current quote
             return quoteManager.currentQuote
         }
     }
