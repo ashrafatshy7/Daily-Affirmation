@@ -8,6 +8,12 @@
 "dark_mode" = "Dark Mode";
 "daily_notifications" = "Daily Notifications";
 "notification_time" = "Notification Time";
+"notification_mode" = "Notification Mode";
+"single_daily" = "Single Daily";
+"time_range" = "Time Range";
+"start_time" = "Start Time";
+"end_time" = "End Time";
+"notification_count" = "Notification Count";
 "font_size" = "Font Size";
 "language" = "Language";
 "privacy_policy" = "Privacy Policy";
@@ -27,9 +33,10 @@
 "next" = "NEXT";
 "share" = "SHARE";
 "done" = "Done";
+"swipe_up_next" = "Swipe up for next";
 
 // Notifications
-"daily_inspiration" = "Daily Inspiration";
+"daily_inspiration" = "ThinkUp";
 
 // Share
 "share_suffix" = "- Daily Inspiration";
@@ -63,3 +70,6 @@
 "privacy_contact_text" = "If you have any questions about this Privacy Policy, please contact us at ashrafatshy7@gmail.com";
 "privacy_last_updated_title" = "Last Updated";
 "privacy_last_updated_text" = "This Privacy Policy was last updated on July 7, 2025.";
+
+// Swipe Gestures
+"swipe_up_next" = "Swipe up for next";
