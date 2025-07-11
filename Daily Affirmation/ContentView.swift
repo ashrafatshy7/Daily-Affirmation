@@ -154,6 +154,32 @@ struct ContentView: View {
                     Spacer() // Push navigation to top
                 }
                 .zIndex(10) // Ensure buttons stay on top
+                
+                // Fixed bottom right love button overlay
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            let currentQuote = quoteManager.currentQuote
+                            quoteManager.toggleLoveQuote(currentQuote)
+                        }) {
+                            Image(systemName: quoteManager.isQuoteLoved(quoteManager.currentQuote) ? "heart.fill" : "heart")
+                                .font(.title2)
+                                .foregroundColor(quoteManager.isQuoteLoved(quoteManager.currentQuote) ? .red : .black.opacity(0.6))
+                                .padding(12)
+                                .background(Color.white.opacity(0.9))
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
+                        }
+                        .accessibilityIdentifier("love_button")
+                        .accessibilityLabel("Love this quote")
+                        .accessibilityHint("Add or remove from loved quotes")
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 50)
+                }
+                .zIndex(10) // Ensure button stays on top
             }
             .onAppear {
                 // Set initial opacity for swipe indicator

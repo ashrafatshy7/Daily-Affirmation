@@ -189,6 +189,14 @@ class QuoteManager: ObservableObject {
         }
     }
     
+    @Published var lovedQuotes: Set<String> = [] {
+        didSet {
+            if !isInitializing {
+                saveLovedQuotes()
+            }
+        }
+    }
+    
     
     enum FontSize: String, CaseIterable {
         case small = "small"
@@ -234,6 +242,7 @@ class QuoteManager: ObservableObject {
         
         setupNotificationCategories()
         loadSettings()
+        loadLovedQuotes()
         loadQuotes()
         setDailyQuote()
         isInitializing = false
@@ -647,6 +656,34 @@ class QuoteManager: ObservableObject {
             notificationCount = maxAllowed
         }
         // If current count is less than or equal to maximum, don't change it
+    }
+    
+    // MARK: - Loved Quotes Management
+    func toggleLoveQuote(_ quote: String) {
+        if lovedQuotes.contains(quote) {
+            lovedQuotes.remove(quote)
+        } else {
+            lovedQuotes.insert(quote)
+        }
+    }
+    
+    func isQuoteLoved(_ quote: String) -> Bool {
+        return lovedQuotes.contains(quote)
+    }
+    
+    var lovedQuotesArray: [String] {
+        return Array(lovedQuotes).sorted()
+    }
+    
+    private func saveLovedQuotes() {
+        let lovedQuotesArray = Array(lovedQuotes)
+        UserDefaults.standard.set(lovedQuotesArray, forKey: "lovedQuotes")
+    }
+    
+    private func loadLovedQuotes() {
+        if let savedLovedQuotes = UserDefaults.standard.array(forKey: "lovedQuotes") as? [String] {
+            lovedQuotes = Set(savedLovedQuotes)
+        }
     }
     
     // MARK: - Localization
