@@ -15,6 +15,12 @@ struct ContentView: View {
     @State private var showSwipeIndicator: Bool = true
     @State private var dragOffset: CGFloat = 0
     @State private var lastDragValue: CGFloat = 0
+    @State private var hasTriggeredSwipe: Bool = false
+    @State private var swipeDirection: SwipeDirection = .none
+    
+    enum SwipeDirection {
+        case none, up, down
+    }
     
     var body: some View {
         GeometryReader { geometry in
@@ -44,32 +50,61 @@ struct ContentView: View {
                             
                             // Hide swipe indicator when user starts swiping
                             if showSwipeIndicator && abs(value.translation.height) > 10 {
-                                withAnimation(.easeOut(duration: 0.3)) {
-                                    showSwipeIndicator = false
-                                }
+                                showSwipeIndicator = false
                             }
                             
-                            // Immediate quote switching based on scroll direction
+                            // Detect swipe direction and trigger quote change only once
+                            let minimumSwipeDistance: CGFloat = 80
                             let currentDrag = value.translation.height
-                            let dragDifference = currentDrag - lastDragValue
-                            let minimumScrollDistance: CGFloat = 50
                             
-                            if abs(currentDrag) > minimumScrollDistance {
-                                if currentDrag < -minimumScrollDistance && dragDifference < 0 {
+                            if !hasTriggeredSwipe && abs(currentDrag) > minimumSwipeDistance {
+                                if currentDrag < -minimumSwipeDistance && swipeDirection != .up {
                                     // Swiping up = next quote
+                                    swipeDirection = .up
+                                    hasTriggeredSwipe = true
                                     quoteManager.nextQuote()
-                                    lastDragValue = currentDrag
-                                } else if currentDrag > minimumScrollDistance && dragDifference > 0 {
+                                } else if currentDrag > minimumSwipeDistance && swipeDirection != .down {
                                     // Swiping down = previous quote
+                                    swipeDirection = .down
+                                    hasTriggeredSwipe = true
                                     quoteManager.previousQuote()
-                                    lastDragValue = currentDrag
                                 }
                             }
                         }
                         .onEnded { value in
-                            // Simple reset without animations or delays
-                            dragOffset = 0
-                            lastDragValue = 0
+                            let minimumSwipeDistance: CGFloat = 80
+                            let currentDrag = value.translation.height
+                            
+                            if hasTriggeredSwipe {
+                                // Complete the screen transition
+                                if swipeDirection == .up {
+                                    // Slide current screen up completely, next screen slides up
+                                    withAnimation(.easeOut(duration: 0.4)) {
+                                        dragOffset = -screenHeight
+                                    }
+                                } else if swipeDirection == .down {
+                                    // Slide current screen down completely, previous screen slides down
+                                    withAnimation(.easeOut(duration: 0.4)) {
+                                        dragOffset = screenHeight
+                                    }
+                                }
+                                
+                                // Reset positions after animation completes
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                    dragOffset = 0
+                                    hasTriggeredSwipe = false
+                                    swipeDirection = .none
+                                    lastDragValue = 0
+                                }
+                            } else {
+                                // No swipe triggered, snap back to center
+                                withAnimation(.easeOut(duration: 0.3)) {
+                                    dragOffset = 0
+                                }
+                                hasTriggeredSwipe = false
+                                swipeDirection = .none
+                                lastDragValue = 0
+                            }
                         }
                 )
                 
@@ -119,15 +154,11 @@ struct ContentView: View {
                 .zIndex(10) // Ensure buttons stay on top
             }
             .onAppear {
-                // Start pulsing animation for swipe indicator
-                withAnimation {
-                    swipeIndicatorOpacity = 0.3
-                }
+                // Set initial opacity for swipe indicator
+                swipeIndicatorOpacity = 0.7
                 // Auto-hide after 5 seconds
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                    withAnimation(.easeOut(duration: 0.5)) {
-                        showSwipeIndicator = false
-                    }
+                    showSwipeIndicator = false
                 }
             }
         }
@@ -186,39 +217,22 @@ struct QuoteScreenWithBackgroundView: View {
     let swipeIndicatorOpacity: Double
     
     private var displayQuote: String {
-        guard !quoteManager.quotes.isEmpty else { return quoteManager.currentQuote }
-        
-        let displayIndex: Int
+        // Show different quotes based on screen index for visual swapping
         if screenIndex == -1 {
-            // Previous screen
-            displayIndex = quoteManager.currentIndex > 0 ? 
-                quoteManager.currentIndex - 1 : 
-                quoteManager.quotes.count - 1
+            // Previous screen - show previous quote
+            return quoteManager.getPreviewQuote(offset: -1)
         } else if screenIndex == 1 {
-            // Next screen
-            displayIndex = (quoteManager.currentIndex + 1) % quoteManager.quotes.count
+            // Next screen - show next quote
+            return quoteManager.getPreviewQuote(offset: 1)
         } else {
-            // Current screen
-            displayIndex = quoteManager.currentIndex
+            // Current screen - show current quote
+            return quoteManager.currentQuote
         }
-        
-        return quoteManager.quotes[displayIndex]
     }
     
     private var displayIndex: Int {
-        guard !quoteManager.quotes.isEmpty else { return 1 }
-        
-        if screenIndex == -1 {
-            return quoteManager.currentIndex > 0 ? 
-                quoteManager.currentIndex : 
-                quoteManager.quotes.count
-        } else if screenIndex == 1 {
-            return (quoteManager.currentIndex + 2) > quoteManager.quotes.count ? 
-                1 : 
-                quoteManager.currentIndex + 2
-        } else {
-            return quoteManager.currentIndex + 1
-        }
+        // Since we're using history system, we don't need complex indexing
+        return 1
     }
     
     var body: some View {
@@ -265,12 +279,7 @@ struct QuoteScreenWithBackgroundView: View {
                         Image(systemName: "chevron.up")
                             .font(.title2)
                             .foregroundColor(.black.opacity(0.6))
-                            .scaleEffect(swipeIndicatorOpacity)
-                            .animation(
-                                Animation.easeInOut(duration: 1.5)
-                                    .repeatForever(autoreverses: true),
-                                value: swipeIndicatorOpacity
-                            )
+                            .opacity(swipeIndicatorOpacity)
                         
                         Text(quoteManager.localizedString("swipe_up_next"))
                             .font(.caption)
@@ -284,7 +293,6 @@ struct QuoteScreenWithBackgroundView: View {
                             )
                     }
                     .opacity(showSwipeIndicator ? 1 : 0)
-                    .animation(.easeInOut(duration: 0.3), value: showSwipeIndicator)
                 }
                 
                 Spacer().frame(height: 50)

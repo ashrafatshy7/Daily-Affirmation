@@ -2,10 +2,84 @@ import Foundation
 import UserNotifications
 import SwiftUI
 
+class QuoteHistory {
+    private var history: [String] = []
+    private var currentIndex: Int = 0
+    private let quotes: [String]
+    
+    init(initialQuote: String, availableQuotes: [String]) {
+        self.quotes = availableQuotes
+        self.history = [initialQuote]
+        self.currentIndex = 0
+    }
+    
+    var currentQuote: String {
+        guard currentIndex < history.count else { return "Stay inspired!" }
+        return history[currentIndex]
+    }
+    
+    func getPreviewQuote(offset: Int) -> String {
+        if offset == 0 {
+            // Current quote
+            return currentQuote
+        } else if offset == -1 {
+            // Previous quote
+            guard currentIndex > 0 else { return currentQuote }
+            return history[currentIndex - 1]
+        } else if offset == 1 {
+            // Next quote
+            if currentIndex + 1 < history.count {
+                // Use existing next quote from history
+                return history[currentIndex + 1]
+            } else {
+                // Generate preview of what next quote would be
+                return generateRandomQuote()
+            }
+        } else {
+            return currentQuote
+        }
+    }
+    
+    func moveNext() -> String {
+        if currentIndex + 1 < history.count {
+            // Move to existing next quote
+            currentIndex += 1
+            return history[currentIndex]
+        } else {
+            // Generate new quote and add to history
+            let newQuote = generateRandomQuote()
+            history.append(newQuote)
+            currentIndex = history.count - 1
+            return newQuote
+        }
+    }
+    
+    func movePrevious() -> String? {
+        guard currentIndex > 0 else { return nil }
+        currentIndex -= 1
+        return history[currentIndex]
+    }
+    
+    private func generateRandomQuote() -> String {
+        guard !quotes.isEmpty else { return "Stay inspired!" }
+        
+        // Ensure we don't return the same quote as current
+        let currentQuote = history[currentIndex]
+        let availableQuotes = quotes.filter { $0 != currentQuote }
+        if availableQuotes.isEmpty {
+            return quotes.randomElement() ?? "Stay inspired!"
+        }
+        
+        return availableQuotes.randomElement() ?? "Stay inspired!"
+    }
+}
+
 class QuoteManager: ObservableObject {
     @Published var quotes: [String] = []
     @Published var currentIndex: Int = 0
+    @Published private var currentQuoteText: String = ""
     private var isInitializing = true
+    private var quoteHistory: QuoteHistory?
     
     @Published var dailyNotifications: Bool = false {
         didSet {
@@ -145,34 +219,42 @@ class QuoteManager: ObservableObject {
             // Ensure safe calculation to prevent overflow
             let safeDayOfYear = max(1, dayOfYear)
             currentIndex = (safeDayOfYear - 1) % quotes.count
+            
+            // Initialize quote history with daily quote
+            let dailyQuote = quotes[currentIndex]
+            quoteHistory = QuoteHistory(initialQuote: dailyQuote, availableQuotes: quotes)
+            currentQuoteText = dailyQuote
         } else {
             currentIndex = 0
+            quoteHistory = nil
+            currentQuoteText = NSLocalizedString("loading", comment: "")
         }
     }
     
     func nextQuote() {
-        if !quotes.isEmpty {
-            // Use safe current index and navigate to next
-            let safeIndex = safeCurrentIndex()
-            currentIndex = (safeIndex + 1) % quotes.count
-        } else {
-            currentIndex = 0
+        guard let history = quoteHistory else { return }
+        let newQuote = history.moveNext()
+        DispatchQueue.main.async {
+            self.currentQuoteText = newQuote
         }
     }
     
     func previousQuote() {
-        if !quotes.isEmpty {
-            // Use safe current index and navigate to previous
-            let safeIndex = safeCurrentIndex()
-            currentIndex = safeIndex > 0 ? safeIndex - 1 : quotes.count - 1
-        } else {
-            currentIndex = 0
+        guard let history = quoteHistory else { return }
+        if let previousQuote = history.movePrevious() {
+            DispatchQueue.main.async {
+                self.currentQuoteText = previousQuote
+            }
         }
     }
     
     var currentQuote: String {
-        guard !quotes.isEmpty else { return NSLocalizedString("loading", comment: "") }
-        return quotes[safeCurrentIndex()]
+        return currentQuoteText
+    }
+    
+    func getPreviewQuote(offset: Int) -> String {
+        guard let history = quoteHistory else { return currentQuoteText }
+        return history.getPreviewQuote(offset: offset)
     }
     
     var formattedDate: String {

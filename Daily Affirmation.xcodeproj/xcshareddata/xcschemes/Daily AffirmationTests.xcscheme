@@ -19,7 +19,7 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D6B838112E1C757100A34476"
+               BlueprintIdentifier = "D6AA2EB82E206D2300E647B3"
                BuildableName = "Daily AffirmationTests.xctest"
                BlueprintName = "Daily AffirmationTests"
                ReferencedContainer = "container:Daily Affirmation.xcodeproj">
