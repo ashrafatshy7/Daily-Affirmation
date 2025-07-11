@@ -163,11 +163,9 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.light)
-        .environment(\.layoutDirection, quoteManager.selectedLanguage.isRTL ? .rightToLeft : .leftToRight)
         .ignoresSafeArea(.all) // Ensure the entire view ignores safe areas
         .sheet(isPresented: $showSettings) {
             SettingsView(quoteManager: quoteManager)
-                .environment(\.layoutDirection, quoteManager.selectedLanguage.isRTL ? .rightToLeft : .leftToRight)
         }
     }
     

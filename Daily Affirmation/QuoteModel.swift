@@ -93,11 +93,35 @@ class QuoteManager: ObservableObject {
             }
         }
     }
-    @Published var notificationTime: Date = {
+    @Published var startTime: Date = {
         let calendar = Calendar.current
         let now = Date()
         return calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
     }() {
+        didSet {
+            if !isInitializing {
+                saveSettings()
+                if dailyNotifications {
+                    scheduleNotification()
+                }
+            }
+        }
+    }
+    @Published var endTime: Date = {
+        let calendar = Calendar.current
+        let now = Date()
+        return calendar.date(bySettingHour: 17, minute: 0, second: 0, of: now) ?? now
+    }() {
+        didSet {
+            if !isInitializing {
+                saveSettings()
+                if dailyNotifications {
+                    scheduleNotification()
+                }
+            }
+        }
+    }
+    @Published var notificationCount: Int = 1 {
         didSet {
             if !isInitializing {
                 saveSettings()
@@ -114,46 +138,7 @@ class QuoteManager: ObservableObject {
             }
         }
     }
-    @Published var selectedLanguage: AppLanguage = .english {
-        didSet {
-            if selectedLanguage != oldValue {
-                loadQuotes()
-                setDailyQuote()
-                if !isInitializing {
-                    saveSettings()
-                    if dailyNotifications {
-                        scheduleNotification()
-                    }
-                }
-            }
-        }
-    }
     
-    enum AppLanguage: String, CaseIterable {
-        case english = "en"
-        case hebrew = "he"
-        case arabic = "ar"
-        
-        var displayName: String {
-            switch self {
-            case .english: return "English"
-            case .hebrew: return "עברית"
-            case .arabic: return "العربية"
-            }
-        }
-        
-        var isRTL: Bool {
-            return self == .hebrew || self == .arabic
-        }
-        
-        var quotesFileName: String {
-            switch self {
-            case .english: return "quotes"
-            case .hebrew: return "quotes_he"
-            case .arabic: return "quotes_ar"
-            }
-        }
-    }
     
     enum FontSize: String, CaseIterable {
         case small = "small"
@@ -188,10 +173,12 @@ class QuoteManager: ObservableObject {
     
     init() {
         isInitializing = true
-        // Set default notification time to 9:00 AM
+        // Set default notification times: 9:00 AM to 5:00 PM
         let calendar = Calendar.current
         let now = Date()
-        notificationTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
+        startTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
+        endTime = calendar.date(bySettingHour: 17, minute: 0, second: 0, of: now) ?? now
+        notificationCount = 1
         
         loadSettings()
         loadQuotes()
@@ -200,10 +187,10 @@ class QuoteManager: ObservableObject {
     }
     
     private func loadQuotes() {
-        guard let url = Bundle.main.url(forResource: selectedLanguage.quotesFileName, withExtension: "json"),
+        guard let url = Bundle.main.url(forResource: "quotes", withExtension: "json"),
               let data = try? Data(contentsOf: url),
               let quotesArray = try? JSONDecoder().decode([String].self, from: data) else {
-            print("Failed to load quotes for language: \(selectedLanguage.rawValue)")
+            print("Failed to load quotes")
             return
         }
         
@@ -263,12 +250,80 @@ class QuoteManager: ObservableObject {
         return formatter.string(from: Date())
     }
     
+    // MARK: - Notification Time Calculation
+    func calculateNotificationTimes() -> [Date] {
+        let calendar = Calendar.current
+        
+        // Get minutes since midnight for both times
+        let startComponents = calendar.dateComponents([.hour, .minute], from: startTime)
+        let endComponents = calendar.dateComponents([.hour, .minute], from: endTime)
+        
+        let startMinutes = (startComponents.hour ?? 0) * 60 + (startComponents.minute ?? 0)
+        var endMinutes = (endComponents.hour ?? 0) * 60 + (endComponents.minute ?? 0)
+        
+        // Handle cross-midnight scenarios (e.g., 10 PM to 6 AM)
+        if endMinutes <= startMinutes {
+            endMinutes += 24 * 60 // Add 24 hours
+        }
+        
+        let totalMinutes = endMinutes - startMinutes
+        
+        // Validation: ensure there's at least a 1-minute difference
+        if totalMinutes < 1 {
+            // Return start time as single notification if times are equal
+            return [startTime]
+        }
+        
+        // Limit notification count to maximum possible unique times
+        // Since iOS only supports minute precision, max notifications = total minutes + 1
+        let maxPossibleNotifications = totalMinutes + 1
+        let count = min(max(1, notificationCount), maxPossibleNotifications)
+        
+        var notificationTimes: [Date] = []
+        
+        if count == 1 {
+            // Single notification at center of range
+            let centerMinutes = startMinutes + totalMinutes / 2
+            if let notificationTime = createDateFromMinutes(centerMinutes, using: calendar) {
+                notificationTimes.append(notificationTime)
+            }
+        } else {
+            // Multiple notifications distributed evenly (space-between)
+            // Calculate the exact interval for space-between distribution
+            let interval = Double(totalMinutes) / Double(count - 1)
+            
+            // Generate notifications with proper space-between distribution
+            for i in 0..<count {
+                let exactMinutes = Double(startMinutes) + (Double(i) * interval)
+                let minutes = Int(round(exactMinutes))
+                let adjustedMinutes = min(minutes, endMinutes) // Don't exceed end time
+                
+                if let notificationTime = createDateFromMinutes(adjustedMinutes, using: calendar) {
+                    notificationTimes.append(notificationTime)
+                }
+            }
+        }
+        
+        // Sort by time and remove duplicates
+        return Array(Set(notificationTimes)).sorted()
+    }
+    
+    private func createDateFromMinutes(_ minutes: Int, using calendar: Calendar) -> Date? {
+        let adjustedMinutes = minutes % (24 * 60) // Handle overflow past midnight
+        let hours = adjustedMinutes / 60
+        let mins = adjustedMinutes % 60
+        
+        let now = Date()
+        return calendar.date(bySettingHour: hours, minute: mins, second: 0, of: now)
+    }
+    
     // MARK: - Settings Persistence
     private func saveSettings() {
         UserDefaults.standard.set(dailyNotifications, forKey: "dailyNotifications")
-        UserDefaults.standard.set(notificationTime, forKey: "notificationTime")
+        UserDefaults.standard.set(startTime, forKey: "startTime")
+        UserDefaults.standard.set(endTime, forKey: "endTime")
+        UserDefaults.standard.set(notificationCount, forKey: "notificationCount")
         UserDefaults.standard.set(fontSize.rawValue, forKey: "fontSize")
-        UserDefaults.standard.set(selectedLanguage.rawValue, forKey: "selectedLanguage")
     }
     
     private func loadSettings() {
@@ -278,16 +333,22 @@ class QuoteManager: ObservableObject {
             fontSize = savedFontSize
         }
         
-        // For language, only load if the key exists and has a valid value
-        if UserDefaults.standard.object(forKey: "selectedLanguage") != nil,
-           let savedLanguage = AppLanguage(rawValue: UserDefaults.standard.string(forKey: "selectedLanguage") ?? "") {
-            selectedLanguage = savedLanguage
+        // Load notification times if available
+        if let savedStartTime = UserDefaults.standard.object(forKey: "startTime") as? Date {
+            startTime = savedStartTime
         }
         
-        // For notification time, load saved time if available
-        if UserDefaults.standard.object(forKey: "notificationTime") != nil,
-           let savedTime = UserDefaults.standard.object(forKey: "notificationTime") as? Date {
-            notificationTime = savedTime
+        if let savedEndTime = UserDefaults.standard.object(forKey: "endTime") as? Date {
+            endTime = savedEndTime
+        }
+        
+        // Load notification count if available
+        if UserDefaults.standard.object(forKey: "notificationCount") != nil {
+            notificationCount = UserDefaults.standard.integer(forKey: "notificationCount")
+            // Ensure count is at least 1
+            if notificationCount < 1 {
+                notificationCount = 1
+            }
         }
         
         // If notifications were enabled, check permission and schedule
@@ -339,30 +400,44 @@ class QuoteManager: ObservableObject {
             return
         }
         
-        let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("daily_inspiration", comment: "")
-        content.body = getDailyQuote()
-        content.sound = .default
-        content.badge = 1
-        
+        let notificationTimes = calculateNotificationTimes()
         let calendar = Calendar.current
-        let components = calendar.dateComponents([.hour, .minute], from: notificationTime)
         
-        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
-        
-        let request = UNNotificationRequest(identifier: "dailyInspiration", content: content, trigger: trigger)
-        
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("Error scheduling notification: \(error)")
-            } else {
-                print("Notification scheduled successfully for \(components.hour ?? 0):\(components.minute ?? 0)")
+        for (index, notificationTime) in notificationTimes.enumerated() {
+            let content = UNMutableNotificationContent()
+            content.title = NSLocalizedString("daily_inspiration", comment: "")
+            content.body = getRandomQuote() // Use random quote for each notification
+            content.sound = .default
+            content.badge = 1
+            
+            let components = calendar.dateComponents([.hour, .minute], from: notificationTime)
+            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+            
+            let identifier = "dailyInspiration_\(index + 1)"
+            let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+            
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    print("Error scheduling notification \(identifier): \(error)")
+                } else {
+                    print("Notification \(identifier) scheduled successfully for \(components.hour ?? 0):\(String(format: "%02d", components.minute ?? 0))")
+                }
             }
         }
     }
     
     private func cancelNotifications() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["dailyInspiration"])
+        // Cancel all existing daily inspiration notifications
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            let identifiersToCancel = requests
+                .filter { $0.identifier.hasPrefix("dailyInspiration") }
+                .map { $0.identifier }
+            
+            if !identifiersToCancel.isEmpty {
+                UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiersToCancel)
+                print("Cancelled \(identifiersToCancel.count) existing notifications")
+            }
+        }
     }
     
     private func getDailyQuote() -> String {
@@ -384,15 +459,48 @@ class QuoteManager: ObservableObject {
     var formattedNotificationTime: String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
-        return formatter.string(from: notificationTime)
+        let startTimeStr = formatter.string(from: startTime)
+        let endTimeStr = formatter.string(from: endTime)
+        return "\(startTimeStr) - \(endTimeStr)"
     }
     
-    // MARK: - Custom Localization
-    func localizedString(_ key: String) -> String {
-        guard let bundle = Bundle.main.path(forResource: selectedLanguage.rawValue, ofType: "lproj"),
-              let localizationBundle = Bundle(path: bundle) else {
-            return NSLocalizedString(key, comment: "")
+    var formattedNotificationCount: String {
+        return "\(notificationCount)"
+    }
+    
+    var isValidTimeRange: Bool {
+        let calendar = Calendar.current
+        let startComponents = calendar.dateComponents([.hour, .minute], from: startTime)
+        let endComponents = calendar.dateComponents([.hour, .minute], from: endTime)
+        
+        let startMinutes = (startComponents.hour ?? 0) * 60 + (startComponents.minute ?? 0)
+        let endMinutes = (endComponents.hour ?? 0) * 60 + (endComponents.minute ?? 0)
+        
+        // Consider it valid if there's a difference (handles cross-midnight)
+        return startMinutes != endMinutes
+    }
+    
+    var maxNotificationsAllowed: Int {
+        let calendar = Calendar.current
+        let startComponents = calendar.dateComponents([.hour, .minute], from: startTime)
+        let endComponents = calendar.dateComponents([.hour, .minute], from: endTime)
+        
+        let startMinutes = (startComponents.hour ?? 0) * 60 + (startComponents.minute ?? 0)
+        var endMinutes = (endComponents.hour ?? 0) * 60 + (endComponents.minute ?? 0)
+        
+        // Handle cross-midnight scenarios
+        if endMinutes <= startMinutes {
+            endMinutes += 24 * 60
         }
-        return NSLocalizedString(key, bundle: localizationBundle, comment: "")
+        
+        let totalMinutes = endMinutes - startMinutes
+        
+        // Maximum notifications = total minutes + 1 (to include both start and end)
+        return max(1, totalMinutes + 1)
+    }
+    
+    // MARK: - Localization
+    func localizedString(_ key: String) -> String {
+        return NSLocalizedString(key, comment: "")
     }
 }
