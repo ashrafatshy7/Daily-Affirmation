@@ -8,6 +8,12 @@
 "dark_mode" = "Dark Mode";
 "daily_notifications" = "Daily Notifications";
 "notification_time" = "Notification Time";
+"notification_mode" = "Notification Mode";
+"single_daily" = "Single Daily";
+"time_range" = "Time Range";
+"start_time" = "Start Time";
+"end_time" = "End Time";
+"notification_count" = "Notification Count";
 "font_size" = "Font Size";
 "language" = "Language";
 "privacy_policy" = "Privacy Policy";

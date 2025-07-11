@@ -93,6 +93,43 @@ class QuoteManager: ObservableObject {
             }
         }
     }
+    
+    enum NotificationMode: String, CaseIterable {
+        case single = "single"
+        case range = "range"
+        
+        func displayName(using quoteManager: QuoteManager) -> String {
+            switch self {
+            case .single: return quoteManager.localizedString("single_daily")
+            case .range: return quoteManager.localizedString("time_range")
+            }
+        }
+    }
+    
+    @Published var notificationMode: NotificationMode = .range {
+        didSet {
+            if !isInitializing {
+                saveSettings()
+                if dailyNotifications {
+                    scheduleNotification()
+                }
+            }
+        }
+    }
+    @Published var singleNotificationTime: Date = {
+        let calendar = Calendar.current
+        let now = Date()
+        return calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
+    }() {
+        didSet {
+            if !isInitializing {
+                saveSettings()
+                if dailyNotifications && notificationMode == .single {
+                    scheduleNotification()
+                }
+            }
+        }
+    }
     @Published var startTime: Date = {
         let calendar = Calendar.current
         let now = Date()
@@ -100,6 +137,8 @@ class QuoteManager: ObservableObject {
     }() {
         didSet {
             if !isInitializing {
+                adjustEndTimeIfNeeded()
+                adjustNotificationCountIfNeeded()
                 saveSettings()
                 if dailyNotifications {
                     scheduleNotification()
@@ -110,10 +149,11 @@ class QuoteManager: ObservableObject {
     @Published var endTime: Date = {
         let calendar = Calendar.current
         let now = Date()
-        return calendar.date(bySettingHour: 17, minute: 0, second: 0, of: now) ?? now
+        return calendar.date(bySettingHour: 10, minute: 0, second: 0, of: now) ?? now
     }() {
         didSet {
             if !isInitializing {
+                adjustNotificationCountIfNeeded()
                 saveSettings()
                 if dailyNotifications {
                     scheduleNotification()
@@ -173,17 +213,31 @@ class QuoteManager: ObservableObject {
     
     init() {
         isInitializing = true
-        // Set default notification times: 9:00 AM to 5:00 PM
+        // Set default notification times: 9:00 AM to 10:00 AM
         let calendar = Calendar.current
         let now = Date()
         startTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
-        endTime = calendar.date(bySettingHour: 17, minute: 0, second: 0, of: now) ?? now
+        endTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: now) ?? now
+        singleNotificationTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
         notificationCount = 1
+        notificationMode = .range
         
+        setupNotificationCategories()
         loadSettings()
         loadQuotes()
         setDailyQuote()
         isInitializing = false
+    }
+    
+    private func setupNotificationCategories() {
+        let category = UNNotificationCategory(
+            identifier: "DAILY_AFFIRMATION",
+            actions: [],
+            intentIdentifiers: [],
+            options: [.customDismissAction]
+        )
+        
+        UNUserNotificationCenter.current().setNotificationCategories([category])
     }
     
     private func loadQuotes() {
@@ -322,7 +376,9 @@ class QuoteManager: ObservableObject {
         UserDefaults.standard.set(dailyNotifications, forKey: "dailyNotifications")
         UserDefaults.standard.set(startTime, forKey: "startTime")
         UserDefaults.standard.set(endTime, forKey: "endTime")
+        UserDefaults.standard.set(singleNotificationTime, forKey: "singleNotificationTime")
         UserDefaults.standard.set(notificationCount, forKey: "notificationCount")
+        UserDefaults.standard.set(notificationMode.rawValue, forKey: "notificationMode")
         UserDefaults.standard.set(fontSize.rawValue, forKey: "fontSize")
     }
     
@@ -342,6 +398,11 @@ class QuoteManager: ObservableObject {
             endTime = savedEndTime
         }
         
+        // Load single notification time if available
+        if let savedSingleTime = UserDefaults.standard.object(forKey: "singleNotificationTime") as? Date {
+            singleNotificationTime = savedSingleTime
+        }
+        
         // Load notification count if available
         if UserDefaults.standard.object(forKey: "notificationCount") != nil {
             notificationCount = UserDefaults.standard.integer(forKey: "notificationCount")
@@ -349,6 +410,11 @@ class QuoteManager: ObservableObject {
             if notificationCount < 1 {
                 notificationCount = 1
             }
+        }
+        
+        // Load notification mode if available
+        if let savedMode = NotificationMode(rawValue: UserDefaults.standard.string(forKey: "notificationMode") ?? "") {
+            notificationMode = savedMode
         }
         
         // If notifications were enabled, check permission and schedule
@@ -400,31 +466,58 @@ class QuoteManager: ObservableObject {
             return
         }
         
-        let notificationTimes = calculateNotificationTimes()
         let calendar = Calendar.current
         
-        for (index, notificationTime) in notificationTimes.enumerated() {
+        if notificationMode == .single {
+            // Schedule single daily notification
             let content = UNMutableNotificationContent()
             content.title = NSLocalizedString("daily_inspiration", comment: "")
-            content.body = getRandomQuote() // Use random quote for each notification
+            content.body = getRandomQuote()
             content.sound = .default
             content.badge = 1
+            content.categoryIdentifier = "DAILY_AFFIRMATION"
             
-            let components = calendar.dateComponents([.hour, .minute], from: notificationTime)
+            let components = calendar.dateComponents([.hour, .minute], from: singleNotificationTime)
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
             
-            let identifier = "dailyInspiration_\(index + 1)"
+            let identifier = "dailyInspiration_single_\(components.hour ?? 0)_\(components.minute ?? 0)"
             let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
             
             UNUserNotificationCenter.current().add(request) { error in
                 if let error = error {
-                    print("Error scheduling notification \(identifier): \(error)")
-                } else {
-                    print("Notification \(identifier) scheduled successfully for \(components.hour ?? 0):\(String(format: "%02d", components.minute ?? 0))")
+                    print("Error scheduling single notification \(identifier): \(error)")
+                }
+            }
+        } else {
+            // Schedule range-based notifications
+            let notificationTimes = calculateNotificationTimes()
+            
+            for (index, notificationTime) in notificationTimes.enumerated() {
+                let content = UNMutableNotificationContent()
+                content.title = NSLocalizedString("daily_inspiration", comment: "")
+                content.body = getRandomQuote() // Use random quote for each notification
+                content.sound = .default
+                content.badge = 1
+                
+                // Add category for better notification handling
+                content.categoryIdentifier = "DAILY_AFFIRMATION"
+                
+                let components = calendar.dateComponents([.hour, .minute], from: notificationTime)
+                let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+                
+                // Create more unique identifiers to avoid conflicts
+                let identifier = "dailyInspiration_range_\(components.hour ?? 0)_\(components.minute ?? 0)_\(index)"
+                let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+                
+                UNUserNotificationCenter.current().add(request) { error in
+                    if let error = error {
+                        print("Error scheduling range notification \(identifier): \(error)")
+                    }
                 }
             }
         }
     }
+    
     
     private func cancelNotifications() {
         // Cancel all existing daily inspiration notifications
@@ -435,7 +528,8 @@ class QuoteManager: ObservableObject {
             
             if !identifiersToCancel.isEmpty {
                 UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiersToCancel)
-                print("Cancelled \(identifiersToCancel.count) existing notifications")
+                // Also remove delivered notifications
+                UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: identifiersToCancel)
             }
         }
     }
@@ -495,8 +589,54 @@ class QuoteManager: ObservableObject {
         
         let totalMinutes = endMinutes - startMinutes
         
-        // Maximum notifications = total minutes + 1 (to include both start and end)
-        return max(1, totalMinutes + 1)
+        // Maximum notifications based on time range (total minutes + 1 to include both start and end)
+        let timeBasedMax = max(1, totalMinutes + 1)
+        
+        // Apply both time-based limitation and hard cap of 10
+        return min(10, timeBasedMax)
+    }
+    
+    // MARK: - Time Adjustment
+    private func adjustEndTimeIfNeeded() {
+        // Only adjust if we're in range mode
+        guard notificationMode == .range else { return }
+        
+        let calendar = Calendar.current
+        let startComponents = calendar.dateComponents([.hour, .minute], from: startTime)
+        let endComponents = calendar.dateComponents([.hour, .minute], from: endTime)
+        
+        let startMinutes = (startComponents.hour ?? 0) * 60 + (startComponents.minute ?? 0)
+        let endMinutes = (endComponents.hour ?? 0) * 60 + (endComponents.minute ?? 0)
+        
+        // If start time is >= end time, set end time to start time + 1 minute
+        if startMinutes >= endMinutes {
+            let newEndMinutes = startMinutes + 1
+            let newEndHour = newEndMinutes / 60
+            let newEndMinute = newEndMinutes % 60
+            
+            // Handle the case where adding 1 minute goes to next day (24:00 -> 00:00)
+            if newEndHour >= 24 {
+                // Set to 00:00 next day
+                endTime = calendar.date(bySettingHour: 0, minute: 0, second: 0, of: endTime) ?? endTime
+            } else {
+                // Set to calculated time same day
+                endTime = calendar.date(bySettingHour: newEndHour, minute: newEndMinute, second: 0, of: endTime) ?? endTime
+            }
+        }
+    }
+    
+    // MARK: - Notification Count Adjustment
+    private func adjustNotificationCountIfNeeded() {
+        // Only adjust if we're in range mode
+        guard notificationMode == .range else { return }
+        
+        let maxAllowed = maxNotificationsAllowed
+        
+        // If current count exceeds the new maximum, reduce it to the maximum
+        if notificationCount > maxAllowed {
+            notificationCount = maxAllowed
+        }
+        // If current count is less than or equal to maximum, don't change it
     }
     
     // MARK: - Localization
