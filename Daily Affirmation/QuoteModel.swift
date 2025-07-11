@@ -6,6 +6,7 @@ class QuoteHistory {
     private var history: [String] = []
     private var currentIndex: Int = 0
     private let quotes: [String]
+    private var cachedNextQuote: String?
     
     init(initialQuote: String, availableQuotes: [String]) {
         self.quotes = availableQuotes
@@ -32,8 +33,11 @@ class QuoteHistory {
                 // Use existing next quote from history
                 return history[currentIndex + 1]
             } else {
-                // Generate preview of what next quote would be
-                return generateRandomQuote()
+                // Generate and cache preview of what next quote would be
+                if cachedNextQuote == nil {
+                    cachedNextQuote = generateRandomQuote()
+                }
+                return cachedNextQuote!
             }
         } else {
             return currentQuote
@@ -44,12 +48,16 @@ class QuoteHistory {
         if currentIndex + 1 < history.count {
             // Move to existing next quote
             currentIndex += 1
+            // Clear cache since we're moving to existing quote
+            cachedNextQuote = nil
             return history[currentIndex]
         } else {
-            // Generate new quote and add to history
-            let newQuote = generateRandomQuote()
+            // Use cached quote if available, otherwise generate new one
+            let newQuote = cachedNextQuote ?? generateRandomQuote()
             history.append(newQuote)
             currentIndex = history.count - 1
+            // Clear cache since we've used it
+            cachedNextQuote = nil
             return newQuote
         }
     }
@@ -57,6 +65,8 @@ class QuoteHistory {
     func movePrevious() -> String? {
         guard currentIndex > 0 else { return nil }
         currentIndex -= 1
+        // Clear cache when moving backwards since next quote might be different
+        cachedNextQuote = nil
         return history[currentIndex]
     }
     
