@@ -65,6 +65,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "D6B838042E1C757100A34476"
+            BuildableName = "Daily Affirmation.app"
+            BlueprintName = "Daily Affirmation"
+            ReferencedContainer = "container:Daily Affirmation.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
