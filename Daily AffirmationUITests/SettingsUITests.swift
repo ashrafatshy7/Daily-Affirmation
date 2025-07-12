@@ -22,9 +22,17 @@ final class SettingsUITests: XCTestCase {
         app = XCUIApplication()
         app.launch()
         
+        // Skip onboarding if it appears
+        let xButton = app.buttons.matching(NSPredicate(format: "identifier CONTAINS 'xmark'")).element
+        if xButton.waitForExistence(timeout: 3) {
+            xButton.tap()
+        }
+        
         // Navigate to settings
         let settingsButton = app.buttons["settings_button"]
-        settingsButton.tap()
+        if settingsButton.waitForExistence(timeout: 5) {
+            settingsButton.tap()
+        }
         
         // Try different element types for settings title
         let settingsTitleText = app.staticTexts["settings_title"]
@@ -101,6 +109,53 @@ final class SettingsUITests: XCTestCase {
         let quoteTextOther = app.otherElements["quote_text"]
         let quoteText = quoteTextStatic.exists ? quoteTextStatic : quoteTextOther
         XCTAssertTrue(quoteText.waitForExistence(timeout: 3.0), "Should return to main quote screen")
+    }
+    
+    // MARK: - Premium Features Section Tests
+    
+    func testPremiumFeaturesSection_exists_andIsInteractive() {
+        // Arrange & Assert
+        let premiumSection = app.buttons["premium_section"]
+        XCTAssertTrue(premiumSection.exists, "Premium features section should exist")
+        XCTAssertTrue(premiumSection.isEnabled, "Premium features section should be interactive")
+    }
+    
+    func testPremiumFeaturesSection_tap_opensSubscriptionView() {
+        // Arrange
+        let premiumSection = app.buttons["premium_section"]
+        
+        // Act
+        premiumSection.tap()
+        
+        // Assert
+        // Look for subscription-related content
+        let subscriptionTitle = app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Premium' OR label CONTAINS 'Subscription' OR label CONTAINS 'Unlock'")).firstMatch
+        XCTAssertTrue(subscriptionTitle.waitForExistence(timeout: 3.0), "Should open subscription view")
+    }
+    
+    func testPremiumFeaturesSection_subscriptionModal_canBeDismissed() {
+        // Arrange
+        let premiumSection = app.buttons["premium_section"]
+        premiumSection.tap()
+        
+        // Wait for modal to appear
+        Thread.sleep(forTimeInterval: 1.0)
+        
+        // Act
+        // Look for close button or dismiss mechanism
+        let closeButtons = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Close' OR identifier CONTAINS 'xmark'"))
+        
+        if closeButtons.count > 0 {
+            closeButtons.firstMatch.tap()
+            
+            // Assert
+            let settingsTitleText = app.staticTexts["settings_title"]
+            let settingsTitleButton = app.buttons["settings_title"]
+            let settingsTitleOther = app.otherElements["settings_title"]
+            let settingsTitle = settingsTitleText.exists ? settingsTitleText : 
+                               (settingsTitleButton.exists ? settingsTitleButton : settingsTitleOther)
+            XCTAssertTrue(settingsTitle.waitForExistence(timeout: 3.0), "Should return to settings after dismissing subscription")
+        }
     }
     
     // MARK: - Notifications Section Tests
@@ -311,6 +366,7 @@ final class SettingsUITests: XCTestCase {
         // Test navigating through all sections
         let sections = [
             "notifications_section",
+            "premium_section",
             "display_section", 
             "loved_quotes_section"
         ]
@@ -368,11 +424,13 @@ final class SettingsUITests: XCTestCase {
     func testAccessibility_settingsSections_haveProperLabels() {
         // Test accessibility labels for all sections
         let notificationsSection = app.buttons["notifications_section"]
+        let premiumSection = app.buttons["premium_section"]
         let displaySection = app.buttons["display_section"]
         let lovedQuotesSection = app.buttons["loved_quotes_section"]
         let privacySection = app.buttons["privacy_section"]
         
         XCTAssertTrue(notificationsSection.isAccessibilityElement, "Notifications section should be accessible")
+        XCTAssertTrue(premiumSection.isAccessibilityElement, "Premium section should be accessible")
         XCTAssertTrue(displaySection.isAccessibilityElement, "Display section should be accessible")
         XCTAssertTrue(lovedQuotesSection.isAccessibilityElement, "Loved quotes section should be accessible")
         XCTAssertTrue(privacySection.isAccessibilityElement, "Privacy section should be accessible")

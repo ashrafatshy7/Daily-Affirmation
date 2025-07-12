@@ -112,7 +112,7 @@ final class QuoteManagerTests: XCTestCase {
         // Assert
         XCTAssertFalse(manager.dailyNotifications, "Daily notifications should be disabled by default")
         XCTAssertEqual(manager.fontSize, .medium, "Font size should be medium by default")
-        XCTAssertEqual(manager.notificationMode, .range, "Notification mode should be range by default")
+        XCTAssertEqual(manager.notificationMode, .single, "Notification mode should be single by default")
         XCTAssertEqual(manager.notificationCount, 1, "Notification count should be 1 by default")
         XCTAssertTrue(manager.lovedQuotes.isEmpty, "Loved quotes should be empty by default")
     }

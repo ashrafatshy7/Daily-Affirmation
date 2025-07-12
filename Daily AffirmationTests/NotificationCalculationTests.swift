@@ -306,7 +306,13 @@ final class NotificationCalculationTests: XCTestCase {
     func testAdjustEndTimeIfNeeded_whenStartEqualsEnd_adjustsEndTime() {
         // Arrange
         let sameTime = calendar.date(bySettingHour: 15, minute: 30, second: 0, of: baseDate)!
+        
+        // Grant time range access for testing
+        UserDefaults.standard.set(true, forKey: "hasTimeRangeAccess")
         quoteManager.notificationMode = .range
+        
+        // Verify mode was actually set
+        XCTAssertEqual(quoteManager.notificationMode, .range, "Should be able to set range mode with access")
         
         // Act
         quoteManager.startTime = sameTime
@@ -321,11 +327,17 @@ final class NotificationCalculationTests: XCTestCase {
         let endMinute = calendar.component(.minute, from: quoteManager.endTime)
         let startMinute = calendar.component(.minute, from: sameTime)
         XCTAssertEqual(endMinute, startMinute + 1, "End time should be 1 minute after start time")
+        
+        // Cleanup
+        UserDefaults.standard.removeObject(forKey: "hasTimeRangeAccess")
     }
     
     func testAdjustEndTimeIfNeeded_withMidnightRollover_handlesCorrectly() {
         // Arrange
         let lateTime = calendar.date(bySettingHour: 23, minute: 59, second: 0, of: baseDate)!
+        
+        // Grant time range access for testing
+        UserDefaults.standard.set(true, forKey: "hasTimeRangeAccess")
         quoteManager.notificationMode = .range
         
         // Act
@@ -340,6 +352,9 @@ final class NotificationCalculationTests: XCTestCase {
         let endMinute = calendar.component(.minute, from: quoteManager.endTime)
         XCTAssertEqual(endHour, 0, "Should roll over to midnight hour")
         XCTAssertEqual(endMinute, 0, "Should roll over to zero minutes")
+        
+        // Cleanup
+        UserDefaults.standard.removeObject(forKey: "hasTimeRangeAccess")
     }
     
     // MARK: - Notification Count Adjustment Tests
@@ -348,6 +363,9 @@ final class NotificationCalculationTests: XCTestCase {
         // Arrange
         let startTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: baseDate)!
         let endTime = calendar.date(bySettingHour: 9, minute: 5, second: 0, of: baseDate)!
+        
+        // Grant time range access for testing
+        UserDefaults.standard.set(true, forKey: "hasTimeRangeAccess")
         
         quoteManager.startTime = startTime
         quoteManager.endTime = endTime
@@ -360,12 +378,18 @@ final class NotificationCalculationTests: XCTestCase {
         // Assert
         XCTAssertLessThanOrEqual(quoteManager.notificationCount, quoteManager.maxNotificationsAllowed,
                                 "Notification count should be reduced to maximum allowed")
+        
+        // Cleanup
+        UserDefaults.standard.removeObject(forKey: "hasTimeRangeAccess")
     }
     
     func testAdjustNotificationCountIfNeeded_whenWithinLimits_doesNotChange() {
         // Arrange
         let startTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: baseDate)!
         let endTime = calendar.date(bySettingHour: 17, minute: 0, second: 0, of: baseDate)!
+        
+        // Grant time range access for testing
+        UserDefaults.standard.set(true, forKey: "hasTimeRangeAccess")
         
         quoteManager.startTime = startTime
         quoteManager.endTime = endTime
@@ -380,6 +404,9 @@ final class NotificationCalculationTests: XCTestCase {
         // Assert
         XCTAssertEqual(quoteManager.notificationCount, originalCount,
                       "Notification count should not change when within limits")
+        
+        // Cleanup
+        UserDefaults.standard.removeObject(forKey: "hasTimeRangeAccess")
     }
     
     // MARK: - Performance Tests

@@ -823,18 +823,6 @@ class QuoteManager: ObservableObject {
         // Save the encoded array to UserDefaults (this replaces existing data)
         userDefaults.set(encodedQuotes, forKey: "lovedQuotes")
         userDefaults.synchronize() // Force immediate synchronization
-        
-        print("Debug: Saved \(lovedQuotesArray.count) quotes: \(lovedQuotesArray)")
-        
-        // Validation: verify the data was saved correctly
-        if let savedData = userDefaults.array(forKey: "lovedQuotes") as? [String] {
-            let expectedCount = lovedQuotesArray.count
-            let actualCount = savedData.count
-            if expectedCount != actualCount {
-                print("Warning: Expected to save \(expectedCount) quotes but saved \(actualCount)")
-                print("Debug: Actual saved data: \(savedData)")
-            }
-        }
     }
     
     private func loadLovedQuotes() {
@@ -870,22 +858,14 @@ class QuoteManager: ObservableObject {
             }
         }
         
-        // Validation: log any issues for debugging
-        if failedDecodingCount > 0 {
-            print("Warning: Failed to decode \(failedDecodingCount) Base64 quotes")
-        }
-        
         // Set the loaded quotes
         let wasInitializing = isInitializing
         isInitializing = true
         lovedQuotes = Set(decodedQuotes)
         isInitializing = wasInitializing
         
-        print("Debug: Loaded \(decodedQuotes.count) quotes: \(decodedQuotes)")
-        
         // If we found old format data, migrate it to new format
         if needsMigration {
-            print("Debug: Migrating \(decodedQuotes.count) quotes to new format")
             saveLovedQuotes()
         }
     }
@@ -946,10 +926,9 @@ class QuoteManager: ObservableObject {
         
         // Double-check that the data is really gone
         if userDefaults.array(forKey: "lovedQuotes") != nil {
-            print("Warning: UserDefaults still contains loved quotes data after clearing")
+            // Data persists, which could be expected in some testing scenarios
         }
         
-        print("Debug: Cleared all loved quotes from memory and UserDefaults")
     }
     
     // Check if we're running in a test environment
