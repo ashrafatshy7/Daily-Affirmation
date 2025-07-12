@@ -62,6 +62,10 @@ struct PrivacyPolicyView: View {
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                 
+                                Text("• Subscription Status: Information about your premium subscription status is stored locally on your device for offline access")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                
                                 Text("• No Personal Data: We do not collect names, email addresses, phone numbers, or any personally identifiable information")
                                     .font(.body)
                                     .foregroundColor(.secondary)
@@ -122,6 +126,18 @@ struct PrivacyPolicyView: View {
                                 .foregroundColor(.secondary)
                         }
                         
+                        // In-App Purchases
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("In-App Purchases")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+                            
+                            Text("Daily Affirmation offers premium subscription features. All purchases are processed through Apple's App Store and are subject to Apple's terms and conditions. All sales are final and no refunds are provided by the developer. For refund requests, please contact Apple Support directly.")
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                        }
+                        
                         // Contact Information
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Contact Us")
@@ -141,7 +157,7 @@ struct PrivacyPolicyView: View {
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                             
-                            Text("This Privacy Policy was last updated on July 7, 2025.")
+                            Text("This Privacy Policy was last updated on July 12, 2025.")
                                 .font(.body)
                                 .foregroundColor(.secondary)
                         }
