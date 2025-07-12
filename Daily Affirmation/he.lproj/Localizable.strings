@@ -64,3 +64,9 @@
 "privacy_contact_text" = "אם יש לכם שאלות לגבי מדיניות פרטיות זו, אנא צרו איתנו קשר בכתובת ashrafatshy7@gmail.com";
 "privacy_last_updated_title" = "עדכון אחרון";
 "privacy_last_updated_text" = "מדיניות פרטיות זו עודכנה לאחרונה ב-7 ביולי 2025.";
+
+// Notification Permission
+"enable_notifications_title" = "הישאר מעורר השראה יומית";
+"enable_notifications_description" = "קבל ציטוטי מוטיבציה יומיים במכשיר שלך. אתה יכול להתאים את העיתוי בהגדרות.";
+"allow_notifications" = "אפשר התראות";
+"not_now" = "לא עכשיו";

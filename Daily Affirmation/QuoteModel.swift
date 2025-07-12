@@ -115,6 +115,24 @@ class QuoteManager: ObservableObject {
     }
     
     private func _setDailyNotifications(_ newValue: Bool) {
+        if !isInitializing && newValue {
+            // Check permission before enabling notifications
+            checkNotificationPermissionBeforeEnabling { [weak self] canEnable in
+                DispatchQueue.main.async {
+                    if canEnable {
+                        self?._updateDailyNotifications(newValue)
+                    } else {
+                        // Permission denied, keep notifications off and notify delegates
+                        NotificationCenter.default.post(name: .notificationPermissionDenied, object: nil)
+                    }
+                }
+            }
+        } else {
+            _updateDailyNotifications(newValue)
+        }
+    }
+    
+    private func _updateDailyNotifications(_ newValue: Bool) {
         _dailyNotifications = newValue
         _dailyNotificationsSubject.send(newValue) // Send on main thread
         objectWillChange.send() // Manually trigger @Published-like behavior on main thread
@@ -509,6 +527,24 @@ class QuoteManager: ObservableObject {
     }
     
     // MARK: - Notification Methods
+    private func checkNotificationPermissionBeforeEnabling(completion: @escaping (Bool) -> Void) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .authorized:
+                completion(true)
+            case .denied:
+                completion(false)
+            case .notDetermined:
+                // Request permission
+                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+                    completion(granted)
+                }
+            default:
+                completion(false)
+            }
+        }
+    }
+    
     private func requestNotificationPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, error in
             DispatchQueue.main.async {
@@ -950,4 +986,9 @@ class QuoteManager: ObservableObject {
     func localizedString(_ key: String) -> String {
         return NSLocalizedString(key, comment: "")
     }
+}
+
+// MARK: - Notification Names
+extension Notification.Name {
+    static let notificationPermissionDenied = Notification.Name("notificationPermissionDenied")
 }

@@ -63,3 +63,9 @@
 "privacy_contact_text" = "إذا كان لديكم أي أسئلة حول سياسة الخصوصية هذه، يرجى الاتصال بنا على ashrafatshy7@gmail.com";
 "privacy_last_updated_title" = "آخر تحديث";
 "privacy_last_updated_text" = "تم آخر تحديث لسياسة الخصوصية هذه في 7 يوليو 2025.";
+
+// Notification Permission
+"enable_notifications_title" = "ابق ملهمًا يوميًا";
+"enable_notifications_description" = "احصل على اقتباسات تحفيزية يومية على جهازك. يمكنك تخصيص التوقيت في الإعدادات.";
+"allow_notifications" = "السماح بالإشعارات";
+"not_now" = "ليس الآن";

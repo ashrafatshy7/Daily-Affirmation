@@ -17,6 +17,7 @@ struct ContentView: View {
     @State private var lastDragValue: CGFloat = 0
     @State private var hasTriggeredSwipe: Bool = false
     @State private var swipeDirection: SwipeDirection = .none
+    @State private var showNotificationPermission = false
     
     enum SwipeDirection {
         case none, up, down
@@ -191,6 +192,9 @@ struct ContentView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                     showSwipeIndicator = false
                 }
+                
+                // Check if this is first launch and show notification permission
+                checkFirstLaunch()
             }
         }
         .preferredColorScheme(.light)
@@ -198,6 +202,14 @@ struct ContentView: View {
         .sheet(isPresented: $showSettings) {
             SettingsView(quoteManager: quoteManager)
         }
+        .overlay(
+            // Notification permission popup
+            showNotificationPermission ? 
+            NotificationPermissionView(
+                quoteManager: quoteManager, 
+                isPresented: $showNotificationPermission
+            ) : nil
+        )
     }
     
     private func shareQuote() {
@@ -236,6 +248,18 @@ struct ContentView: View {
     
     private func makePopoverDelegate() -> UIPopoverPresentationControllerDelegate {
         return PopoverDelegate()
+    }
+    
+    private func checkFirstLaunch() {
+        // Check if we've already shown the notification permission popup
+        let hasShownPermission = UserDefaults.standard.bool(forKey: "hasShownNotificationPermission")
+        
+        if !hasShownPermission {
+            // Delay slightly to ensure the main view is loaded
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                showNotificationPermission = true
+            }
+        }
     }
 }
 
