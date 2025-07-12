@@ -10,12 +10,18 @@ struct SettingsView: View {
             VStack(spacing: 0) {
                 // Header - Fixed at top
                 HStack {
-                    Text(quoteManager.localizedString("settings"))
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(.black)
-                        .accessibilityIdentifier("settings_title")
-                        .accessibilityLabel("Settings")
+                    Button(action: {}) {
+                        Text(quoteManager.localizedString("settings"))
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(.black)
+                    }
+                    .disabled(true)
+                    .buttonStyle(PlainButtonStyle())
+                    .accessibilityIdentifier("settings_title")
+                    .accessibilityLabel("Settings")
+                    .accessibility(addTraits: .isHeader)
+                    .accessibility(removeTraits: .isButton)
                     
                     Spacer()
                     
@@ -28,6 +34,7 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("close_settings_button")
                     .accessibilityLabel("Close settings")
+                    .accessibility(addTraits: .isButton)
                 }
                 .padding(.horizontal, 30)
                 .padding(.top, 20)
@@ -47,6 +54,7 @@ struct SettingsView: View {
                             )
                         }
                         .accessibilityIdentifier("notifications_section")
+                        .accessibility(addTraits: .isButton)
                         
                         // Display Section
                         NavigationLink(destination: DisplaySettingsView(quoteManager: quoteManager)) {
@@ -58,6 +66,7 @@ struct SettingsView: View {
                             )
                         }
                         .accessibilityIdentifier("display_section")
+                        .accessibility(addTraits: .isButton)
                         
                         // Loved Quotes Section
                         NavigationLink(destination: LovedQuotesDetailView(quoteManager: quoteManager)) {
@@ -69,6 +78,7 @@ struct SettingsView: View {
                             )
                         }
                         .accessibilityIdentifier("loved_quotes_section")
+                        .accessibility(addTraits: .isButton)
                         
                         // Privacy Policy Section
                         Button(action: {
@@ -82,6 +92,7 @@ struct SettingsView: View {
                             )
                         }
                         .accessibilityIdentifier("privacy_section")
+                        .accessibility(addTraits: .isButton)
                     }
                     .padding(.horizontal, 24)
                     .padding(.top, 24)
