@@ -164,15 +164,27 @@ class QuoteManager: ObservableObject {
         }
     }
     
-    @Published var notificationMode: NotificationMode = .range {
+    @Published var notificationMode: NotificationMode = .single {
         didSet {
             if !isInitializing {
+                // Check if user has access to time range mode
+                if notificationMode == .range && !hasTimeRangeAccess {
+                    // Revert to single mode if no access
+                    notificationMode = .single
+                    return
+                }
                 saveSettings()
                 if dailyNotifications {
                     scheduleNotification()
                 }
             }
         }
+    }
+    
+    // MARK: - Subscription Access
+    var hasTimeRangeAccess: Bool {
+        // Use UserDefaults for immediate access to avoid actor issues
+        return UserDefaults.standard.bool(forKey: "hasTimeRangeAccess")
     }
     @Published var singleNotificationTime: Date = {
         let calendar = Calendar.current
@@ -308,7 +320,7 @@ class QuoteManager: ObservableObject {
         endTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: now) ?? now
         singleNotificationTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: now) ?? now
         notificationCount = 1
-        notificationMode = .range
+        notificationMode = .single
         
         setupNotificationCategories()
         
@@ -322,6 +334,9 @@ class QuoteManager: ObservableObject {
         
         loadQuotes()
         setDailyQuote()
+        
+        // Load offline subscription status immediately - this will be handled by SubscriptionManager on app launch
+        
         isInitializing = false
     }
     
@@ -584,6 +599,13 @@ class QuoteManager: ObservableObject {
         
         guard dailyNotifications, !quotes.isEmpty else {
             print("Cannot schedule: notifications disabled or no quotes")
+            return
+        }
+        
+        // Check if user has access to time range mode
+        if notificationMode == .range && !hasTimeRangeAccess {
+            print("Time range mode requires subscription, switching to single mode")
+            notificationMode = .single
             return
         }
         

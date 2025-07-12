@@ -1,0 +1,152 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "E8C6C3E1",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ],
+    "askToBuyEnabled" : false,
+    "failTransactionsEnabled" : false,
+    "locale" : "en_US",
+    "storefront" : "USA",
+    "subscriptionOfferCodeGenerationEnabled" : false,
+    "subscriptionRenewalRateEnabled" : false
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "E2BE7EA7",
+      "localizations" : [
+
+      ],
+      "name" : "ThinkUp Subscriptions",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "9A1A5684",
+          "introductoryOffer" : {
+            "internalID" : "20593471",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlock Time Range notifications to receive multiple daily inspirations throughout your chosen time period.",
+              "displayName" : "Time Range Notifications - Weekly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "time_range_weekly",
+          "recurringSubscriptionPeriod" : "P1W",
+          "referenceName" : "weekly subscription",
+          "subscriptionGroupID" : "E2BE7EA7",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "17.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "79583B87",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlock Time Range notifications to receive multiple daily inspirations throughout your chosen time period. Save with yearly billing!",
+              "displayName" : "Time Range Notifications - Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "time_range_yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "yearly subscription",
+          "subscriptionGroupID" : "E2BE7EA7",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}
