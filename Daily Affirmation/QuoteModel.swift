@@ -1,11 +1,13 @@
 import Foundation
 import UserNotifications
 import SwiftUI
+import Combine
 
 class QuoteHistory {
     private var history: [String] = []
     private var currentIndex: Int = 0
     private let quotes: [String]
+    private var cachedNextQuote: String?
     
     init(initialQuote: String, availableQuotes: [String]) {
         self.quotes = availableQuotes
@@ -32,8 +34,11 @@ class QuoteHistory {
                 // Use existing next quote from history
                 return history[currentIndex + 1]
             } else {
-                // Generate preview of what next quote would be
-                return generateRandomQuote()
+                // Generate and cache preview of what next quote would be
+                if cachedNextQuote == nil {
+                    cachedNextQuote = generateRandomQuote()
+                }
+                return cachedNextQuote!
             }
         } else {
             return currentQuote
@@ -44,12 +49,16 @@ class QuoteHistory {
         if currentIndex + 1 < history.count {
             // Move to existing next quote
             currentIndex += 1
+            // Clear cache since we're moving to existing quote
+            cachedNextQuote = nil
             return history[currentIndex]
         } else {
-            // Generate new quote and add to history
-            let newQuote = generateRandomQuote()
+            // Use cached quote if available, otherwise generate new one
+            let newQuote = cachedNextQuote ?? generateRandomQuote()
             history.append(newQuote)
             currentIndex = history.count - 1
+            // Clear cache since we've used it
+            cachedNextQuote = nil
             return newQuote
         }
     }
@@ -57,6 +66,8 @@ class QuoteHistory {
     func movePrevious() -> String? {
         guard currentIndex > 0 else { return nil }
         currentIndex -= 1
+        // Clear cache when moving backwards since next quote might be different
+        cachedNextQuote = nil
         return history[currentIndex]
     }
     
@@ -81,17 +92,46 @@ class QuoteManager: ObservableObject {
     private var isInitializing = true
     private var quoteHistory: QuoteHistory?
     
-    @Published var dailyNotifications: Bool = false {
-        didSet {
-            if !isInitializing {
-                saveSettings()
-                if dailyNotifications {
-                    requestNotificationPermission()
-                } else {
-                    cancelNotifications()
+    private var _dailyNotifications: Bool = false
+    private let _dailyNotificationsSubject = PassthroughSubject<Bool, Never>()
+    
+    var dailyNotifications: Bool {
+        get { 
+            if Thread.isMainThread {
+                return _dailyNotifications
+            } else {
+                return DispatchQueue.main.sync { _dailyNotifications }
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                _setDailyNotifications(newValue)
+            } else {
+                DispatchQueue.main.sync {
+                    self._setDailyNotifications(newValue)
                 }
             }
         }
+    }
+    
+    private func _setDailyNotifications(_ newValue: Bool) {
+        _dailyNotifications = newValue
+        _dailyNotificationsSubject.send(newValue) // Send on main thread
+        objectWillChange.send() // Manually trigger @Published-like behavior on main thread
+        
+        if !isInitializing {
+            saveSettings()
+            if _dailyNotifications {
+                requestNotificationPermission()
+            } else {
+                cancelNotifications()
+            }
+        }
+    }
+    
+    // Provide publisher access like @Published
+    var dailyNotificationsPublisher: AnyPublisher<Bool, Never> {
+        return _dailyNotificationsSubject.eraseToAnyPublisher()
     }
     
     enum NotificationMode: String, CaseIterable {
@@ -163,6 +203,16 @@ class QuoteManager: ObservableObject {
     }
     @Published var notificationCount: Int = 1 {
         didSet {
+            // Validate and clamp notification count to acceptable bounds
+            let clampedValue = max(1, min(notificationCount, maxNotificationsAllowed))
+            if clampedValue != notificationCount {
+                // Avoid infinite recursion by temporarily setting isInitializing
+                let wasInitializing = isInitializing
+                isInitializing = true
+                notificationCount = clampedValue
+                isInitializing = wasInitializing
+            }
+            
             if !isInitializing {
                 saveSettings()
                 if dailyNotifications {
@@ -175,6 +225,14 @@ class QuoteManager: ObservableObject {
         didSet {
             if !isInitializing {
                 saveSettings()
+            }
+        }
+    }
+    
+    @Published var lovedQuotes: Set<String> = [] {
+        didSet {
+            if !isInitializing {
+                saveLovedQuotes()
             }
         }
     }
@@ -211,8 +269,20 @@ class QuoteManager: ObservableObject {
     
     // MARK: - Static Helper Methods
     
-    init() {
+    private var userDefaults: UserDefaults
+    
+    init(loadFromDefaults: Bool = true, userDefaults: UserDefaults? = nil) {
+        // Auto-detect test environment and use shared test storage
+        if userDefaults == nil && ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            // In test environment: use thread-local shared UserDefaults for the test
+            self.userDefaults = QuoteManager.getTestUserDefaults()
+        } else {
+            // Use provided UserDefaults or standard
+            self.userDefaults = userDefaults ?? UserDefaults.standard
+        }
+        
         isInitializing = true
+        
         // Set default notification times: 9:00 AM to 10:00 AM
         let calendar = Calendar.current
         let now = Date()
@@ -223,7 +293,15 @@ class QuoteManager: ObservableObject {
         notificationMode = .range
         
         setupNotificationCategories()
-        loadSettings()
+        
+        if loadFromDefaults {
+            loadSettings()
+            loadLovedQuotes()
+        } else {
+            // For tests: start with clean state
+            lovedQuotes = Set<String>()
+        }
+        
         loadQuotes()
         setDailyQuote()
         isInitializing = false
@@ -275,16 +353,25 @@ class QuoteManager: ObservableObject {
     func nextQuote() {
         guard let history = quoteHistory else { return }
         let newQuote = history.moveNext()
-        DispatchQueue.main.async {
-            self.currentQuoteText = newQuote
+        
+        if Thread.isMainThread {
+            currentQuoteText = newQuote
+        } else {
+            DispatchQueue.main.sync {
+                self.currentQuoteText = newQuote
+            }
         }
     }
     
     func previousQuote() {
         guard let history = quoteHistory else { return }
         if let previousQuote = history.movePrevious() {
-            DispatchQueue.main.async {
-                self.currentQuoteText = previousQuote
+            if Thread.isMainThread {
+                currentQuoteText = previousQuote
+            } else {
+                DispatchQueue.main.sync {
+                    self.currentQuoteText = previousQuote
+                }
             }
         }
     }
@@ -316,7 +403,7 @@ class QuoteManager: ObservableObject {
         var endMinutes = (endComponents.hour ?? 0) * 60 + (endComponents.minute ?? 0)
         
         // Handle cross-midnight scenarios (e.g., 10 PM to 6 AM)
-        if endMinutes <= startMinutes {
+        if endMinutes < startMinutes {
             endMinutes += 24 * 60 // Add 24 hours
         }
         
@@ -328,10 +415,8 @@ class QuoteManager: ObservableObject {
             return [startTime]
         }
         
-        // Limit notification count to maximum possible unique times
-        // Since iOS only supports minute precision, max notifications = total minutes + 1
-        let maxPossibleNotifications = totalMinutes + 1
-        let count = min(max(1, notificationCount), maxPossibleNotifications)
+        // Limit notification count to maximum allowed by the app
+        let count = min(max(1, notificationCount), maxNotificationsAllowed)
         
         var notificationTimes: [Date] = []
         
@@ -373,39 +458,39 @@ class QuoteManager: ObservableObject {
     
     // MARK: - Settings Persistence
     private func saveSettings() {
-        UserDefaults.standard.set(dailyNotifications, forKey: "dailyNotifications")
-        UserDefaults.standard.set(startTime, forKey: "startTime")
-        UserDefaults.standard.set(endTime, forKey: "endTime")
-        UserDefaults.standard.set(singleNotificationTime, forKey: "singleNotificationTime")
-        UserDefaults.standard.set(notificationCount, forKey: "notificationCount")
-        UserDefaults.standard.set(notificationMode.rawValue, forKey: "notificationMode")
-        UserDefaults.standard.set(fontSize.rawValue, forKey: "fontSize")
+        userDefaults.set(dailyNotifications, forKey: "dailyNotifications")
+        userDefaults.set(startTime, forKey: "startTime")
+        userDefaults.set(endTime, forKey: "endTime")
+        userDefaults.set(singleNotificationTime, forKey: "singleNotificationTime")
+        userDefaults.set(notificationCount, forKey: "notificationCount")
+        userDefaults.set(notificationMode.rawValue, forKey: "notificationMode")
+        userDefaults.set(fontSize.rawValue, forKey: "fontSize")
     }
     
     private func loadSettings() {
-        dailyNotifications = UserDefaults.standard.bool(forKey: "dailyNotifications")
+        dailyNotifications = userDefaults.bool(forKey: "dailyNotifications")
         
-        if let savedFontSize = FontSize(rawValue: UserDefaults.standard.string(forKey: "fontSize") ?? "") {
+        if let savedFontSize = FontSize(rawValue: userDefaults.string(forKey: "fontSize") ?? "") {
             fontSize = savedFontSize
         }
         
         // Load notification times if available
-        if let savedStartTime = UserDefaults.standard.object(forKey: "startTime") as? Date {
+        if let savedStartTime = userDefaults.object(forKey: "startTime") as? Date {
             startTime = savedStartTime
         }
         
-        if let savedEndTime = UserDefaults.standard.object(forKey: "endTime") as? Date {
+        if let savedEndTime = userDefaults.object(forKey: "endTime") as? Date {
             endTime = savedEndTime
         }
         
         // Load single notification time if available
-        if let savedSingleTime = UserDefaults.standard.object(forKey: "singleNotificationTime") as? Date {
+        if let savedSingleTime = userDefaults.object(forKey: "singleNotificationTime") as? Date {
             singleNotificationTime = savedSingleTime
         }
         
         // Load notification count if available
-        if UserDefaults.standard.object(forKey: "notificationCount") != nil {
-            notificationCount = UserDefaults.standard.integer(forKey: "notificationCount")
+        if userDefaults.object(forKey: "notificationCount") != nil {
+            notificationCount = userDefaults.integer(forKey: "notificationCount")
             // Ensure count is at least 1
             if notificationCount < 1 {
                 notificationCount = 1
@@ -413,7 +498,7 @@ class QuoteManager: ObservableObject {
         }
         
         // Load notification mode if available
-        if let savedMode = NotificationMode(rawValue: UserDefaults.standard.string(forKey: "notificationMode") ?? "") {
+        if let savedMode = NotificationMode(rawValue: userDefaults.string(forKey: "notificationMode") ?? "") {
             notificationMode = savedMode
         }
         
@@ -583,7 +668,7 @@ class QuoteManager: ObservableObject {
         var endMinutes = (endComponents.hour ?? 0) * 60 + (endComponents.minute ?? 0)
         
         // Handle cross-midnight scenarios
-        if endMinutes <= startMinutes {
+        if endMinutes < startMinutes {
             endMinutes += 24 * 60
         }
         
@@ -592,8 +677,12 @@ class QuoteManager: ObservableObject {
         // Maximum notifications based on time range (total minutes + 1 to include both start and end)
         let timeBasedMax = max(1, totalMinutes + 1)
         
-        // Apply both time-based limitation and hard cap of 10
-        return min(10, timeBasedMax)
+        // Apply hard cap only for very long ranges (more than 12 hours = 720 minutes)
+        if totalMinutes > 720 {
+            return 10
+        }
+        
+        return timeBasedMax
     }
     
     // MARK: - Time Adjustment
@@ -637,6 +726,224 @@ class QuoteManager: ObservableObject {
             notificationCount = maxAllowed
         }
         // If current count is less than or equal to maximum, don't change it
+    }
+    
+    // MARK: - Loved Quotes Management
+    func toggleLoveQuote(_ quote: String) {
+        if Thread.isMainThread {
+            var newLovedQuotes = self.lovedQuotes
+            if newLovedQuotes.contains(quote) {
+                newLovedQuotes.remove(quote)
+            } else {
+                newLovedQuotes.insert(quote)
+            }
+            self.lovedQuotes = newLovedQuotes
+        } else {
+            DispatchQueue.main.sync {
+                var newLovedQuotes = self.lovedQuotes
+                if newLovedQuotes.contains(quote) {
+                    newLovedQuotes.remove(quote)
+                } else {
+                    newLovedQuotes.insert(quote)
+                }
+                self.lovedQuotes = newLovedQuotes
+            }
+        }
+    }
+    
+    func isQuoteLoved(_ quote: String) -> Bool {
+        return lovedQuotes.contains(quote)
+    }
+    
+    var lovedQuotesArray: [String] {
+        return Array(lovedQuotes).sorted()
+    }
+    
+    private func saveLovedQuotes() {
+        let lovedQuotesArray = Array(lovedQuotes)
+        
+        // Encode each quote using Base64 to preserve special characters
+        let encodedQuotes = lovedQuotesArray.map { encodeQuoteForStorage($0) }
+        
+        // Save the encoded array to UserDefaults (this replaces existing data)
+        userDefaults.set(encodedQuotes, forKey: "lovedQuotes")
+        userDefaults.synchronize() // Force immediate synchronization
+        
+        print("Debug: Saved \(lovedQuotesArray.count) quotes: \(lovedQuotesArray)")
+        
+        // Validation: verify the data was saved correctly
+        if let savedData = userDefaults.array(forKey: "lovedQuotes") as? [String] {
+            let expectedCount = lovedQuotesArray.count
+            let actualCount = savedData.count
+            if expectedCount != actualCount {
+                print("Warning: Expected to save \(expectedCount) quotes but saved \(actualCount)")
+                print("Debug: Actual saved data: \(savedData)")
+            }
+        }
+    }
+    
+    private func loadLovedQuotes() {
+        guard let savedArray = userDefaults.array(forKey: "lovedQuotes") as? [String] else {
+            // No saved data, start with empty set
+            let wasInitializing = isInitializing
+            isInitializing = true
+            lovedQuotes = Set<String>()
+            isInitializing = wasInitializing
+            return
+        }
+        
+        var decodedQuotes: [String] = []
+        var needsMigration = false
+        var failedDecodingCount = 0
+        
+        for savedQuote in savedArray {
+            if isBase64Encoded(savedQuote) {
+                // This is an encoded quote, decode it
+                let decodedQuote = decodeQuoteFromStorage(savedQuote)
+                if decodedQuote != savedQuote { // Successfully decoded (different from input)
+                    decodedQuotes.append(decodedQuote)
+                } else {
+                    // Decoding failed, treat as raw quote
+                    decodedQuotes.append(savedQuote)
+                    needsMigration = true
+                    failedDecodingCount += 1
+                }
+            } else {
+                // This is a raw quote (old format), keep as-is but mark for migration
+                decodedQuotes.append(savedQuote)
+                needsMigration = true
+            }
+        }
+        
+        // Validation: log any issues for debugging
+        if failedDecodingCount > 0 {
+            print("Warning: Failed to decode \(failedDecodingCount) Base64 quotes")
+        }
+        
+        // Set the loaded quotes
+        let wasInitializing = isInitializing
+        isInitializing = true
+        lovedQuotes = Set(decodedQuotes)
+        isInitializing = wasInitializing
+        
+        print("Debug: Loaded \(decodedQuotes.count) quotes: \(decodedQuotes)")
+        
+        // If we found old format data, migrate it to new format
+        if needsMigration {
+            print("Debug: Migrating \(decodedQuotes.count) quotes to new format")
+            saveLovedQuotes()
+        }
+    }
+    
+    // MARK: - Encoding Utilities for Special Characters
+    private func encodeQuoteForStorage(_ quote: String) -> String {
+        guard let data = quote.data(using: .utf8) else { return quote }
+        return data.base64EncodedString()
+    }
+    
+    private func decodeQuoteFromStorage(_ encodedQuote: String) -> String {
+        guard let data = Data(base64Encoded: encodedQuote),
+              let decodedString = String(data: data, encoding: .utf8) else {
+            // If Base64 decoding fails, return the original string (backward compatibility)
+            return encodedQuote
+        }
+        return decodedString
+    }
+    
+    private func isBase64Encoded(_ string: String) -> Bool {
+        // More strict Base64 detection to avoid false positives
+        guard string.count > 8, // Minimum reasonable length for Base64 encoded text
+              string.count % 4 == 0 else { // Base64 must be multiple of 4
+            return false
+        }
+        
+        // Check for Base64 character set
+        let base64CharacterSet = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=")
+        guard string.rangeOfCharacter(from: base64CharacterSet.inverted) == nil else {
+            return false
+        }
+        
+        // Verify it's actually valid Base64 by trying to decode it
+        guard let data = Data(base64Encoded: string),
+              let decodedString = String(data: data, encoding: .utf8),
+              !decodedString.isEmpty else {
+            return false
+        }
+        
+        // Additional check: the decoded string should look like a quote (reasonable length and characters)
+        return decodedString.count > 3 && decodedString.count < 10000
+    }
+    
+    // MARK: - Testing Support
+    func clearLovedQuotes() {
+        // Clear in-memory data
+        if Thread.isMainThread {
+            lovedQuotes = Set<String>()
+        } else {
+            DispatchQueue.main.sync {
+                self.lovedQuotes = Set<String>()
+            }
+        }
+        
+        // Completely clear UserDefaults data
+        userDefaults.removeObject(forKey: "lovedQuotes")
+        userDefaults.synchronize()
+        
+        // Double-check that the data is really gone
+        if userDefaults.array(forKey: "lovedQuotes") != nil {
+            print("Warning: UserDefaults still contains loved quotes data after clearing")
+        }
+        
+        print("Debug: Cleared all loved quotes from memory and UserDefaults")
+    }
+    
+    // Check if we're running in a test environment
+    private var isRunningTests: Bool {
+        return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
+               NSClassFromString("XCTestCase") != nil
+    }
+    
+    // MARK: - Test Support
+    private static var currentTestUserDefaults: UserDefaults?
+    private static var currentTestIdentifier: String?
+    
+    private static func getTestUserDefaults() -> UserDefaults {
+        // Use call stack to identify the current test method
+        let stackTrace = Thread.callStackSymbols
+        var testMethodName = "unknown"
+        
+        // Look for test method in call stack
+        for frame in stackTrace {
+            if frame.contains("test") && frame.contains("[") && frame.contains("]") {
+                // Extract test method name from stack frame
+                if let range = frame.range(of: "test"),
+                   let endRange = frame.range(of: "]", range: range.upperBound..<frame.endIndex) {
+                    testMethodName = String(frame[range.lowerBound..<endRange.lowerBound])
+                    break
+                }
+            }
+        }
+        
+        // Always create fresh UserDefaults for each test method
+        if currentTestIdentifier != testMethodName {
+            currentTestIdentifier = testMethodName
+            // Add timestamp to ensure unique storage even if test methods have same name
+            let testSuiteName = "QuoteManagerTest_\(testMethodName)_\(Date().timeIntervalSince1970)"
+            currentTestUserDefaults = UserDefaults(suiteName: testSuiteName)
+            
+            // Clear any existing data to ensure clean slate
+            currentTestUserDefaults?.removePersistentDomain(forName: testSuiteName)
+            currentTestUserDefaults = UserDefaults(suiteName: testSuiteName)
+        }
+        
+        return currentTestUserDefaults!
+    }
+    
+    static func createTestInstance() -> QuoteManager {
+        // Create a unique UserDefaults suite for this test instance
+        let testSuiteName = "QuoteManagerTest_\(UUID().uuidString)"
+        let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
+        return QuoteManager(loadFromDefaults: false, userDefaults: testUserDefaults)
     }
     
     // MARK: - Localization
