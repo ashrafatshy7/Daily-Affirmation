@@ -128,6 +128,7 @@ struct ContentView: View {
                         .accessibilityIdentifier("settings_button")
                         .accessibilityLabel("Settings")
                         .accessibilityHint("Open settings")
+                        .accessibility(addTraits: .isButton)
                         
                         Spacer()
                         
@@ -146,6 +147,7 @@ struct ContentView: View {
                         .accessibilityIdentifier("share_button")
                         .accessibilityLabel("Share")
                         .accessibilityHint("Share current quote")
+                        .accessibility(addTraits: .isButton)
                     }
                     .padding(.horizontal, 24)
                     .padding(.top, 50) // Add extra padding to account for status bar
@@ -175,6 +177,7 @@ struct ContentView: View {
                         .accessibilityIdentifier("love_button")
                         .accessibilityLabel("Love this quote")
                         .accessibilityHint("Add or remove from loved quotes")
+                        .accessibility(addTraits: .isButton)
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 50)
@@ -290,10 +293,13 @@ struct QuoteScreenWithBackgroundView: View {
                         .padding(.horizontal, 40)
                         .scaleEffect(quoteManager.fontSize.multiplier)
                         .shadow(color: .white.opacity(0.8), radius: 2, x: 0, y: 1)
-                        .accessibilityIdentifier("quote_text")
-                        .accessibilityLabel("Daily quote")
-                        .accessibilityValue(displayQuote)
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityIdentifier(screenIndex == 0 ? "quote_text" : "quote_text_preview_\(screenIndex)")
+                .accessibilityLabel("Daily quote")
+                .accessibilityValue(displayQuote)
+                .accessibilityHint("Swipe up for next quote, swipe down for previous quote")
+                .accessibility(addTraits: .isStaticText)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 20)
                 
