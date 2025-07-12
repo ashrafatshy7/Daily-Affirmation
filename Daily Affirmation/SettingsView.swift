@@ -4,6 +4,7 @@ struct SettingsView: View {
     @ObservedObject var quoteManager: QuoteManager
     @Environment(\.dismiss) private var dismiss
     @State private var showPrivacyPolicy = false
+    @State private var showSubscription = false
     
     var body: some View {
         NavigationView {
@@ -56,6 +57,20 @@ struct SettingsView: View {
                         .accessibilityIdentifier("notifications_section")
                         .accessibility(addTraits: .isButton)
                         
+                        // Premium Features Section
+                        Button(action: {
+                            showSubscription.toggle()
+                        }) {
+                            SettingsCard(
+                                icon: "crown.fill",
+                                title: "Premium Features",
+                                subtitle: "Unlock Time Range notifications",
+                                iconColor: Color(red: 1.0, green: 0.7, blue: 0.0)
+                            )
+                        }
+                        .accessibilityIdentifier("premium_section")
+                        .accessibility(addTraits: .isButton)
+                        
                         // Display Section
                         NavigationLink(destination: DisplaySettingsView(quoteManager: quoteManager)) {
                             SettingsCard(
@@ -106,6 +121,9 @@ struct SettingsView: View {
         .sheet(isPresented: $showPrivacyPolicy) {
             PrivacyPolicyView()
                 .preferredColorScheme(.light)
+        }
+        .sheet(isPresented: $showSubscription) {
+            SubscriptionView()
         }
     }
 }

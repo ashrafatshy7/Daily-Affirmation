@@ -564,13 +564,10 @@ class QuoteManager: ObservableObject {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    print("Notification permission error: \(error)")
                     self?.dailyNotifications = false
                 } else if granted {
-                    print("Notification permission granted")
                     self?.scheduleNotification()
                 } else {
-                    print("Notification permission denied")
                     self?.dailyNotifications = false
                 }
             }
@@ -1049,4 +1046,5 @@ class QuoteManager: ObservableObject {
 // MARK: - Notification Names
 extension Notification.Name {
     static let notificationPermissionDenied = Notification.Name("notificationPermissionDenied")
+    static let resetOnboarding = Notification.Name("resetOnboarding")
 }

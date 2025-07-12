@@ -35,15 +35,8 @@ class SubscriptionManager: ObservableObject {
         isLoading = true
         defer { isLoading = false }
         
-        print("🔍 Loading products with identifiers: \(productIdentifiers)")
-        
         do {
             let storeProducts = try await Product.products(for: productIdentifiers)
-            print("✅ StoreKit returned \(storeProducts.count) products")
-            
-            for product in storeProducts {
-                print("📦 Product: \(product.id) - \(product.displayName) - \(product.displayPrice)")
-            }
             
             products = storeProducts.sorted { product1, product2 in
                 // Sort weekly first, then yearly
@@ -52,17 +45,18 @@ class SubscriptionManager: ObservableObject {
                 return product1.price < product2.price
             }
             
-            print("🎯 Final products array has \(products.count) items")
-            
-            // If no products loaded and we're in development, show helpful message
+            #if DEBUG
             if products.isEmpty {
                 print("⚠️ No products loaded. Make sure StoreKit Configuration is enabled in Xcode scheme:")
                 print("   1. Edit Scheme > Run > Options")
                 print("   2. Set StoreKit Configuration to 'Products.storekit'")
             }
+            #endif
         } catch {
+            #if DEBUG
             print("❌ Failed to load products: \(error)")
             print("   This usually means StoreKit Configuration is not set up properly in Xcode")
+            #endif
         }
     }
     
