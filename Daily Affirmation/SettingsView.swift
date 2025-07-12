@@ -273,6 +273,8 @@ struct NotificationSettingsDetailView: View {
 
 struct NotificationModeSection: View {
     @ObservedObject var quoteManager: QuoteManager
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
+    @State private var showingSubscriptionView = false
     
     var body: some View {
         VStack(spacing: 10) {
@@ -287,41 +289,59 @@ struct NotificationModeSection: View {
             HStack(spacing: 12) {
                 ForEach(QuoteManager.NotificationMode.allCases, id: \.self) { mode in
                     Button(action: {
-                        quoteManager.notificationMode = mode
+                        if mode == .range && !quoteManager.hasTimeRangeAccess {
+                            showingSubscriptionView = true
+                        } else {
+                            quoteManager.notificationMode = mode
+                        }
                     }) {
-                        Text(mode.displayName(using: quoteManager))
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(quoteManager.notificationMode == mode ? .white : .black)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(quoteManager.notificationMode == mode ? 
-                                          Color(red: 0.659, green: 0.902, blue: 0.812) : 
-                                          Color.white)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .stroke(
-                                                quoteManager.notificationMode == mode ? 
-                                                Color(red: 0.659, green: 0.902, blue: 0.812) : 
-                                                Color.secondary.opacity(0.3), 
-                                                lineWidth: 2
-                                            )
-                                    )
-                                    .shadow(
-                                        color: quoteManager.notificationMode == mode ? 
-                                        Color(red: 0.659, green: 0.902, blue: 0.812).opacity(0.3) : 
-                                        Color.clear,
-                                        radius: 4,
-                                        x: 0,
-                                        y: 2
-                                    )
-                            )
+                        HStack {
+                            Text(mode.displayName(using: quoteManager))
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(
+                                    (mode == .range && !quoteManager.hasTimeRangeAccess) ? .gray :
+                                    (quoteManager.notificationMode == mode ? .white : .black)
+                                )
+                            
+                            if mode == .range && !quoteManager.hasTimeRangeAccess {
+                                Image(systemName: "lock.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(
+                                    (mode == .range && !quoteManager.hasTimeRangeAccess) ? Color.gray.opacity(0.1) :
+                                    (quoteManager.notificationMode == mode ? Color(red: 0.659, green: 0.902, blue: 0.812) : Color.white)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(
+                                            (mode == .range && !quoteManager.hasTimeRangeAccess) ? Color.gray.opacity(0.3) :
+                                            (quoteManager.notificationMode == mode ? Color(red: 0.659, green: 0.902, blue: 0.812) : Color.secondary.opacity(0.3)), 
+                                            lineWidth: 2
+                                        )
+                                )
+                                .shadow(
+                                    color: (mode == .range && !quoteManager.hasTimeRangeAccess) ? Color.clear :
+                                    (quoteManager.notificationMode == mode ? Color(red: 0.659, green: 0.902, blue: 0.812).opacity(0.3) : Color.clear),
+                                    radius: 4,
+                                    x: 0,
+                                    y: 2
+                                )
+                        )
                     }
+                    .disabled(mode == .range && !quoteManager.hasTimeRangeAccess ? false : false) // Keep clickable for subscription
                     .animation(.easeInOut(duration: 0.2), value: quoteManager.notificationMode)
                 }
             }
             .padding(.horizontal, 24)
+            .sheet(isPresented: $showingSubscriptionView) {
+                SubscriptionView()
+            }
         }
     }
 }
