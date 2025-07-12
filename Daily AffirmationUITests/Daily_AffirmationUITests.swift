@@ -23,12 +23,18 @@ final class Daily_AffirmationUITests: XCTestCase {
     }
 
     @MainActor
-    func testExample() throws {
+    func testAppLaunch_displaysCorrectly() throws {
         // UI tests must launch the application that they test.
         let app = XCUIApplication()
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        // Verify the app launches successfully
+        XCTAssertTrue(app.exists, "App should launch successfully")
+        
+        // The app may show onboarding or main content depending on user state
+        // Just verify it doesn't crash
+        let hasContent = app.staticTexts.count > 0 || app.buttons.count > 0
+        XCTAssertTrue(hasContent, "App should display some content after launch")
     }
 
     @MainActor

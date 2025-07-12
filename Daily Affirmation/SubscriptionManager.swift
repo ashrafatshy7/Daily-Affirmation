@@ -20,10 +20,20 @@ class SubscriptionManager: ObservableObject {
     
     init() {
         updateListenerTask = listenForTransactions()
-        Task {
-            await loadProducts()
-            await checkSubscriptionStatus()
+        
+        // Don't load products during tests to avoid StoreKit warnings
+        if !isRunningTests {
+            Task {
+                await loadProducts()
+                await checkSubscriptionStatus()
+            }
         }
+    }
+    
+    // Check if we're running in a test environment
+    private var isRunningTests: Bool {
+        return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
+               NSClassFromString("XCTestCase") != nil
     }
     
     deinit {

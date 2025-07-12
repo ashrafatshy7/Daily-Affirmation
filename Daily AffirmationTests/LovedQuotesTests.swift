@@ -386,14 +386,15 @@ final class LovedQuotesTests: XCTestCase {
         let expectation = expectation(description: "Should publish loved quotes removal")
         let testQuote = sampleQuotes[0]
         
-        quoteManager.toggleLoveQuote(testQuote) // Add first
+        // Add quote first
+        quoteManager.toggleLoveQuote(testQuote)
+        XCTAssertEqual(quoteManager.lovedQuotes.count, 1, "Should have one loved quote")
         
-        var changeCount = 0
+        // Set up publisher to watch for removal
         quoteManager.$lovedQuotes
-            .dropFirst() // Skip initial value
-            .sink { _ in
-                changeCount += 1
-                if changeCount == 2 { // Second change (removal)
+            .dropFirst() // Skip current value (with 1 quote)
+            .sink { quotes in
+                if quotes.isEmpty {
                     expectation.fulfill()
                 }
             }
