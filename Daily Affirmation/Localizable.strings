@@ -74,3 +74,9 @@
 
 // Swipe Gestures
 "swipe_up_next" = "Swipe up for next";
+
+// Notification Permission
+"enable_notifications_title" = "Stay Inspired Daily";
+"enable_notifications_description" = "Get daily motivational quotes delivered to your device. You can customize the timing in settings.";
+"allow_notifications" = "Allow Notifications";
+"not_now" = "Not Now";

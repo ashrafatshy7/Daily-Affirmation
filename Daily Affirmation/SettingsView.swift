@@ -162,6 +162,7 @@ struct NotificationSettingsDetailView: View {
     @State private var showStartTimePicker = false
     @State private var showEndTimePicker = false
     @State private var showSingleTimePicker = false
+    @State private var showSettingsAlert = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -244,6 +245,28 @@ struct NotificationSettingsDetailView: View {
             TimePickerModal(selectedTime: $quoteManager.singleNotificationTime, isPresented: $showSingleTimePicker, quoteManager: quoteManager, title: "Notification Time", isStartTime: true)
                 .presentationDetents([.height(350)])
                 .presentationDragIndicator(.visible)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .notificationPermissionDenied)) { _ in
+            showSettingsAlert = true
+        }
+        .overlay(
+            showSettingsAlert ? 
+            SettingsRequiredAlert(
+                isPresented: $showSettingsAlert,
+                onOpenSettings: {
+                    openAppSettings()
+                    showSettingsAlert = false
+                },
+                onCancel: {
+                    showSettingsAlert = false
+                }
+            ) : nil
+        )
+    }
+    
+    private func openAppSettings() {
+        if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(settingsUrl)
         }
     }
 }
