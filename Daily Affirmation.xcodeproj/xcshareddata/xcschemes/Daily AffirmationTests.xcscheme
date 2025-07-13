@@ -19,7 +19,7 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D6B838112E1C757100A34476"
+               BlueprintIdentifier = "D6AA2EB82E206D2300E647B3"
                BuildableName = "Daily AffirmationTests.xctest"
                BlueprintName = "Daily AffirmationTests"
                ReferencedContainer = "container:Daily Affirmation.xcodeproj">
@@ -58,6 +58,9 @@
             ReferencedContainer = "container:Daily Affirmation.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <StoreKitConfigurationFileReference
+         identifier = "../../Daily Affirmation/Products.storekit">
+      </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -65,6 +68,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "D6B838042E1C757100A34476"
+            BuildableName = "Daily Affirmation.app"
+            BlueprintName = "Daily Affirmation"
+            ReferencedContainer = "container:Daily Affirmation.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
