@@ -24,7 +24,7 @@ struct SubscriptionView: View {
                             .fontWeight(.bold)
                             .multilineTextAlignment(.center)
                         
-                        Text("Get multiple daily inspirations throughout your chosen time period instead of just one notification per day.")
+                        Text("Get up to 10 daily inspirations throughout your chosen time period instead of just one notification per day.")
                             .font(.body)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)

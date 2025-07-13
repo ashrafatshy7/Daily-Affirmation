@@ -732,12 +732,8 @@ class QuoteManager: ObservableObject {
         // Maximum notifications based on time range (total minutes + 1 to include both start and end)
         let timeBasedMax = max(1, totalMinutes + 1)
         
-        // Apply hard cap only for very long ranges (more than 12 hours = 720 minutes)
-        if totalMinutes > 720 {
-            return 10
-        }
-        
-        return timeBasedMax
+        // Apply hard cap of 10 notifications maximum regardless of time range
+        return min(timeBasedMax, 10)
     }
     
     // MARK: - Time Adjustment

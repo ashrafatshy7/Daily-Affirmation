@@ -72,7 +72,7 @@ struct OnboardingView: View {
                         title: "Unlock Your Full\nPotential",
                         subtitle: "Upgrade to Premium and get multiple daily inspirations throughout your chosen time range",
                         features: [
-                            "⚡ Multiple notifications per day",
+                            "⚡ Up to 10 notifications per day",
                             "⏱️ Custom time range control",
                             "🎪 Perfect distribution throughout your day"
                         ],
