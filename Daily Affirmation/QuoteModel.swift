@@ -3,16 +3,233 @@ import UserNotifications
 import SwiftUI
 import Combine
 
+// MARK: - Personal Quote Model
+struct PersonalQuote: Identifiable, Codable, Equatable {
+    let id = UUID()
+    var text: String
+    let createdDate: Date
+    var isActive: Bool
+    
+    init(text: String, isActive: Bool = true) {
+        self.text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.createdDate = Date()
+        self.isActive = isActive
+    }
+    
+    // Validation
+    var isValid: Bool {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmedText.isEmpty && trimmedText.count >= 4 && trimmedText.count <= 50
+    }
+    
+    var displayText: String {
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    // Encoding keys for Codable
+    enum CodingKeys: String, CodingKey {
+        case id, text, createdDate, isActive
+    }
+}
+
+// MARK: - Quote Frequency Models
+enum QuoteType {
+    case builtin
+    case personal
+}
+
+struct WeightedQuote {
+    let text: String
+    let type: QuoteType
+    let baseWeight: Double
+    var currentWeight: Double
+    let personalQuoteId: UUID?
+    
+    init(text: String, type: QuoteType, baseWeight: Double = 1.0, personalQuoteId: UUID? = nil) {
+        self.text = text
+        self.type = type
+        self.baseWeight = baseWeight
+        self.currentWeight = baseWeight
+        self.personalQuoteId = personalQuoteId
+    }
+    
+    mutating func adjustWeight(multiplier: Double) {
+        self.currentWeight = baseWeight * multiplier
+    }
+}
+
+class QuoteBag {
+    private var quotes: [WeightedQuote] = []
+    private var usedQuotes: Set<String> = []
+    private var recentBuffer: [String] = []
+    private let maxRecentBuffer: Int = 10
+    
+    var isEmpty: Bool {
+        return quotes.isEmpty
+    }
+    
+    var totalQuotes: Int {
+        return quotes.count
+    }
+    
+    var availableQuotes: Int {
+        return quotes.count - usedQuotes.count
+    }
+    
+    var exhaustionPercentage: Double {
+        guard totalQuotes > 0 else { return 0 }
+        return Double(usedQuotes.count) / Double(totalQuotes)
+    }
+    
+    func addQuote(_ weightedQuote: WeightedQuote) {
+        quotes.append(weightedQuote)
+    }
+    
+    func addQuotes(_ weightedQuotes: [WeightedQuote]) {
+        quotes.append(contentsOf: weightedQuotes)
+    }
+    
+    func updatePersonalQuoteFrequency(multiplier: Double) {
+        for i in 0..<quotes.count {
+            if quotes[i].type == .personal {
+                quotes[i].adjustWeight(multiplier: multiplier)
+            }
+        }
+    }
+    
+    func selectRandomQuote() -> WeightedQuote? {
+        let availableQuotes = quotes.filter { quote in
+            !usedQuotes.contains(quote.text) && !recentBuffer.contains(quote.text)
+        }
+        
+        guard !availableQuotes.isEmpty else {
+            // If all quotes are used or in recent buffer, check if we should reset
+            if shouldResetBag() {
+                resetBag()
+                return selectRandomQuote()
+            }
+            return nil
+        }
+        
+        // Apply boost to remaining quotes when bag is getting empty
+        let boostedQuotes = applyEmptyBagBoost(to: availableQuotes)
+        
+        // Weighted random selection
+        let totalWeight = boostedQuotes.reduce(0) { $0 + $1.currentWeight }
+        guard totalWeight > 0 else { return availableQuotes.randomElement() }
+        
+        let randomValue = Double.random(in: 0..<totalWeight)
+        var accumulatedWeight: Double = 0
+        
+        for quote in boostedQuotes {
+            accumulatedWeight += quote.currentWeight
+            if randomValue < accumulatedWeight {
+                markQuoteAsUsed(quote.text)
+                return quote
+            }
+        }
+        
+        // Fallback to random selection
+        let selectedQuote = availableQuotes.randomElement()
+        if let quote = selectedQuote {
+            markQuoteAsUsed(quote.text)
+        }
+        return selectedQuote
+    }
+    
+    private func shouldResetBag() -> Bool {
+        // Reset when 90% of quotes have been used
+        return exhaustionPercentage >= 0.9
+    }
+    
+    private func resetBag() {
+        usedQuotes.removeAll()
+        recentBuffer.removeAll()
+        
+        // Shuffle the quotes array for variety
+        quotes.shuffle()
+    }
+    
+    private func markQuoteAsUsed(_ quoteText: String) {
+        usedQuotes.insert(quoteText)
+        
+        // Add to recent buffer
+        recentBuffer.append(quoteText)
+        if recentBuffer.count > maxRecentBuffer {
+            recentBuffer.removeFirst()
+        }
+    }
+    
+    private func applyEmptyBagBoost(to quotes: [WeightedQuote]) -> [WeightedQuote] {
+        // When bag is getting empty (>60% used), boost remaining quotes
+        guard exhaustionPercentage > 0.6 else { return quotes }
+        
+        let boostMultiplier = 1.0 + (exhaustionPercentage - 0.6) * 2.0 // Up to 2x boost
+        
+        return quotes.map { quote in
+            var boostedQuote = quote
+            boostedQuote.currentWeight *= boostMultiplier
+            return boostedQuote
+        }
+    }
+    
+    func removeQuotesMatching(predicate: (WeightedQuote) -> Bool) {
+        quotes.removeAll(where: predicate)
+        // Clean up used quotes set to remove any that no longer exist
+        let existingTexts = Set(quotes.map { $0.text })
+        usedQuotes = usedQuotes.intersection(existingTexts)
+    }
+    
+    func updateQuote(withId id: UUID, newText: String) {
+        for i in 0..<quotes.count {
+            if quotes[i].personalQuoteId == id {
+                let oldText = quotes[i].text
+                quotes[i] = WeightedQuote(
+                    text: newText,
+                    type: quotes[i].type,
+                    baseWeight: quotes[i].baseWeight,
+                    personalQuoteId: id
+                )
+                
+                // Update tracking sets
+                if usedQuotes.contains(oldText) {
+                    usedQuotes.remove(oldText)
+                    usedQuotes.insert(newText)
+                }
+                
+                if let index = recentBuffer.firstIndex(of: oldText) {
+                    recentBuffer[index] = newText
+                }
+                break
+            }
+        }
+    }
+    
+    func getQuoteStatistics() -> (total: Int, used: Int, personal: Int, builtin: Int) {
+        let personalCount = quotes.filter { $0.type == .personal }.count
+        let builtinCount = quotes.filter { $0.type == .builtin }.count
+        
+        return (
+            total: totalQuotes,
+            used: usedQuotes.count,
+            personal: personalCount,
+            builtin: builtinCount
+        )
+    }
+}
+
 class QuoteHistory {
     private var history: [String] = []
     private var currentIndex: Int = 0
     private let quotes: [String]
     private var cachedNextQuote: String?
+    private weak var quoteManager: QuoteManager?
     
-    init(initialQuote: String, availableQuotes: [String]) {
+    init(initialQuote: String, availableQuotes: [String], quoteManager: QuoteManager? = nil) {
         self.quotes = availableQuotes
         self.history = [initialQuote]
         self.currentIndex = 0
+        self.quoteManager = quoteManager
     }
     
     var currentQuote: String {
@@ -72,13 +289,44 @@ class QuoteHistory {
     }
     
     private func generateRandomQuote() -> String {
-        guard !quotes.isEmpty else { return "Stay inspired!" }
+        // Try to use weighted selection from quote manager
+        if let manager = quoteManager {
+            manager.ensureQuoteBagInitialized()
+            
+            // Try to get a weighted quote that's different from current
+            let currentQuote = history[currentIndex]
+            
+            // Try multiple times to get a different quote
+            for _ in 0..<10 {
+                if let selectedQuote = manager.quoteBag.selectRandomQuote() {
+                    if selectedQuote.text != currentQuote {
+                        return selectedQuote.text
+                    }
+                }
+            }
+        }
+        
+        // Fallback to original logic
+        var allAvailableQuotes: [String] = []
+        
+        // Add regular quotes
+        if !quotes.isEmpty {
+            allAvailableQuotes.append(contentsOf: quotes)
+        }
+        
+        // Add personal quotes if enabled and available
+        if let manager = quoteManager, manager.includePersonalQuotes {
+            let activePersonal = manager.activePersonalQuotes.map { $0.displayText }
+            allAvailableQuotes.append(contentsOf: activePersonal)
+        }
+        
+        guard !allAvailableQuotes.isEmpty else { return "Stay inspired!" }
         
         // Ensure we don't return the same quote as current
         let currentQuote = history[currentIndex]
-        let availableQuotes = quotes.filter { $0 != currentQuote }
+        let availableQuotes = allAvailableQuotes.filter { $0 != currentQuote }
         if availableQuotes.isEmpty {
-            return quotes.randomElement() ?? "Stay inspired!"
+            return allAvailableQuotes.randomElement() ?? "Stay inspired!"
         }
         
         return availableQuotes.randomElement() ?? "Stay inspired!"
@@ -267,6 +515,35 @@ class QuoteManager: ObservableObject {
         }
     }
     
+    @Published var personalQuotes: [PersonalQuote] = [] {
+        didSet {
+            if !isInitializing {
+                savePersonalQuotes()
+                rebuildQuoteBag()
+            }
+        }
+    }
+    
+    @Published var includePersonalQuotes: Bool = true {
+        didSet {
+            if !isInitializing {
+                saveSettings()
+                rebuildQuoteBag()
+            }
+        }
+    }
+    
+    @Published var personalQuoteFrequencyMultiplier: Double = 2.0 {
+        didSet {
+            if !isInitializing {
+                saveSettings()
+                quoteBag.updatePersonalQuoteFrequency(multiplier: personalQuoteFrequencyMultiplier)
+            }
+        }
+    }
+    
+    internal var quoteBag = QuoteBag()
+    
     
     enum FontSize: String, CaseIterable {
         case small = "small"
@@ -327,9 +604,11 @@ class QuoteManager: ObservableObject {
         if loadFromDefaults {
             loadSettings()
             loadLovedQuotes()
+            loadPersonalQuotes()
         } else {
             // For tests: start with clean state
             lovedQuotes = Set<String>()
+            personalQuotes = []
         }
         
         loadQuotes()
@@ -338,6 +617,9 @@ class QuoteManager: ObservableObject {
         // Load offline subscription status immediately - this will be handled by SubscriptionManager on app launch
         
         isInitializing = false
+        
+        // Build initial quote bag after everything is loaded
+        rebuildQuoteBag()
     }
     
     private func setupNotificationCategories() {
@@ -374,7 +656,7 @@ class QuoteManager: ObservableObject {
             
             // Initialize quote history with daily quote
             let dailyQuote = quotes[currentIndex]
-            quoteHistory = QuoteHistory(initialQuote: dailyQuote, availableQuotes: quotes)
+            quoteHistory = QuoteHistory(initialQuote: dailyQuote, availableQuotes: quotes, quoteManager: self)
             currentQuoteText = dailyQuote
         } else {
             currentIndex = 0
@@ -498,6 +780,8 @@ class QuoteManager: ObservableObject {
         userDefaults.set(notificationCount, forKey: "notificationCount")
         userDefaults.set(notificationMode.rawValue, forKey: "notificationMode")
         userDefaults.set(fontSize.rawValue, forKey: "fontSize")
+        userDefaults.set(includePersonalQuotes, forKey: "includePersonalQuotes")
+        userDefaults.set(personalQuoteFrequencyMultiplier, forKey: "personalQuoteFrequencyMultiplier")
     }
     
     private func loadSettings() {
@@ -533,6 +817,22 @@ class QuoteManager: ObservableObject {
         // Load notification mode if available
         if let savedMode = NotificationMode(rawValue: userDefaults.string(forKey: "notificationMode") ?? "") {
             notificationMode = savedMode
+        }
+        
+        // Load include personal quotes setting (defaults to true if not set)
+        if userDefaults.object(forKey: "includePersonalQuotes") != nil {
+            includePersonalQuotes = userDefaults.bool(forKey: "includePersonalQuotes")
+        } else {
+            includePersonalQuotes = true
+        }
+        
+        // Load personal quote frequency multiplier (defaults to 2.0 if not set)
+        if userDefaults.object(forKey: "personalQuoteFrequencyMultiplier") != nil {
+            personalQuoteFrequencyMultiplier = userDefaults.double(forKey: "personalQuoteFrequencyMultiplier")
+            // Ensure the value is within valid range (1.0 - 5.0)
+            personalQuoteFrequencyMultiplier = max(1.0, min(5.0, personalQuoteFrequencyMultiplier))
+        } else {
+            personalQuoteFrequencyMultiplier = 2.0
         }
         
         // If notifications were enabled, check permission and schedule
@@ -686,8 +986,28 @@ class QuoteManager: ObservableObject {
     }
     
     private func getRandomQuote() -> String {
-        guard !quotes.isEmpty else { return "Stay inspired!" }
-        return quotes.randomElement() ?? "Stay inspired!"
+        ensureQuoteBagInitialized()
+        
+        if let selectedQuote = quoteBag.selectRandomQuote() {
+            return selectedQuote.text
+        }
+        
+        // Fallback to old method if quote bag fails
+        var allAvailableQuotes: [String] = []
+        
+        // Add regular quotes
+        if !quotes.isEmpty {
+            allAvailableQuotes.append(contentsOf: quotes)
+        }
+        
+        // Add personal quotes if enabled and available
+        if includePersonalQuotes {
+            let activePersonal = activePersonalQuotes.map { $0.displayText }
+            allAvailableQuotes.append(contentsOf: activePersonal)
+        }
+        
+        guard !allAvailableQuotes.isEmpty else { return "Stay inspired!" }
+        return allAvailableQuotes.randomElement() ?? "Stay inspired!"
     }
     
     var formattedNotificationTime: String {
@@ -903,6 +1223,186 @@ class QuoteManager: ObservableObject {
         
         // Additional check: the decoded string should look like a quote (reasonable length and characters)
         return decodedString.count > 3 && decodedString.count < 10000
+    }
+    
+    // MARK: - Quote Bag Management
+    private func rebuildQuoteBag() {
+        quoteBag = QuoteBag()
+        
+        // Add built-in quotes
+        for quote in quotes {
+            let weightedQuote = WeightedQuote(text: quote, type: .builtin)
+            quoteBag.addQuote(weightedQuote)
+        }
+        
+        // Add personal quotes if enabled
+        if includePersonalQuotes {
+            for personalQuote in activePersonalQuotes {
+                let weightedQuote = WeightedQuote(
+                    text: personalQuote.displayText,
+                    type: .personal,
+                    baseWeight: 1.0,
+                    personalQuoteId: personalQuote.id
+                )
+                quoteBag.addQuote(weightedQuote)
+            }
+        }
+        
+        // Apply frequency multiplier to personal quotes
+        quoteBag.updatePersonalQuoteFrequency(multiplier: personalQuoteFrequencyMultiplier)
+    }
+    
+    internal func ensureQuoteBagInitialized() {
+        if quoteBag.isEmpty && (!quotes.isEmpty || !personalQuotes.isEmpty) {
+            rebuildQuoteBag()
+        }
+    }
+    
+    func getQuoteBagStatistics() -> (total: Int, used: Int, personal: Int, builtin: Int) {
+        return quoteBag.getQuoteStatistics()
+    }
+    
+    // MARK: - Personal Quotes Management
+    func addPersonalQuote(_ text: String) -> Bool {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty && trimmedText.count >= 4 && trimmedText.count <= 50 else {
+            return false
+        }
+        
+        let newQuote = PersonalQuote(text: trimmedText)
+        
+        if Thread.isMainThread {
+            personalQuotes.append(newQuote)
+        } else {
+            DispatchQueue.main.sync {
+                self.personalQuotes.append(newQuote)
+            }
+        }
+        return true
+    }
+    
+    func deletePersonalQuote(withId id: UUID) {
+        if Thread.isMainThread {
+            personalQuotes.removeAll { $0.id == id }
+        } else {
+            DispatchQueue.main.sync {
+                self.personalQuotes.removeAll { $0.id == id }
+            }
+        }
+    }
+    
+    func updatePersonalQuote(withId id: UUID, newText: String) -> Bool {
+        let trimmedText = newText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty && trimmedText.count >= 4 && trimmedText.count <= 50 else {
+            return false
+        }
+        
+        if Thread.isMainThread {
+            if let index = personalQuotes.firstIndex(where: { $0.id == id }) {
+                personalQuotes[index].text = trimmedText
+                // Update quote bag directly for immediate consistency
+                quoteBag.updateQuote(withId: id, newText: trimmedText)
+                return true
+            }
+        } else {
+            return DispatchQueue.main.sync {
+                if let index = self.personalQuotes.firstIndex(where: { $0.id == id }) {
+                    self.personalQuotes[index].text = trimmedText
+                    // Update quote bag directly for immediate consistency
+                    self.quoteBag.updateQuote(withId: id, newText: trimmedText)
+                    return true
+                }
+                return false
+            }
+        }
+        return false
+    }
+    
+    func togglePersonalQuoteActive(withId id: UUID) {
+        if Thread.isMainThread {
+            if let index = personalQuotes.firstIndex(where: { $0.id == id }) {
+                personalQuotes[index].isActive.toggle()
+            }
+        } else {
+            DispatchQueue.main.sync {
+                if let index = self.personalQuotes.firstIndex(where: { $0.id == id }) {
+                    self.personalQuotes[index].isActive.toggle()
+                }
+            }
+        }
+    }
+    
+    var activePersonalQuotes: [PersonalQuote] {
+        return personalQuotes.filter { $0.isActive }
+    }
+    
+    var sortedPersonalQuotes: [PersonalQuote] {
+        return personalQuotes.sorted { $0.createdDate > $1.createdDate }
+    }
+    
+    private func savePersonalQuotes() {
+        do {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            let data = try encoder.encode(personalQuotes)
+            
+            // Encode the data using Base64 to preserve special characters
+            let encodedData = data.base64EncodedString()
+            
+            userDefaults.set(encodedData, forKey: "personalQuotes")
+            userDefaults.synchronize()
+        } catch {
+            print("Failed to save personal quotes: \(error)")
+        }
+    }
+    
+    private func loadPersonalQuotes() {
+        guard let encodedData = userDefaults.string(forKey: "personalQuotes") else {
+            // No saved data, start with empty array
+            let wasInitializing = isInitializing
+            isInitializing = true
+            personalQuotes = []
+            isInitializing = wasInitializing
+            return
+        }
+        
+        do {
+            // Decode the Base64 data
+            guard let data = Data(base64Encoded: encodedData) else {
+                print("Failed to decode personal quotes data")
+                personalQuotes = []
+                return
+            }
+            
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let loadedQuotes = try decoder.decode([PersonalQuote].self, from: data)
+            
+            let wasInitializing = isInitializing
+            isInitializing = true
+            personalQuotes = loadedQuotes
+            isInitializing = wasInitializing
+        } catch {
+            print("Failed to load personal quotes: \(error)")
+            // If loading fails, start with empty array
+            let wasInitializing = isInitializing
+            isInitializing = true
+            personalQuotes = []
+            isInitializing = wasInitializing
+        }
+    }
+    
+    func clearPersonalQuotes() {
+        if Thread.isMainThread {
+            personalQuotes = []
+        } else {
+            DispatchQueue.main.sync {
+                self.personalQuotes = []
+            }
+        }
+        
+        userDefaults.removeObject(forKey: "personalQuotes")
+        userDefaults.synchronize()
     }
     
     // MARK: - Testing Support
