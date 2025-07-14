@@ -1,7 +1,7 @@
 import SwiftUI
 import StoreKit
 
-struct OnboardingSubscriptionView: View {
+struct SubscriptionView: View {
     @StateObject private var subscriptionManager = SubscriptionManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var isPurchasing = false
@@ -140,7 +140,7 @@ struct OnboardingSubscriptionView: View {
                                 .frame(height: 100)
                         } else {
                             ForEach(subscriptionManager.products, id: \.id) { product in
-                                OnboardingSubscriptionCard(
+                                SubscriptionCard(
                                     product: product,
                                     isSelected: selectedProduct?.id == product.id,
                                     isPurchasing: isPurchasing
@@ -317,7 +317,7 @@ struct ComparisonRow: View {
     }
 }
 
-struct OnboardingSubscriptionCard: View {
+struct SubscriptionCard: View {
     let product: Product
     let isSelected: Bool
     let isPurchasing: Bool
@@ -432,5 +432,5 @@ struct OnboardingSubscriptionCard: View {
 }
 
 #Preview {
-    OnboardingSubscriptionView()
+    SubscriptionView()
 }

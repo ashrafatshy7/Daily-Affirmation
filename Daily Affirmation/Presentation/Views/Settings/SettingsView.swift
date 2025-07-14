@@ -76,7 +76,7 @@ struct SettingsView: View {
                             SettingsCard(
                                 icon: "textformat.size",
                                 title: quoteManager.localizedString("font_size"),
-                                subtitle: quoteManager.fontSize.displayName(using: quoteManager),
+                                subtitle: quoteManager.fontSize.displayName,
                                 iconColor: Color(red: 0.0, green: 0.478, blue: 1.0)
                             )
                         }
@@ -305,7 +305,7 @@ struct NotificationModeSection: View {
             .padding(.horizontal, 24)
             
             HStack(spacing: 12) {
-                ForEach(QuoteManager.NotificationMode.allCases, id: \.self) { mode in
+                ForEach(NotificationMode.allCases, id: \.self) { mode in
                     Button(action: {
                         if mode == .range && !quoteManager.hasTimeRangeAccess {
                             showingSubscriptionView = true
@@ -314,7 +314,7 @@ struct NotificationModeSection: View {
                         }
                     }) {
                         HStack {
-                            Text(mode.displayName(using: quoteManager))
+                            Text(mode.displayName)
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(
                                     (mode == .range && !quoteManager.hasTimeRangeAccess) ? .gray :
@@ -711,12 +711,12 @@ struct DisplaySettingsView: View {
                         .padding(.horizontal, 24)
                         
                         VStack(spacing: 10) {
-                            ForEach(QuoteManager.FontSize.allCases, id: \.self) { size in
+                            ForEach(FontSize.allCases, id: \.self) { size in
                                 Button(action: {
                                     quoteManager.fontSize = size
                                 }) {
                                     HStack {
-                                        Text(size.displayName(using: quoteManager))
+                                        Text(size.displayName)
                                             .font(.headline)
                                             .foregroundColor(quoteManager.fontSize == size ? .white : .black)
                                         Spacer()
@@ -743,7 +743,7 @@ struct DisplaySettingsView: View {
                                             )
                                     )
                                 }
-                                .accessibilityLabel(size.displayName(using: quoteManager))
+                                .accessibilityLabel(size.displayName)
                                 .accessibilityIdentifier("font_size_\(size.rawValue)")
                                 .padding(.horizontal, 24)
                             }
