@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var quoteManager = QuoteManager()
     @State private var showSettings = false
+    @State private var showCustomizeOptions = false
     @State private var currentScreenOffset: CGFloat = 0
     @State private var swipeIndicatorOpacity: Double = 1.0
     @State private var showSwipeIndicator: Bool = true
@@ -158,11 +159,30 @@ struct ContentView: View {
                 }
                 .zIndex(10) // Ensure buttons stay on top
                 
-                // Fixed bottom right love button overlay
+                // Fixed bottom buttons overlay
                 VStack {
                     Spacer()
                     HStack {
+                        // Customize options button (bottom left)
+                        Button(action: {
+                            showCustomizeOptions.toggle()
+                        }) {
+                            Image(systemName: "paintbrush.fill")
+                                .font(.title2)
+                                .foregroundColor(.black.opacity(0.6))
+                                .padding(12)
+                                .background(Color.white.opacity(0.9))
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
+                        }
+                        .accessibilityIdentifier("customize_button")
+                        .accessibilityLabel("Customize options")
+                        .accessibilityHint("Customize background, add personal quotes, and more")
+                        .accessibility(addTraits: .isButton)
+                        
                         Spacer()
+                        
+                        // Love button (bottom right)
                         Button(action: {
                             let currentQuote = quoteManager.currentQuote
                             quoteManager.toggleLoveQuote(currentQuote)
@@ -183,7 +203,7 @@ struct ContentView: View {
                     .padding(.horizontal, 24)
                     .padding(.bottom, 50)
                 }
-                .zIndex(10) // Ensure button stays on top
+                .zIndex(10) // Ensure buttons stay on top
             }
             .onAppear {
                 // Set initial opacity for swipe indicator
@@ -201,6 +221,9 @@ struct ContentView: View {
         .ignoresSafeArea(.all) // Ensure the entire view ignores safe areas
         .sheet(isPresented: $showSettings) {
             SettingsView(quoteManager: quoteManager)
+        }
+        .sheet(isPresented: $showCustomizeOptions) {
+            CustomizeOptionsView(quoteManager: quoteManager)
         }
         .overlay(
             // Notification permission popup
