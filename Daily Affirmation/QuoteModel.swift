@@ -461,23 +461,52 @@ class QuoteManager: ObservableObject {
             }
         } else {
             // Multiple notifications distributed evenly (space-between)
-            // Calculate the exact interval for space-between distribution
-            let interval = Double(totalMinutes) / Double(count - 1)
+            // For short ranges, ensure minimum 1 minute spacing between notifications
+            let minSpacing = 1
+            let maxPossibleNotifications = totalMinutes + 1 // +1 because we include both start and end
+            let actualCount = min(count, maxPossibleNotifications)
             
-            // Generate notifications with proper space-between distribution
-            for i in 0..<count {
-                let exactMinutes = Double(startMinutes) + (Double(i) * interval)
-                let minutes = Int(round(exactMinutes))
-                let adjustedMinutes = min(minutes, endMinutes) // Don't exceed end time
+            if actualCount <= totalMinutes {
+                // Use space-between distribution for proper spacing
+                let interval = actualCount > 1 ? Double(totalMinutes) / Double(actualCount - 1) : 0.0
                 
-                if let notificationTime = createDateFromMinutes(adjustedMinutes, using: calendar) {
-                    notificationTimes.append(notificationTime)
+                for i in 0..<actualCount {
+                    let exactMinutes = Double(startMinutes) + (Double(i) * interval)
+                    let minutes = Int(round(exactMinutes))
+                    let adjustedMinutes = min(minutes, endMinutes) // Don't exceed end time
+                    
+                    if let notificationTime = createDateFromMinutes(adjustedMinutes, using: calendar) {
+                        notificationTimes.append(notificationTime)
+                    }
+                }
+            } else {
+                // Fallback: distribute with minimum spacing
+                for i in 0..<min(actualCount, totalMinutes + 1) {
+                    let minutes = startMinutes + (i * minSpacing)
+                    if minutes <= endMinutes {
+                        if let notificationTime = createDateFromMinutes(minutes, using: calendar) {
+                            notificationTimes.append(notificationTime)
+                        }
+                    }
                 }
             }
         }
         
-        // Sort by time and remove duplicates
-        return Array(Set(notificationTimes)).sorted()
+        // Sort by time and ensure we don't lose notifications due to Set conversion
+        // Only remove exact duplicates manually to preserve all intended notifications
+        let sortedTimes = notificationTimes.sorted()
+        var uniqueTimes: [Date] = []
+        
+        for time in sortedTimes {
+            if uniqueTimes.isEmpty || !uniqueTimes.contains(where: { 
+                Calendar.current.dateComponents([.hour, .minute], from: $0) == 
+                Calendar.current.dateComponents([.hour, .minute], from: time) 
+            }) {
+                uniqueTimes.append(time)
+            }
+        }
+        
+        return uniqueTimes
     }
     
     private func createDateFromMinutes(_ minutes: Int, using calendar: Calendar) -> Date? {
