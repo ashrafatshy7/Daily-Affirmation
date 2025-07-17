@@ -121,6 +121,18 @@ struct SubscriptionView: View {
                         Text("• Subscription automatically renews unless cancelled")
                         Text("• Cancel anytime in Settings > Subscriptions")
                         Text("• Payment charged to iTunes Account")
+                        
+                        // Terms of Use and Privacy Policy links
+                        HStack(spacing: 16) {
+                            Link("Terms of Use", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+                                .font(.caption)
+                                .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                            
+                            Link("Privacy Policy", destination: URL(string: "https://daily-affirmation-gamma.vercel.app")!)
+                                .font(.caption)
+                                .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                        }
+                        .padding(.top, 8)
                     }
                     .font(.caption)
                     .foregroundColor(.secondary)

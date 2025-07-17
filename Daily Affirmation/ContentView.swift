@@ -306,10 +306,7 @@ struct QuoteScreenWithBackgroundView: View {
         }
     }
     
-    private var displayIndex: Int {
-        // Since we're using history system, we don't need complex indexing
-        return 1
-    }
+
     
     var body: some View {
         ZStack {

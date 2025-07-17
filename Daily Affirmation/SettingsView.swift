@@ -3,7 +3,6 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var quoteManager: QuoteManager
     @Environment(\.dismiss) private var dismiss
-    @State private var showPrivacyPolicy = false
     @State private var showSubscription = false
     
     var body: some View {
@@ -95,19 +94,6 @@ struct SettingsView: View {
                         .accessibilityIdentifier("loved_quotes_section")
                         .accessibility(addTraits: .isButton)
                         
-                        // Privacy Policy Section
-                        Button(action: {
-                            showPrivacyPolicy.toggle()
-                        }) {
-                            SettingsCard(
-                                icon: "doc.text.fill",
-                                title: quoteManager.localizedString("privacy_policy"),
-                                subtitle: "App privacy information",
-                                iconColor: Color(red: 0.5, green: 0.5, blue: 0.5)
-                            )
-                        }
-                        .accessibilityIdentifier("privacy_section")
-                        .accessibility(addTraits: .isButton)
                     }
                     .padding(.horizontal, 24)
                     .padding(.top, 24)
@@ -118,10 +104,6 @@ struct SettingsView: View {
             .navigationBarHidden(true)
         }
         .preferredColorScheme(.light)
-        .sheet(isPresented: $showPrivacyPolicy) {
-            PrivacyPolicyView()
-                .preferredColorScheme(.light)
-        }
         .sheet(isPresented: $showSubscription) {
             SubscriptionView()
         }
@@ -250,19 +232,31 @@ struct NotificationSettingsDetailView: View {
         .background(Color.white)
         .navigationBarHidden(true)
         .sheet(isPresented: $showStartTimePicker) {
-            TimePickerModal(selectedTime: $quoteManager.startTime, isPresented: $showStartTimePicker, quoteManager: quoteManager, title: "Start Time", isStartTime: true)
-                .presentationDetents([.height(350)])
-                .presentationDragIndicator(.visible)
+            if #available(iOS 16.0, *) {
+                TimePickerModal(selectedTime: $quoteManager.startTime, isPresented: $showStartTimePicker, quoteManager: quoteManager, title: "Start Time", isStartTime: true)
+                    .presentationDetents([.height(350)])
+                    .presentationDragIndicator(.visible)
+            } else {
+                // Fallback on earlier versions
+            }
         }
         .sheet(isPresented: $showEndTimePicker) {
-            TimePickerModal(selectedTime: $quoteManager.endTime, isPresented: $showEndTimePicker, quoteManager: quoteManager, title: "End Time", isStartTime: false)
-                .presentationDetents([.height(350)])
-                .presentationDragIndicator(.visible)
+            if #available(iOS 16.0, *) {
+                TimePickerModal(selectedTime: $quoteManager.endTime, isPresented: $showEndTimePicker, quoteManager: quoteManager, title: "End Time", isStartTime: false)
+                    .presentationDetents([.height(350)])
+                    .presentationDragIndicator(.visible)
+            } else {
+                // Fallback on earlier versions
+            }
         }
         .sheet(isPresented: $showSingleTimePicker) {
-            TimePickerModal(selectedTime: $quoteManager.singleNotificationTime, isPresented: $showSingleTimePicker, quoteManager: quoteManager, title: "Notification Time", isStartTime: true)
-                .presentationDetents([.height(350)])
-                .presentationDragIndicator(.visible)
+            if #available(iOS 16.0, *) {
+                TimePickerModal(selectedTime: $quoteManager.singleNotificationTime, isPresented: $showSingleTimePicker, quoteManager: quoteManager, title: "Notification Time", isStartTime: true)
+                    .presentationDetents([.height(350)])
+                    .presentationDragIndicator(.visible)
+            } else {
+                // Fallback on earlier versions
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .notificationPermissionDenied)) { _ in
             showSettingsAlert = true
