@@ -34,9 +34,7 @@ struct ContentView: View {
                     ForEach(-1...1, id: \.self) { screenIndex in
                         QuoteCardWithGradientView(
                             quoteManager: quoteManager,
-                            screenIndex: screenIndex,
-                            showSwipeIndicator: showSwipeIndicator && screenIndex == 0,
-                            swipeIndicatorOpacity: swipeIndicatorOpacity
+                            screenIndex: screenIndex
                         )
                         .frame(width: geometry.size.width, height: screenHeight)
                         .offset(y: CGFloat(screenIndex) * screenHeight + dragOffset)
@@ -145,18 +143,18 @@ struct ContentView: View {
                 VStack {
                     Spacer()
                     HStack {
-                        Button(action: {
-                            showCustomizeOptions.toggle()
-                        }) {
-                            Image(systemName: "paintbrush.fill")
-                                .font(.title2)
-                                .foregroundColor(.black.opacity(0.6))
-                                .padding(12)
-                                .background(Color.white.opacity(0.9))
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
-                        }
-                        .accessibilityIdentifier("customize_button")
+             //           Button(action: {
+              //              showCustomizeOptions.toggle()
+              //          }) {
+               //             Image(systemName: "paintbrush.fill")
+               //                 .font(.title2)
+              //                  .foregroundColor(.black.opacity(0.6))
+              //                  .padding(12)
+               //                 .background(Color.white.opacity(0.9))
+              //                  .clipShape(Circle())
+              //                  .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
+                //        }
+                 //       .accessibilityIdentifier("customize_button")
                         
                         Spacer()
                         
@@ -178,6 +176,33 @@ struct ContentView: View {
                     .padding(.bottom, 50)
                 }
                 .zIndex(10)
+                
+                // Fixed swipe indicator overlay
+                if showSwipeIndicator {
+                    VStack {
+                        Spacer()
+                        
+                        VStack(spacing: 12) {
+                            Image(systemName: "chevron.up")
+                                .font(.title2)
+                                .foregroundColor(.black.opacity(0.6))
+                                .opacity(swipeIndicatorOpacity)
+
+                            Text(quoteManager.localizedString("swipe_up_next"))
+                                .font(.caption)
+                                .foregroundColor(.black.opacity(0.6))
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 6)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color.white.opacity(0.8))
+                                        .blur(radius: 0.5)
+                                )
+                        }
+                        .opacity(showSwipeIndicator ? 1 : 0)
+                        .padding(.bottom, 80)
+                    }
+                }
             }
             .onAppear {
                 swipeIndicatorOpacity = 0.7
@@ -250,8 +275,6 @@ struct ContentView: View {
 struct QuoteCardWithGradientView: View {
     @ObservedObject var quoteManager: QuoteManager
     let screenIndex: Int
-    let showSwipeIndicator: Bool
-    let swipeIndicatorOpacity: Double
     
     private var displayQuote: String {
         if screenIndex == -1 {
@@ -298,26 +321,6 @@ struct QuoteCardWithGradientView: View {
 
                 Spacer()
 
-                if showSwipeIndicator {
-                    VStack(spacing: 12) {
-                        Image(systemName: "chevron.up")
-                            .font(.title2)
-                            .foregroundColor(.black.opacity(0.6))
-                            .opacity(swipeIndicatorOpacity)
-
-                        Text(quoteManager.localizedString("swipe_up_next"))
-                            .font(.caption)
-                            .foregroundColor(.black.opacity(0.6))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 6)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.white.opacity(0.8))
-                                    .blur(radius: 0.5)
-                            )
-                    }
-                    .opacity(showSwipeIndicator ? 1 : 0)
-                }
 
                 Spacer().frame(height: 50)
             }
