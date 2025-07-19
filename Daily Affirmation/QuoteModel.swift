@@ -742,53 +742,74 @@ class QuoteManager: ObservableObject {
                 notificationTimes.append(notificationTime)
             }
         } else {
-            // Multiple notifications distributed evenly (space-between)
-            // For short ranges, ensure minimum 1 minute spacing between notifications
-            let minSpacing = 1
-            let maxPossibleNotifications = totalMinutes + 1 // +1 because we include both start and end
-            let actualCount = min(count, maxPossibleNotifications)
+            // Multiple notifications distributed evenly with improved algorithm
+            let actualCount = min(count, totalMinutes + 1)
             
-            if actualCount <= totalMinutes {
-                // Use space-between distribution for proper spacing
-                let interval = actualCount > 1 ? Double(totalMinutes) / Double(actualCount - 1) : 0.0
-                
-                for i in 0..<actualCount {
-                    let exactMinutes = Double(startMinutes) + (Double(i) * interval)
-                    let minutes = Int(round(exactMinutes))
-                    let adjustedMinutes = min(minutes, endMinutes) // Don't exceed end time
-                    
-                    if let notificationTime = createDateFromMinutes(adjustedMinutes, using: calendar) {
-                        notificationTimes.append(notificationTime)
-                    }
+            if actualCount == 1 {
+                // Single notification in the middle of range
+                let middleMinutes = startMinutes + totalMinutes / 2
+                if let notificationTime = createDateFromMinutes(middleMinutes, using: calendar) {
+                    notificationTimes.append(notificationTime)
+                }
+            } else if actualCount == 2 {
+                // Two notifications: start and end
+                if let startTime = createDateFromMinutes(startMinutes, using: calendar) {
+                    notificationTimes.append(startTime)
+                }
+                if let endTime = createDateFromMinutes(endMinutes, using: calendar) {
+                    notificationTimes.append(endTime)
                 }
             } else {
-                // Fallback: distribute with minimum spacing
-                for i in 0..<min(actualCount, totalMinutes + 1) {
-                    let minutes = startMinutes + (i * minSpacing)
-                    if minutes <= endMinutes {
-                        if let notificationTime = createDateFromMinutes(minutes, using: calendar) {
-                            notificationTimes.append(notificationTime)
+                // Multiple notifications with guaranteed unique times
+                var usedMinutes: Set<Int> = []
+                
+                // Always include start time
+                usedMinutes.insert(startMinutes)
+                if let startTime = createDateFromMinutes(startMinutes, using: calendar) {
+                    notificationTimes.append(startTime)
+                }
+                
+                // Always include end time
+                usedMinutes.insert(endMinutes)
+                if let endTime = createDateFromMinutes(endMinutes, using: calendar) {
+                    notificationTimes.append(endTime)
+                }
+                
+                // Distribute remaining notifications evenly in between
+                let remainingCount = actualCount - 2
+                if remainingCount > 0 {
+                    // Calculate step size for even distribution
+                    let step = Double(totalMinutes) / Double(actualCount - 1)
+                    
+                    for i in 1..<(actualCount - 1) {
+                        let targetMinutes = Double(startMinutes) + (Double(i) * step)
+                        var candidateMinute = Int(round(targetMinutes))
+                        
+                        // Ensure uniqueness by adjusting if needed
+                        while usedMinutes.contains(candidateMinute) {
+                            candidateMinute += 1
+                            if candidateMinute > endMinutes {
+                                candidateMinute = Int(targetMinutes) - 1
+                                while usedMinutes.contains(candidateMinute) && candidateMinute > startMinutes {
+                                    candidateMinute -= 1
+                                }
+                            }
+                        }
+                        
+                        // Only add if within valid range and unique
+                        if candidateMinute >= startMinutes && candidateMinute <= endMinutes && !usedMinutes.contains(candidateMinute) {
+                            usedMinutes.insert(candidateMinute)
+                            if let notificationTime = createDateFromMinutes(candidateMinute, using: calendar) {
+                                notificationTimes.append(notificationTime)
+                            }
                         }
                     }
                 }
             }
         }
         
-        // Sort by time and ensure we don't lose notifications due to Set conversion
-        // Only remove exact duplicates manually to preserve all intended notifications
-        let sortedTimes = notificationTimes.sorted()
-        var uniqueTimes: [Date] = []
-        
-        for time in sortedTimes {
-            if uniqueTimes.isEmpty || !uniqueTimes.contains(where: { 
-                Calendar.current.dateComponents([.hour, .minute], from: $0) == 
-                Calendar.current.dateComponents([.hour, .minute], from: time) 
-            }) {
-                uniqueTimes.append(time)
-            }
-        }
-        
-        return uniqueTimes
+        // Sort by time - duplicates are already prevented by the improved algorithm
+        return notificationTimes.sorted()
     }
     
     private func createDateFromMinutes(_ minutes: Int, using calendar: Calendar) -> Date? {
@@ -798,6 +819,76 @@ class QuoteManager: ObservableObject {
         
         let now = Date()
         return calendar.date(bySettingHour: hours, minute: mins, second: 0, of: now)
+    }
+    
+    // MARK: - Immediate Notification Helpers
+    private func getTodaysRemainingNotificationTimes() -> [Date] {
+        let allNotificationTimes = calculateNotificationTimes()
+        let now = Date()
+        let calendar = Calendar.current
+        
+        // Filter times that are still pending today
+        return allNotificationTimes.filter { notificationTime in
+            // Create today's version of this notification time
+            let todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
+            let timeComponents = calendar.dateComponents([.hour, .minute], from: notificationTime)
+            
+            guard let todaysNotificationTime = calendar.date(bySettingHour: timeComponents.hour ?? 0,
+                                                           minute: timeComponents.minute ?? 0,
+                                                           second: 0,
+                                                           of: calendar.date(from: todayComponents) ?? now) else {
+                return false
+            }
+            
+            // Only include times that are in the future (haven't passed yet today)
+            return todaysNotificationTime > now
+        }
+    }
+    
+    private func scheduleImmediateNotifications() {
+        let remainingTimes = getTodaysRemainingNotificationTimes()
+        let now = Date()
+        let calendar = Calendar.current
+        
+        for (index, notificationTime) in remainingTimes.enumerated() {
+            // Create today's version of this notification time
+            let todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
+            let timeComponents = calendar.dateComponents([.hour, .minute], from: notificationTime)
+            
+            guard let todaysNotificationTime = calendar.date(bySettingHour: timeComponents.hour ?? 0,
+                                                           minute: timeComponents.minute ?? 0,
+                                                           second: 0,
+                                                           of: calendar.date(from: todayComponents) ?? now) else {
+                continue
+            }
+            
+            // Calculate time interval from now to the notification time
+            let timeInterval = todaysNotificationTime.timeIntervalSince(now)
+            
+            // Only schedule if it's in the future (should always be true due to filtering)
+            if timeInterval > 0 {
+                let content = UNMutableNotificationContent()
+                content.title = "ThinkUp"
+                content.body = getRandomQuote()
+                content.sound = .default
+                content.badge = 1
+                content.categoryIdentifier = "DAILY_AFFIRMATION"
+                
+                // Use time interval trigger for immediate scheduling
+                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
+                
+                // Create unique identifier for today's immediate notifications
+                let timeString = String(format: "%02d_%02d", timeComponents.hour ?? 0, timeComponents.minute ?? 0)
+                let identifier = "dailyInspiration_today_\(timeString)_\(index)"
+                let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+                
+                UNUserNotificationCenter.current().add(request) { error in
+                    if let error = error {
+                        print("Error scheduling immediate notification \(identifier): \(error)")
+                    }
+                }
+            }
+        }
     }
     
     // MARK: - Settings Persistence
@@ -958,9 +1049,10 @@ class QuoteManager: ObservableObject {
                 }
             }
         } else {
-            // Schedule range-based notifications
+            // Schedule range-based notifications with hybrid approach
             let notificationTimes = calculateNotificationTimes()
             
+            // 1. Schedule recurring daily notifications for future days
             for (index, notificationTime) in notificationTimes.enumerated() {
                 let content = UNMutableNotificationContent()
                 content.title = "ThinkUp"
@@ -984,6 +1076,9 @@ class QuoteManager: ObservableObject {
                     }
                 }
             }
+            
+            // 2. Schedule immediate notifications for remaining times today
+            scheduleImmediateNotifications()
         }
     }
     
