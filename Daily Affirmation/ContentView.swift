@@ -29,10 +29,10 @@ struct ContentView: View {
             let screenHeight = geometry.size.height
             
             ZStack {
-                // Full-screen background and content
+                // One swipeable stack per index
                 ZStack {
                     ForEach(-1...1, id: \.self) { screenIndex in
-                        QuoteScreenWithBackgroundView(
+                        QuoteCardWithGradientView(
                             quoteManager: quoteManager,
                             screenIndex: screenIndex,
                             showSwipeIndicator: showSwipeIndicator && screenIndex == 0,
@@ -44,28 +44,24 @@ struct ContentView: View {
                 }
                 .clipped()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(Rectangle()) // Makes entire area tappable/swipeable
+                .contentShape(Rectangle())
                 .gesture(
                     DragGesture()
                         .onChanged { value in
                             dragOffset = value.translation.height
                             
-                            // Hide swipe indicator when user starts swiping
                             if showSwipeIndicator && abs(value.translation.height) > 10 {
                                 showSwipeIndicator = false
                             }
                             
-                            // Detect swipe direction but don't change quote yet
                             let minimumSwipeDistance: CGFloat = 80
                             let currentDrag = value.translation.height
                             
                             if !hasTriggeredSwipe && abs(currentDrag) > minimumSwipeDistance {
                                 if currentDrag < -minimumSwipeDistance && swipeDirection != .up {
-                                    // Swiping up = next quote (but don't change yet)
                                     swipeDirection = .up
                                     hasTriggeredSwipe = true
                                 } else if currentDrag > minimumSwipeDistance && swipeDirection != .down {
-                                    // Swiping down = previous quote (but don't change yet)
                                     swipeDirection = .down
                                     hasTriggeredSwipe = true
                                 }
@@ -73,22 +69,17 @@ struct ContentView: View {
                         }
                         .onEnded { value in
                             if hasTriggeredSwipe {
-                                // Complete the screen transition
                                 if swipeDirection == .up {
-                                    // Slide current screen up completely, next screen slides up
                                     withAnimation(.easeOut(duration: 0.4)) {
                                         dragOffset = -screenHeight
                                     }
                                 } else if swipeDirection == .down {
-                                    // Slide current screen down completely, previous screen slides down
                                     withAnimation(.easeOut(duration: 0.4)) {
                                         dragOffset = screenHeight
                                     }
                                 }
                                 
-                                // Reset positions after animation completes
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                                    // Now change the quote after the animation is complete
                                     if swipeDirection == .up {
                                         quoteManager.nextQuote()
                                     } else if swipeDirection == .down {
@@ -101,7 +92,6 @@ struct ContentView: View {
                                     lastDragValue = 0
                                 }
                             } else {
-                                // No swipe triggered, snap back to center
                                 withAnimation(.easeOut(duration: 0.3)) {
                                     dragOffset = 0
                                 }
@@ -115,7 +105,6 @@ struct ContentView: View {
                 // Fixed top navigation bar overlay
                 VStack {
                     HStack {
-                        // Settings button
                         Button(action: {
                             showSettings.toggle()
                         }) {
@@ -128,13 +117,9 @@ struct ContentView: View {
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
                         }
                         .accessibilityIdentifier("settings_button")
-                        .accessibilityLabel("Settings")
-                        .accessibilityHint("Open settings")
-                        .accessibility(addTraits: .isButton)
                         
                         Spacer()
                         
-                        // Share button
                         Button(action: {
                             shareQuote()
                         }) {
@@ -147,23 +132,19 @@ struct ContentView: View {
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
                         }
                         .accessibilityIdentifier("share_button")
-                        .accessibilityLabel("Share")
-                        .accessibilityHint("Share current quote")
-                        .accessibility(addTraits: .isButton)
                     }
                     .padding(.horizontal, 24)
-                    .padding(.top, 50) // Add extra padding to account for status bar
+                    .padding(.top, 50)
                     .padding(.bottom, 10)
                     
-                    Spacer() // Push navigation to top
+                    Spacer()
                 }
-                .zIndex(10) // Ensure buttons stay on top
+                .zIndex(10)
                 
                 // Fixed bottom buttons overlay
                 VStack {
                     Spacer()
                     HStack {
-                        // Customize options button (bottom left)
                         Button(action: {
                             showCustomizeOptions.toggle()
                         }) {
@@ -176,13 +157,9 @@ struct ContentView: View {
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
                         }
                         .accessibilityIdentifier("customize_button")
-                        .accessibilityLabel("Customize options")
-                        .accessibilityHint("Customize background, add personal quotes, and more")
-                        .accessibility(addTraits: .isButton)
                         
                         Spacer()
                         
-                        // Love button (bottom right)
                         Button(action: {
                             let currentQuote = quoteManager.currentQuote
                             quoteManager.toggleLoveQuote(currentQuote)
@@ -196,29 +173,22 @@ struct ContentView: View {
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
                         }
                         .accessibilityIdentifier("love_button")
-                        .accessibilityLabel("Love this quote")
-                        .accessibilityHint("Add or remove from loved quotes")
-                        .accessibility(addTraits: .isButton)
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 50)
                 }
-                .zIndex(10) // Ensure buttons stay on top
+                .zIndex(10)
             }
             .onAppear {
-                // Set initial opacity for swipe indicator
                 swipeIndicatorOpacity = 0.7
-                // Auto-hide after 5 seconds
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                     showSwipeIndicator = false
                 }
-                
-                // Check if this is first launch and show notification permission
                 checkFirstLaunch()
             }
         }
         .preferredColorScheme(.light)
-        .ignoresSafeArea(.all) // Ensure the entire view ignores safe areas
+        .ignoresSafeArea(.all)
         .sheet(isPresented: $showSettings) {
             SettingsView(quoteManager: quoteManager)
         }
@@ -226,10 +196,9 @@ struct ContentView: View {
             CustomizeOptionsView(quoteManager: quoteManager)
         }
         .overlay(
-            // Notification permission popup
-            showNotificationPermission ? 
+            showNotificationPermission ?
             NotificationPermissionView(
-                quoteManager: quoteManager, 
+                quoteManager: quoteManager,
                 isPresented: $showNotificationPermission
             ) : nil
         )
@@ -238,30 +207,24 @@ struct ContentView: View {
     private func shareQuote() {
         let shareSuffix = quoteManager.localizedString("share_suffix")
         let text = "\(quoteManager.currentQuote)\n\n\(shareSuffix)"
-
+        
         let activityViewController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
-        // Get the window scene and root view controller with proper validation
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first,
               let rootViewController = window.rootViewController else {
             return
         }
         
-        // Configure popover presentation for iPad only if not in test environment
         if UIDevice.current.userInterfaceIdiom == .pad && !ProcessInfo.processInfo.environment.keys.contains("XCTestConfigurationFilePath") {
             if let popoverController = activityViewController.popoverPresentationController {
-                // Ensure we have a valid source view
                 let sourceView = rootViewController.view ?? window
                 popoverController.sourceView = sourceView
                 popoverController.sourceRect = CGRect(x: sourceView.bounds.midX, y: sourceView.bounds.midY, width: 0, height: 0)
                 popoverController.permittedArrowDirections = []
-                
-                // Add delegate to handle popover dismissal
                 popoverController.delegate = makePopoverDelegate()
             }
         }
         
-        // Present with proper error handling
         DispatchQueue.main.async {
             if rootViewController.presentedViewController == nil {
                 rootViewController.present(activityViewController, animated: true, completion: nil)
@@ -274,11 +237,8 @@ struct ContentView: View {
     }
     
     private func checkFirstLaunch() {
-        // Check if we've already shown the notification permission popup
         let hasShownPermission = UserDefaults.standard.bool(forKey: "hasShownNotificationPermission")
-        
         if !hasShownPermission {
-            // Delay slightly to ensure the main view is loaded
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 showNotificationPermission = true
             }
@@ -286,77 +246,65 @@ struct ContentView: View {
     }
 }
 
-struct QuoteScreenWithBackgroundView: View {
+// MARK: - Gradient + Text as one swipeable card
+struct QuoteCardWithGradientView: View {
     @ObservedObject var quoteManager: QuoteManager
     let screenIndex: Int
     let showSwipeIndicator: Bool
     let swipeIndicatorOpacity: Double
     
     private var displayQuote: String {
-        // Show different quotes based on screen index for visual swapping
         if screenIndex == -1 {
-            // Previous screen - show previous quote preview
             return quoteManager.getPreviewQuote(offset: -1)
         } else if screenIndex == 1 {
-            // Next screen - show next quote preview
             return quoteManager.getPreviewQuote(offset: 1)
         } else {
-            // Current screen (index 0) - always show current quote
             return quoteManager.currentQuote
         }
     }
     
-
-    
     var body: some View {
         ZStack {
-            // Background gradient (part of swipeable content)
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(red: 0.659, green: 0.902, blue: 0.812), // #A8E6CF
-                    Color(red: 1.0, green: 0.827, blue: 0.647),   // #FFD3A5
-                    Color(red: 1.0, green: 0.659, blue: 0.659)    // #FFA8A8
-                ]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea(.all)
-            
-            // Content overlay
+            Image("background")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .ignoresSafeArea(.all)
+                .id("background-\(screenIndex)")
+
             VStack {
                 Spacer()
-                
-                // Quote display area
-                VStack(spacing: 40) {
-                    // Main quote text
-                    Text(displayQuote)
-                        .font(.system(size: 32, weight: .semibold, design: .default))
-                        .foregroundColor(.black)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(nil)
-                        .padding(.horizontal, 40)
-                        .scaleEffect(quoteManager.fontSize.multiplier)
-                        .shadow(color: .white.opacity(0.8), radius: 2, x: 0, y: 1)
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityIdentifier(screenIndex == 0 ? "quote_text" : "quote_text_preview_\(screenIndex)")
-                .accessibilityLabel("Daily quote")
-                .accessibilityValue(displayQuote)
-                .accessibilityHint("Swipe up for next quote, swipe down for previous quote")
-                .accessibility(addTraits: .isStaticText)
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 20)
-                
+
+                Text(displayQuote)
+                  .font(.system(size: 32, weight: .semibold))
+                  .multilineTextAlignment(.center)
+                  .lineLimit(nil)
+                  .fixedSize(horizontal: false, vertical: true)
+                  .frame(maxWidth: UIScreen.main.bounds.width - 40)
+                  .padding(.horizontal, 20)
+                  .foregroundColor(.black)
+                  .lineSpacing(8)
+                  .scaleEffect(quoteManager.fontSize.multiplier)
+                  .shadow(color: .white.opacity(0.8), radius: 2, x: 0, y: 1)
+                  .accessibilityElement(children: .ignore)
+                                     .accessibilityIdentifier(
+                                         screenIndex == 0
+                                             ? "quote_text"
+                                             : "quote_text_preview_\(screenIndex)"
+                                     )
+                                     .accessibilityLabel("Daily quote")
+                                                         .accessibilityValue(displayQuote)
+                                                         .accessibility(addTraits: .isStaticText)
+                  
+
                 Spacer()
-                
-                // Swipe indicator (only on current screen)
+
                 if showSwipeIndicator {
                     VStack(spacing: 12) {
                         Image(systemName: "chevron.up")
                             .font(.title2)
                             .foregroundColor(.black.opacity(0.6))
                             .opacity(swipeIndicatorOpacity)
-                        
+
                         Text(quoteManager.localizedString("swipe_up_next"))
                             .font(.caption)
                             .foregroundColor(.black.opacity(0.6))
@@ -370,14 +318,17 @@ struct QuoteScreenWithBackgroundView: View {
                     }
                     .opacity(showSwipeIndicator ? 1 : 0)
                 }
-                
+
                 Spacer().frame(height: 50)
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 120)
+            .padding(.bottom, 140)
         }
+
     }
 }
 
-// Helper class to handle popover presentation
 private class PopoverDelegate: NSObject, UIPopoverPresentationControllerDelegate {
     func adaptivePresentationStyle(for controller: UIPresentationController) -> UIModalPresentationStyle {
         return .none
