@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct ContentView: View {
     @StateObject private var quoteManager = QuoteManager()
@@ -210,6 +211,8 @@ struct ContentView: View {
                     showSwipeIndicator = false
                 }
                 checkFirstLaunch()
+                // Clear notification badge when main content appears
+                UIApplication.shared.applicationIconBadgeNumber = 0
             }
         }
         .preferredColorScheme(.light)
