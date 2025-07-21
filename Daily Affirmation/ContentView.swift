@@ -144,18 +144,18 @@ struct ContentView: View {
                 VStack {
                     Spacer()
                     HStack {
-             //           Button(action: {
-              //              showCustomizeOptions.toggle()
-              //          }) {
-               //             Image(systemName: "paintbrush.fill")
-               //                 .font(.title2)
-              //                  .foregroundColor(.black.opacity(0.6))
-              //                  .padding(12)
-               //                 .background(Color.white.opacity(0.9))
-              //                  .clipShape(Circle())
-              //                  .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
-                //        }
-                 //       .accessibilityIdentifier("customize_button")
+                        Button(action: {
+                            showCustomizeOptions.toggle()
+                        }) {
+                            Image(systemName: "paintbrush.fill")
+                                .font(.title2)
+                                .foregroundColor(.black.opacity(0.6))
+                                .padding(12)
+                                .background(Color.white.opacity(0.9))
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
+                        }
+                        .accessibilityIdentifier("customize_button")
                         
                         Spacer()
                         
@@ -290,12 +290,15 @@ struct QuoteCardWithGradientView: View {
     }
     
     var body: some View {
-        ZStack {
-            Image("background")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .ignoresSafeArea(.all)
-                .id("background-\(screenIndex)")
+        GeometryReader { geometry in
+            ZStack {
+                Image(quoteManager.selectedBackgroundImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+                    .ignoresSafeArea(.all)
+                    .allowsHitTesting(false)
 
             VStack {
                 Spacer()
@@ -330,6 +333,7 @@ struct QuoteCardWithGradientView: View {
             .padding(.horizontal, 20)
             .padding(.top, 120)
             .padding(.bottom, 140)
+            }
         }
 
     }

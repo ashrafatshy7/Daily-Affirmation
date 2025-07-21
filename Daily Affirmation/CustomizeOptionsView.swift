@@ -4,6 +4,7 @@ struct CustomizeOptionsView: View {
     @ObservedObject var quoteManager: QuoteManager
     @Environment(\.dismiss) private var dismiss
     @State private var showPersonalQuotes = false
+    @State private var showBackgroundThemes = false
     
     var body: some View {
         NavigationView {
@@ -59,15 +60,20 @@ struct CustomizeOptionsView: View {
                         .accessibilityIdentifier("personal_quotes_section")
                         .accessibility(addTraits: .isButton)
                         
-                        // Background Themes Section (Coming Soon)
-                        CustomizeCard(
-                            icon: "paintbrush.pointed.fill",
-                            title: "Background Themes",
-                            subtitle: "Coming Soon",
-                            iconColor: Color(red: 1.0, green: 0.584, blue: 0.0),
-                            isActive: false
-                        )
+                        // Background Themes Section (Active)
+                        Button(action: {
+                            showBackgroundThemes.toggle()
+                        }) {
+                            CustomizeCard(
+                                icon: "paintbrush.pointed.fill",
+                                title: "Background Themes",
+                                subtitle: "5 beautiful themes",
+                                iconColor: Color(red: 1.0, green: 0.584, blue: 0.0),
+                                isActive: true
+                            )
+                        }
                         .accessibilityIdentifier("background_themes_section")
+                        .accessibility(addTraits: .isButton)
                         
                         // Advanced Display Section (Coming Soon)
                         CustomizeCard(
@@ -110,6 +116,9 @@ struct CustomizeOptionsView: View {
         .preferredColorScheme(.light)
         .sheet(isPresented: $showPersonalQuotes) {
             PersonalQuotesView(quoteManager: quoteManager)
+        }
+        .sheet(isPresented: $showBackgroundThemes) {
+            BackgroundThemesView(quoteManager: quoteManager)
         }
     }
 }
