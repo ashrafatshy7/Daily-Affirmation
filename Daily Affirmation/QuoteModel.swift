@@ -1051,34 +1051,73 @@ class QuoteManager: ObservableObject {
         } else {
             // Schedule range-based notifications with hybrid approach
             let notificationTimes = calculateNotificationTimes()
+            let remainingTodayTimes = getTodaysRemainingNotificationTimes()
             
-            // 1. Schedule recurring daily notifications for future days
-            for (index, notificationTime) in notificationTimes.enumerated() {
-                let content = UNMutableNotificationContent()
-                content.title = "ThinkUp"
-                content.body = getRandomQuote() // Use random quote for each notification
-                content.sound = .default
-                content.badge = 1
-                
-                // Add category for better notification handling
-                content.categoryIdentifier = "DAILY_AFFIRMATION"
-                
-                let components = calendar.dateComponents([.hour, .minute], from: notificationTime)
-                let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
-                
-                // Create more unique identifiers to avoid conflicts
-                let identifier = "dailyInspiration_range_\(components.hour ?? 0)_\(components.minute ?? 0)_\(index)"
-                let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-                
-                UNUserNotificationCenter.current().add(request) { error in
-                    if let error = error {
-                        print("Error scheduling range notification \(identifier): \(error)")
+            // Check if we have any remaining times today
+            if remainingTodayTimes.isEmpty {
+                // No remaining times today, schedule normal recurring notifications
+                for (index, notificationTime) in notificationTimes.enumerated() {
+                    let content = UNMutableNotificationContent()
+                    content.title = "ThinkUp"
+                    content.body = getRandomQuote()
+                    content.sound = .default
+                    content.badge = 1
+                    content.categoryIdentifier = "DAILY_AFFIRMATION"
+                    
+                    let components = calendar.dateComponents([.hour, .minute], from: notificationTime)
+                    let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+                    
+                    let identifier = "dailyInspiration_range_\(components.hour ?? 0)_\(components.minute ?? 0)_\(index)"
+                    let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+                    
+                    UNUserNotificationCenter.current().add(request) { error in
+                        if let error = error {
+                            print("Error scheduling range notification \(identifier): \(error)")
+                        }
                     }
                 }
+            } else {
+                // We have remaining times today, use hybrid approach with conflict prevention
+                let remainingTodayTimes = getTodaysRemainingNotificationTimes()
+                let remainingTimeComponents = Set(remainingTodayTimes.map { 
+                    calendar.dateComponents([.hour, .minute], from: $0)
+                })
+                
+                // 1. Schedule immediate notifications for today's remaining times
+                scheduleImmediateNotifications()
+                
+                // 2. Schedule recurring notifications for ALL times EXCEPT those with immediate notifications
+                for (index, notificationTime) in notificationTimes.enumerated() {
+                    let components = calendar.dateComponents([.hour, .minute], from: notificationTime)
+                    
+                    // Skip this time if it has an immediate notification scheduled for today
+                    let hasImmediateNotification = remainingTimeComponents.contains { timeComp in
+                        timeComp.hour == components.hour && timeComp.minute == components.minute
+                    }
+                    
+                    if !hasImmediateNotification {
+                        // This time has already passed today, safe to schedule recurring notification
+                        let content = UNMutableNotificationContent()
+                        content.title = "ThinkUp"
+                        content.body = getRandomQuote()
+                        content.sound = .default
+                        content.badge = 1
+                        content.categoryIdentifier = "DAILY_AFFIRMATION"
+                        
+                        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+                        
+                        let identifier = "dailyInspiration_range_\(components.hour ?? 0)_\(components.minute ?? 0)_\(index)"
+                        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+                        
+                        UNUserNotificationCenter.current().add(request) { error in
+                            if let error = error {
+                                print("Error scheduling range notification \(identifier): \(error)")
+                            }
+                        }
+                    }
+                }
+                
             }
-            
-            // 2. Schedule immediate notifications for remaining times today
-            scheduleImmediateNotifications()
         }
     }
     
