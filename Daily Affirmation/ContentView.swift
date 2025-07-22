@@ -72,16 +72,16 @@ struct ContentView: View {
                             .onEnded { value in
                                 if hasTriggeredSwipe {
                                     if swipeDirection == .up {
-                                        withAnimation(.easeOut(duration: 0.4)) {
+                                        withAnimation(.spring(dampingFraction: 0.8, blendDuration: 0.3)) {
                                             dragOffset = -screenHeight
                                         }
                                     } else if swipeDirection == .down {
-                                        withAnimation(.easeOut(duration: 0.4)) {
+                                        withAnimation(.spring(dampingFraction: 0.8, blendDuration: 0.3)) {
                                             dragOffset = screenHeight
                                         }
                                     }
                                     
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                         if swipeDirection == .up {
                                             quoteManager.nextQuote()
                                         } else if swipeDirection == .down {
@@ -94,7 +94,7 @@ struct ContentView: View {
                                         lastDragValue = 0
                                     }
                                 } else {
-                                    withAnimation(.easeOut(duration: 0.3)) {
+                                    withAnimation(.spring(dampingFraction: 0.8, blendDuration: 0.25)) {
                                         dragOffset = 0
                                     }
                                     hasTriggeredSwipe = false
@@ -299,16 +299,19 @@ struct QuoteCardWithGradientView: View {
     var body: some View {
         GeometryReader { geometry in
             let parallaxMultiplier: CGFloat = 0.5
-            let backgroundOffset = dragOffset * parallaxMultiplier
+            let maxParallaxOffset: CGFloat = geometry.size.height * 0.1
+            let clampedDragOffset = max(-geometry.size.height, min(geometry.size.height, dragOffset))
+            let backgroundOffset = clampedDragOffset * parallaxMultiplier
+            let boundedBackgroundOffset = max(-maxParallaxOffset, min(maxParallaxOffset, backgroundOffset))
             
             ZStack {
                 Image(quoteManager.selectedBackgroundImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width, height: geometry.size.height + abs(dragOffset * parallaxMultiplier))
-                    .offset(y: backgroundOffset)
+                    .frame(width: geometry.size.width, height: geometry.size.height * 1.2)
+                    .offset(y: boundedBackgroundOffset)
                     .clipped()
-                    .ignoresSafeArea(.all)
+                    .ignoresSafeArea(.container, edges: .bottom)
                     .allowsHitTesting(false)
 
             VStack {
