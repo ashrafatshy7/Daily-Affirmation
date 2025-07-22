@@ -31,75 +31,81 @@ struct ContentView: View {
             
             ZStack {
                 // One swipeable stack per index
-                ZStack {
-                    ForEach(-1...1, id: \.self) { screenIndex in
-                        QuoteCardWithGradientView(
-                            quoteManager: quoteManager,
-                            screenIndex: screenIndex
-                        )
-                        .frame(width: geometry.size.width, height: screenHeight)
-                        .offset(y: CGFloat(screenIndex) * screenHeight + dragOffset)
-                    }
-                }
-                .clipped()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            dragOffset = value.translation.height
-                            
-                            if showSwipeIndicator && abs(value.translation.height) > 10 {
-                                showSwipeIndicator = false
-                            }
-                            
-                            let minimumSwipeDistance: CGFloat = 80
-                            let currentDrag = value.translation.height
-                            
-                            if !hasTriggeredSwipe && abs(currentDrag) > minimumSwipeDistance {
-                                if currentDrag < -minimumSwipeDistance && swipeDirection != .up {
-                                    swipeDirection = .up
-                                    hasTriggeredSwipe = true
-                                } else if currentDrag > minimumSwipeDistance && swipeDirection != .down {
-                                    swipeDirection = .down
-                                    hasTriggeredSwipe = true
-                                }
-                            }
+                if #available(iOS 16.0, *) {
+                    ZStack {
+                        ForEach(-1...1, id: \.self) { screenIndex in
+                            QuoteCardWithGradientView(
+                                quoteManager: quoteManager,
+                                screenIndex: screenIndex,
+                                dragOffset: dragOffset
+                            )
+                            .frame(width: geometry.size.width, height: screenHeight)
+                            .offset(y: CGFloat(screenIndex) * screenHeight + dragOffset)
                         }
-                        .onEnded { value in
-                            if hasTriggeredSwipe {
-                                if swipeDirection == .up {
-                                    withAnimation(.easeOut(duration: 0.4)) {
-                                        dragOffset = -screenHeight
-                                    }
-                                } else if swipeDirection == .down {
-                                    withAnimation(.easeOut(duration: 0.4)) {
-                                        dragOffset = screenHeight
-                                    }
+                    }
+                    .clipped()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(Rectangle())
+                    .defersSystemGestures(on: .vertical)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                dragOffset = value.translation.height
+                                
+                                if showSwipeIndicator && abs(value.translation.height) > 10 {
+                                    showSwipeIndicator = false
                                 }
                                 
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                let minimumSwipeDistance: CGFloat = 80
+                                let currentDrag = value.translation.height
+                                
+                                if !hasTriggeredSwipe && abs(currentDrag) > minimumSwipeDistance {
+                                    if currentDrag < -minimumSwipeDistance && swipeDirection != .up {
+                                        swipeDirection = .up
+                                        hasTriggeredSwipe = true
+                                    } else if currentDrag > minimumSwipeDistance && swipeDirection != .down {
+                                        swipeDirection = .down
+                                        hasTriggeredSwipe = true
+                                    }
+                                }
+                            }
+                            .onEnded { value in
+                                if hasTriggeredSwipe {
                                     if swipeDirection == .up {
-                                        quoteManager.nextQuote()
+                                        withAnimation(.easeOut(duration: 0.4)) {
+                                            dragOffset = -screenHeight
+                                        }
                                     } else if swipeDirection == .down {
-                                        quoteManager.previousQuote()
+                                        withAnimation(.easeOut(duration: 0.4)) {
+                                            dragOffset = screenHeight
+                                        }
                                     }
                                     
-                                    dragOffset = 0
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                        if swipeDirection == .up {
+                                            quoteManager.nextQuote()
+                                        } else if swipeDirection == .down {
+                                            quoteManager.previousQuote()
+                                        }
+                                        
+                                        dragOffset = 0
+                                        hasTriggeredSwipe = false
+                                        swipeDirection = .none
+                                        lastDragValue = 0
+                                    }
+                                } else {
+                                    withAnimation(.easeOut(duration: 0.3)) {
+                                        dragOffset = 0
+                                    }
                                     hasTriggeredSwipe = false
                                     swipeDirection = .none
                                     lastDragValue = 0
                                 }
-                            } else {
-                                withAnimation(.easeOut(duration: 0.3)) {
-                                    dragOffset = 0
-                                }
-                                hasTriggeredSwipe = false
-                                swipeDirection = .none
-                                lastDragValue = 0
                             }
-                        }
-                )
+                    )
+                } else {
+                    // Fallback on earlier versions
+                }
                 
                 // Fixed top navigation bar overlay
                 VStack {
@@ -278,6 +284,7 @@ struct ContentView: View {
 struct QuoteCardWithGradientView: View {
     @ObservedObject var quoteManager: QuoteManager
     let screenIndex: Int
+    let dragOffset: CGFloat
     
     private var displayQuote: String {
         if screenIndex == -1 {
@@ -291,11 +298,15 @@ struct QuoteCardWithGradientView: View {
     
     var body: some View {
         GeometryReader { geometry in
+            let parallaxMultiplier: CGFloat = 0.5
+            let backgroundOffset = dragOffset * parallaxMultiplier
+            
             ZStack {
                 Image(quoteManager.selectedBackgroundImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .frame(width: geometry.size.width, height: geometry.size.height + abs(dragOffset * parallaxMultiplier))
+                    .offset(y: backgroundOffset)
                     .clipped()
                     .ignoresSafeArea(.all)
                     .allowsHitTesting(false)
