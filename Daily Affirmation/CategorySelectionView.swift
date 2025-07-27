@@ -3,6 +3,8 @@ import SwiftUI
 struct CategorySelectionView: View {
     @ObservedObject var quoteManager: QuoteManager
     @Environment(\.dismiss) private var dismiss
+    @State private var showSubscription = false
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
     
     var body: some View {
         ZStack {
@@ -87,9 +89,15 @@ struct CategorySelectionView: View {
                             ModernCategoryCard(
                                 category: category,
                                 isSelected: quoteManager.selectedCategory == category,
+                                isPremiumCategory: category != .general,
+                                hasSubscription: subscriptionManager.hasTimeRangeAccess,
                                 action: {
-                                    withAnimation(.spring(dampingFraction: 0.7, blendDuration: 0.3)) {
-                                        quoteManager.selectedCategory = category
+                                    if category == .general || subscriptionManager.hasTimeRangeAccess {
+                                        withAnimation(.spring(dampingFraction: 0.7, blendDuration: 0.3)) {
+                                            quoteManager.selectedCategory = category
+                                        }
+                                    } else {
+                                        showSubscription.toggle()
                                     }
                                 }
                             )
@@ -102,6 +110,9 @@ struct CategorySelectionView: View {
         }
         .navigationBarHidden(true)
         .preferredColorScheme(.light)
+        .sheet(isPresented: $showSubscription) {
+            SubscriptionView()
+        }
     }
     
 }
@@ -109,9 +120,15 @@ struct CategorySelectionView: View {
 struct ModernCategoryCard: View {
     let category: QuoteCategory
     let isSelected: Bool
+    let isPremiumCategory: Bool
+    let hasSubscription: Bool
     let action: () -> Void
     
     @State private var isPressed = false
+    
+    private var isAccessible: Bool {
+        return !isPremiumCategory || hasSubscription
+    }
     
     var body: some View {
         Button(action: action) {
@@ -134,7 +151,7 @@ struct ModernCategoryCard: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 20)
                             .stroke(
-                                isSelected ? Color.clear : getCategoryColor(category).opacity(0.2),
+                                isSelected ? Color.clear : getCategoryColor(category).opacity(isAccessible ? 0.2 : 0.1),
                                 lineWidth: 2
                             )
                     )
@@ -145,6 +162,7 @@ struct ModernCategoryCard: View {
                         x: 0,
                         y: isPressed ? 2 : 6
                     )
+                    .opacity(isAccessible ? 1.0 : 0.7)
                 
                 // Content
                 HStack(spacing: 20) {
@@ -156,15 +174,23 @@ struct ModernCategoryCard: View {
                         
                         Image(systemName: getCategoryIcon(category))
                             .font(.system(size: 28, weight: .semibold))
-                            .foregroundColor(isSelected ? .white : getCategoryColor(category))
+                            .foregroundColor(isSelected ? .white : (isAccessible ? getCategoryColor(category) : getCategoryColor(category).opacity(0.5)))
                     }
                     
                     // Content
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(category.displayName)
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(isSelected ? .white : .black)
-                            .multilineTextAlignment(.leading)
+                        HStack(spacing: 8) {
+                            Text(category.displayName)
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(isSelected ? .white : (isAccessible ? .black : .black.opacity(0.6)))
+                                .multilineTextAlignment(.leading)
+                            
+                            if isPremiumCategory && !hasSubscription {
+                                Image(systemName: "lock.fill")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(isSelected ? .white.opacity(0.8) : .gray)
+                            }
+                        }
                     }
                     
                     Spacer()
@@ -175,9 +201,15 @@ struct ModernCategoryCard: View {
                             .fill(isSelected ? Color.white.opacity(0.2) : Color.clear)
                             .frame(width: 32, height: 32)
                         
-                        Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 24, weight: .semibold))
-                            .foregroundColor(isSelected ? .white : getCategoryColor(category).opacity(0.5))
+                        if isPremiumCategory && !hasSubscription && !isSelected {
+                            Image(systemName: "lock.circle")
+                                .font(.system(size: 24, weight: .semibold))
+                                .foregroundColor(getCategoryColor(category).opacity(0.5))
+                        } else {
+                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                .font(.system(size: 24, weight: .semibold))
+                                .foregroundColor(isSelected ? .white : getCategoryColor(category).opacity(0.5))
+                        }
                     }
                 }
                 .padding(.horizontal, 24)
