@@ -4,9 +4,9 @@ struct OnboardingView: View {
     @State private var currentPage = 0
     @State private var showingSubscription = false
     @Environment(\.dismiss) private var dismiss
-    
+
     let totalPages = 3
-    
+
     var body: some View {
         ZStack {
             // Gradient background
@@ -19,9 +19,9 @@ struct OnboardingView: View {
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
-            
+
             VStack(spacing: 0) {
-                // X button - always reserve space, only visible on last page
+                // X button – only visible on final page
                 HStack {
                     Spacer()
                     Button(action: {
@@ -40,8 +40,8 @@ struct OnboardingView: View {
                     .padding(.trailing, 24)
                     .padding(.top, 16)
                 }
-                
-                // Main content
+
+                // Pages
                 TabView(selection: $currentPage) {
                     OnboardingPageView(
                         icon: "sparkles",
@@ -54,7 +54,7 @@ struct OnboardingView: View {
                         ]
                     )
                     .tag(0)
-                    
+
                     OnboardingPageView(
                         icon: "bell.badge",
                         title: "Smart Notifications\nThat Actually Help",
@@ -66,7 +66,7 @@ struct OnboardingView: View {
                         ]
                     )
                     .tag(1)
-                    
+
                     OnboardingPageView(
                         icon: "clock.arrow.2.circlepath",
                         title: "Unlock Your Full\nPotential",
@@ -74,7 +74,8 @@ struct OnboardingView: View {
                         features: [
                             "⚡ Up to 10 notifications per day",
                             "⏱️ Custom time range control",
-                            "🎪 Perfect distribution throughout your day"
+                            "🎪 Perfect distribution throughout your day",
+                            "🎨 Beautiful background themes"  // ← New theme entry
                         ],
                         isPremiumFeature: true
                     )
@@ -82,9 +83,9 @@ struct OnboardingView: View {
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.easeInOut(duration: 0.5), value: currentPage)
-                
+
                 Spacer()
-                
+
                 // Page indicator
                 HStack(spacing: 12) {
                     ForEach(0..<totalPages, id: \.self) { index in
@@ -95,81 +96,63 @@ struct OnboardingView: View {
                             .animation(.spring(response: 0.3), value: currentPage)
                     }
                 }
-                .padding(.bottom, 30)
-                
-                // Action buttons
-                VStack(spacing: 16) {
-                    if currentPage < totalPages - 1 {
-                        // Continue button
-                        Button(action: {
-                            withAnimation(.easeInOut(duration: 0.5)) {
-                                currentPage += 1
-                            }
-                        }) {
-                            HStack {
-                                Text("Continue")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                                
-                                Image(systemName: "arrow.right")
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color(red: 0.4, green: 0.8, blue: 0.8))
-                            )
-                            .shadow(
-                                color: Color(red: 0.4, green: 0.8, blue: 0.8).opacity(0.3),
-                                radius: 12,
-                                x: 0,
-                                y: 6
-                            )
-                        }
-                        .padding(.horizontal, 32)
-                        
-                    } else {
-                        // Premium CTA buttons
-                        Button(action: {
-                            showingSubscription = true
-                        }) {
-                            HStack {
-                                Image(systemName: "crown.fill")
-                                    .font(.system(size: 18))
-                                
-                                Text("Unlock Premium Features")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                            }
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                Color(red: 1.0, green: 0.7, blue: 0.0),
-                                                Color(red: 1.0, green: 0.5, blue: 0.0)
-                                            ],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                            )
-                            .shadow(
-                                color: Color.orange.opacity(0.3),
-                                radius: 12,
-                                x: 0,
-                                y: 6
-                            )
-                        }
-                        .padding(.horizontal, 32)
-                    }
-                }
                 .padding(.bottom, 40)
+
+                // Continue / Unlock buttons
+                if currentPage < totalPages - 1 {
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            currentPage += 1
+                        }
+                    }) {
+                        HStack {
+                            Text("Continue")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 16, weight: .semibold))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color(red: 0.4, green: 0.8, blue: 0.8))
+                        )
+                        .shadow(color: Color(red: 0.4, green: 0.8, blue: 0.8).opacity(0.3), radius: 12, x: 0, y: 6)
+                    }
+                    .padding(.horizontal, 32)
+                } else {
+                    Button(action: {
+                        showingSubscription = true
+                    }) {
+                        HStack {
+                            Image(systemName: "crown.fill")
+                                .font(.system(size: 18))
+                            Text("Unlock Premium Features")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(red: 1.0, green: 0.7, blue: 0.0),
+                                            Color(red: 1.0, green: 0.5, blue: 0.0)
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                        )
+                        .shadow(color: Color.orange.opacity(0.3), radius: 12, x: 0, y: 6)
+                    }
+                    .padding(.horizontal, 32)
+                }
             }
         }
         .fullScreenCover(isPresented: $showingSubscription) {
@@ -188,24 +171,19 @@ struct OnboardingPageView: View {
     let subtitle: String
     let features: [String]
     var isPremiumFeature: Bool = false
-    
+
     var body: some View {
         VStack(spacing: 40) {
             Spacer()
-            
-            // Icon with premium badge
+
+            // Icon + premium badge
             ZStack {
-                // Main icon background
                 Circle()
                     .fill(Color.white.opacity(0.1))
                     .frame(width: 120, height: 120)
-                
-                // Icon
                 Image(systemName: icon)
                     .font(.system(size: 50, weight: .light))
                     .foregroundColor(.white)
-                
-                // Premium crown badge
                 if isPremiumFeature {
                     VStack {
                         HStack {
@@ -226,24 +204,21 @@ struct OnboardingPageView: View {
                 }
             }
             .frame(height: 120)
-            
-            // Title and subtitle
+
+            // Title & subtitle
             VStack(spacing: 16) {
                 Text(title)
                     .font(.system(size: 32, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
-                    .lineLimit(nil)
-                
                 Text(subtitle)
                     .font(.system(size: 18, weight: .regular))
                     .foregroundColor(.white.opacity(0.8))
                     .multilineTextAlignment(.center)
-                    .lineLimit(nil)
                     .padding(.horizontal, 32)
             }
-            
-            // Features list
+
+            // Feature bullets
             VStack(spacing: 16) {
                 ForEach(features, id: \.self) { feature in
                     HStack {
@@ -255,7 +230,7 @@ struct OnboardingPageView: View {
                     .padding(.horizontal, 40)
                 }
             }
-            
+
             Spacer()
         }
         .frame(maxWidth: .infinity)
