@@ -159,6 +159,7 @@ struct PersonalQuotesView: View {
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
                                     .padding(.horizontal, 40)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
                             
                             Button(action: {
