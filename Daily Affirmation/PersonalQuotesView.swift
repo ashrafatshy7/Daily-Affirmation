@@ -356,8 +356,12 @@ struct FrequencyControlSection: View {
         let builtinWeight = Double(builtinCount)
         let totalWeight = personalWeight + builtinWeight
         
+        guard totalWeight > 0 else { return 50 } // Fallback to 50% if no quotes
         let percentage = (personalWeight / totalWeight) * 100
-        return min(95, max(5, Int(percentage.rounded())))
+        
+        // Safely convert percentage to Int with validation
+        let safePercentage = percentage.safeInt(fallback: 50)
+        return min(95, max(5, safePercentage))
     }
     
     var body: some View {
