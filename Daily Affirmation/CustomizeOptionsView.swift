@@ -5,6 +5,7 @@ struct CustomizeOptionsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showPersonalQuotes = false
     @State private var showBackgroundThemes = false
+    @State private var showQuoteCategories = false
     
     var body: some View {
         NavigationView {
@@ -85,15 +86,20 @@ struct CustomizeOptionsView: View {
                         )
                         .accessibilityIdentifier("advanced_display_section")
                         
-                        // Quote Categories Section (Coming Soon)
-                        CustomizeCard(
-                            icon: "folder.fill",
-                            title: "Quote Categories",
-                            subtitle: "Coming Soon",
-                            iconColor: Color(red: 0.5, green: 0.5, blue: 0.5),
-                            isActive: false
-                        )
+                        // Quote Categories Section (Active)
+                        Button(action: {
+                            showQuoteCategories.toggle()
+                        }) {
+                            CustomizeCard(
+                                icon: "folder.fill",
+                                title: "Quote Categories",
+                                subtitle: "Currently: \(quoteManager.selectedCategory.displayName)",
+                                iconColor: getCategoryColor(quoteManager.selectedCategory),
+                                isActive: true
+                            )
+                        }
                         .accessibilityIdentifier("quote_categories_section")
+                        .accessibility(addTraits: .isButton)
                         
                         // Import/Export Section (Coming Soon)
                         CustomizeCard(
@@ -119,6 +125,19 @@ struct CustomizeOptionsView: View {
         }
         .sheet(isPresented: $showBackgroundThemes) {
             BackgroundThemesView(quoteManager: quoteManager)
+        }
+        .sheet(isPresented: $showQuoteCategories) {
+            CategorySelectionView(quoteManager: quoteManager)
+        }
+    }
+    
+    private func getCategoryColor(_ category: QuoteCategory) -> Color {
+        switch category {
+        case .general: return Color(red: 0.0, green: 0.478, blue: 1.0)
+        case .love: return Color.red
+        case .positivity: return Color(red: 1.0, green: 0.584, blue: 0.0)
+        case .stopOverthinking: return Color(red: 0.659, green: 0.902, blue: 0.812)
+        case .loveYourself: return Color.purple
         }
     }
 }

@@ -32,6 +32,29 @@ struct PersonalQuote: Identifiable, Codable, Equatable {
     }
 }
 
+// MARK: - Category Models
+struct QuoteCategories: Codable {
+    let categories: [String: [String]]
+    let defaultCategory: String
+    
+    enum CodingKeys: String, CodingKey {
+        case categories
+        case defaultCategory = "default_category"
+    }
+}
+
+enum QuoteCategory: String, CaseIterable {
+    case general = "General"
+    case love = "Love"
+    case positivity = "Positivity"
+    case stopOverthinking = "Stop overthinking"
+    case loveYourself = "Love yourself"
+    
+    var displayName: String {
+        return self.rawValue
+    }
+}
+
 // MARK: - Quote Frequency Models
 enum QuoteType {
     case builtin
@@ -340,6 +363,18 @@ class QuoteManager: ObservableObject {
     private var isInitializing = true
     private var quoteHistory: QuoteHistory?
     
+    // Category support
+    private var quoteCategories: QuoteCategories?
+    @Published var selectedCategory: QuoteCategory = .general {
+        didSet {
+            if !isInitializing {
+                updateQuotesForSelectedCategory()
+                saveSettings()
+            }
+        }
+    }
+    @Published var availableCategories: [QuoteCategory] = QuoteCategory.allCases
+    
     private var _dailyNotifications: Bool = false
     private let _dailyNotificationsSubject = PassthroughSubject<Bool, Never>()
     
@@ -643,13 +678,52 @@ class QuoteManager: ObservableObject {
     
     private func loadQuotes() {
         guard let url = Bundle.main.url(forResource: "quotes", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let quotesArray = try? JSONDecoder().decode([String].self, from: data) else {
-            print("Failed to load quotes")
+              let data = try? Data(contentsOf: url) else {
+            print("Failed to load quotes file")
             return
         }
         
-        self.quotes = quotesArray
+        // Try to decode new categorized structure first
+        if let categorizedQuotes = try? JSONDecoder().decode(QuoteCategories.self, from: data) {
+            self.quoteCategories = categorizedQuotes
+            
+            // Update available categories based on what exists in the file
+            let fileCategories = categorizedQuotes.categories.keys.compactMap { QuoteCategory(rawValue: $0) }
+            if !fileCategories.isEmpty {
+                availableCategories = fileCategories.sorted { $0.rawValue < $1.rawValue }
+            }
+            
+            // Load quotes for the selected category
+            updateQuotesForSelectedCategory()
+        } else if let quotesArray = try? JSONDecoder().decode([String].self, from: data) {
+            // Fallback to old array format
+            self.quotes = quotesArray
+            print("Loaded quotes using legacy array format")
+        } else {
+            print("Failed to decode quotes in any format")
+            return
+        }
+    }
+    
+    private func updateQuotesForSelectedCategory() {
+        guard let categories = quoteCategories else {
+            return
+        }
+        
+        if let categoryQuotes = categories.categories[selectedCategory.rawValue] {
+            self.quotes = categoryQuotes
+        } else {
+            // Fallback to default category if selected one doesn't exist
+            if let defaultQuotes = categories.categories[categories.defaultCategory] {
+                self.quotes = defaultQuotes
+            } else {
+                self.quotes = []
+            }
+        }
+        
+        // Reset quote history and rebuild quote bag when category changes
+        setDailyQuote()
+        rebuildQuoteBag()
     }
     
     private func setDailyQuote() {
@@ -911,6 +985,7 @@ class QuoteManager: ObservableObject {
         userDefaults.set(selectedBackgroundImage, forKey: "selectedBackgroundImage")
         userDefaults.set(includePersonalQuotes, forKey: "includePersonalQuotes")
         userDefaults.set(personalQuoteFrequencyMultiplier, forKey: "personalQuoteFrequencyMultiplier")
+        userDefaults.set(selectedCategory.rawValue, forKey: "selectedCategory")
     }
     
     private func loadSettings() {
@@ -965,6 +1040,14 @@ class QuoteManager: ObservableObject {
             personalQuoteFrequencyMultiplier = max(1.0, min(5.0, personalQuoteFrequencyMultiplier))
         } else {
             personalQuoteFrequencyMultiplier = 2.0
+        }
+        
+        // Load selected category (defaults to general if not set)
+        if let savedCategoryString = userDefaults.string(forKey: "selectedCategory"),
+           let savedCategory = QuoteCategory(rawValue: savedCategoryString) {
+            selectedCategory = savedCategory
+        } else {
+            selectedCategory = .general
         }
         
         // If notifications were enabled, check permission and schedule
