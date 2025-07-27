@@ -10,6 +10,7 @@ class SubscriptionManager: ObservableObject {
     @Published var isLoading = false
     @Published var hasTimeRangeAccess = false
     @Published var currentSubscription: Product? = nil
+    @Published var isTestingMode = false
     
     private let productIdentifiers = [
         "time_range_weekly",
@@ -19,6 +20,9 @@ class SubscriptionManager: ObservableObject {
     private var updateListenerTask: Task<Void, Error>? = nil
     
     init() {
+        // Load testing mode status
+        isTestingMode = UserDefaults.standard.bool(forKey: "isTestingMode")
+        
         updateListenerTask = listenForTransactions()
         
         // Don't load products during tests to avoid StoreKit warnings
@@ -27,6 +31,9 @@ class SubscriptionManager: ObservableObject {
                 await loadProducts()
                 await checkSubscriptionStatus()
             }
+        } else {
+            // In test environment, just load offline status
+            loadOfflineSubscriptionStatus()
         }
     }
     
@@ -106,11 +113,29 @@ class SubscriptionManager: ObservableObject {
             }
         }
         
-        hasTimeRangeAccess = hasAccess
-        currentSubscription = currentSub
+        // In testing mode, override the subscription status
+        if isTestingMode {
+            let previousAccess = hasTimeRangeAccess
+            hasTimeRangeAccess = UserDefaults.standard.bool(forKey: "testingModeSubscription")
+            
+            // Check if subscription was deactivated in testing mode
+            if previousAccess && !hasTimeRangeAccess {
+                resetPremiumSettingsOnDeactivation()
+            }
+        } else {
+            let previousAccess = hasTimeRangeAccess
+            hasTimeRangeAccess = hasAccess
+            
+            // Check if subscription was deactivated
+            if previousAccess && !hasAccess {
+                resetPremiumSettingsOnDeactivation()
+            }
+            
+            // Store subscription status in UserDefaults for offline access
+            UserDefaults.standard.set(hasAccess, forKey: "hasTimeRangeAccess")
+        }
         
-        // Store subscription status in UserDefaults for offline access
-        UserDefaults.standard.set(hasAccess, forKey: "hasTimeRangeAccess")
+        currentSubscription = currentSub
     }
     
     // MARK: - Restore Purchases
@@ -170,11 +195,82 @@ class SubscriptionManager: ObservableObject {
     
     // MARK: - Offline Access Check
     func loadOfflineSubscriptionStatus() {
-        hasTimeRangeAccess = UserDefaults.standard.bool(forKey: "hasTimeRangeAccess")
+        if isTestingMode {
+            hasTimeRangeAccess = UserDefaults.standard.bool(forKey: "testingModeSubscription")
+        } else {
+            hasTimeRangeAccess = UserDefaults.standard.bool(forKey: "hasTimeRangeAccess")
+        }
+    }
+    
+    // MARK: - Testing Mode
+    func enableTestingMode() {
+        isTestingMode = true
+        UserDefaults.standard.set(true, forKey: "isTestingMode")
+        
+        // Load the current testing subscription status
+        let testingSubscriptionStatus = UserDefaults.standard.bool(forKey: "testingModeSubscription")
+        hasTimeRangeAccess = testingSubscriptionStatus
+    }
+    
+    func disableTestingMode() {
+        isTestingMode = false
+        UserDefaults.standard.set(false, forKey: "isTestingMode")
+        
+        // Restore real subscription status
+        loadOfflineSubscriptionStatus()
+        
+        // Trigger a real subscription check
+        if !isRunningTests {
+            Task {
+                await checkSubscriptionStatus()
+            }
+        }
+    }
+    
+    // MARK: - Premium Settings Reset
+    private func resetPremiumSettingsOnDeactivation() {
+        // Reset background to default if it's a premium background
+        let freeBackgrounds = ["background", "background1"]
+        let currentBackground = UserDefaults.standard.string(forKey: "selectedBackgroundImage") ?? "background"
+        if !freeBackgrounds.contains(currentBackground) {
+            UserDefaults.standard.set("background", forKey: "selectedBackgroundImage")
+        }
+        
+        // Reset category to General if it's a premium category
+        let currentCategory = UserDefaults.standard.string(forKey: "selectedCategory") ?? "General"
+        if currentCategory != "General" {
+            UserDefaults.standard.set("General", forKey: "selectedCategory")
+        }
+        
+        // Reset personal quotes toggle to off
+        UserDefaults.standard.set(false, forKey: "includePersonalQuotes")
+        
+        // Notify the main thread to update UI
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .premiumSettingsReset, object: nil)
+        }
+    }
+    
+    func toggleTestingSubscription(_ hasSubscription: Bool) {
+        guard isTestingMode else { return }
+        
+        let previousAccess = hasTimeRangeAccess
+        UserDefaults.standard.set(hasSubscription, forKey: "testingModeSubscription")
+        hasTimeRangeAccess = hasSubscription
+        
+        // Check if subscription was deactivated in testing mode
+        if previousAccess && !hasSubscription {
+            resetPremiumSettingsOnDeactivation()
+        }
     }
 }
 
 // MARK: - Store Errors
 enum StoreError: Error {
     case failedVerification
+}
+
+// MARK: - Notification Extensions
+extension Notification.Name {
+    static let premiumSettingsReset = Notification.Name("premiumSettingsReset")
 }

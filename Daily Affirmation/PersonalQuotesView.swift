@@ -5,6 +5,8 @@ struct PersonalQuotesView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showAddQuote = false
     @State private var editingQuote: PersonalQuote? = nil
+    @State private var showSubscription = false
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
     
     var body: some View {
         ZStack {
@@ -69,7 +71,11 @@ struct PersonalQuotesView: View {
                             Spacer()
                             
                             Button(action: {
-                                showAddQuote.toggle()
+                                if subscriptionManager.hasTimeRangeAccess {
+                                    showAddQuote.toggle()
+                                } else {
+                                    showSubscription.toggle()
+                                }
                             }) {
                                 ZStack {
                                     Circle()
@@ -77,7 +83,7 @@ struct PersonalQuotesView: View {
                                         .frame(width: 44, height: 44)
                                         .shadow(color: Color(red: 0.659, green: 0.902, blue: 0.812).opacity(0.3), radius: 8, x: 0, y: 2)
                                     
-                                    Image(systemName: "plus")
+                                    Image(systemName: subscriptionManager.hasTimeRangeAccess ? "plus" : "lock.fill")
                                         .font(.system(size: 18, weight: .semibold))
                                         .foregroundColor(.white)
                                 }
@@ -107,8 +113,9 @@ struct PersonalQuotesView: View {
                         
                         Spacer()
                         
-                        Toggle("", isOn: $quoteManager.includePersonalQuotes)
+                        Toggle("", isOn: subscriptionManager.hasTimeRangeAccess ? $quoteManager.includePersonalQuotes : .constant(false))
                             .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.659, green: 0.902, blue: 0.812)))
+                            .disabled(!subscriptionManager.hasTimeRangeAccess)
                     }
                     .padding(.horizontal, 24)
                     .padding(.vertical, 20)
@@ -155,12 +162,16 @@ struct PersonalQuotesView: View {
                             }
                             
                             Button(action: {
-                                showAddQuote.toggle()
+                                if subscriptionManager.hasTimeRangeAccess {
+                                    showAddQuote.toggle()
+                                } else {
+                                    showSubscription.toggle()
+                                }
                             }) {
                                 HStack {
-                                    Image(systemName: "plus")
+                                    Image(systemName: subscriptionManager.hasTimeRangeAccess ? "plus" : "lock.fill")
                                         .font(.system(size: 16, weight: .semibold))
-                                    Text("Add Your First Quote")
+                                    Text(subscriptionManager.hasTimeRangeAccess ? "Add Your First Quote" : "Unlock Personal Quotes")
                                         .font(.headline)
                                         .fontWeight(.semibold)
                                 }
@@ -184,14 +195,27 @@ struct PersonalQuotesView: View {
                                 PersonalQuoteCard(
                                     quote: quote,
                                     onEdit: {
-                                        editingQuote = quote
+                                        if subscriptionManager.hasTimeRangeAccess {
+                                            editingQuote = quote
+                                        } else {
+                                            showSubscription.toggle()
+                                        }
                                     },
                                     onDelete: {
-                                        quoteManager.deletePersonalQuote(withId: quote.id)
+                                        if subscriptionManager.hasTimeRangeAccess {
+                                            quoteManager.deletePersonalQuote(withId: quote.id)
+                                        } else {
+                                            showSubscription.toggle()
+                                        }
                                     },
                                     onToggleActive: {
-                                        quoteManager.togglePersonalQuoteActive(withId: quote.id)
-                                    }
+                                        if subscriptionManager.hasTimeRangeAccess {
+                                            quoteManager.togglePersonalQuoteActive(withId: quote.id)
+                                        } else {
+                                            showSubscription.toggle()
+                                        }
+                                    },
+                                    isPremiumUser: subscriptionManager.hasTimeRangeAccess
                                 )
                             }
                         }
@@ -210,6 +234,9 @@ struct PersonalQuotesView: View {
         .sheet(item: $editingQuote) { quote in
             AddPersonalQuoteView(quoteManager: quoteManager, editingQuote: quote)
         }
+        .sheet(isPresented: $showSubscription) {
+            SubscriptionView()
+        }
     }
 }
 
@@ -218,6 +245,7 @@ struct PersonalQuoteCard: View {
     let onEdit: () -> Void
     let onDelete: () -> Void
     let onToggleActive: () -> Void
+    let isPremiumUser: Bool
     
     @State private var showDeleteAlert = false
     
@@ -244,27 +272,37 @@ struct PersonalQuoteCard: View {
                 HStack(spacing: 16) {
                     // Active/Inactive toggle
                     Button(action: onToggleActive) {
-                        Image(systemName: quote.isActive ? "eye.fill" : "eye.slash")
-                            .font(.system(size: 16))
-                            .foregroundColor(quote.isActive ? Color(red: 0.659, green: 0.902, blue: 0.812) : .secondary)
+                        HStack(spacing: 4) {
+                            Image(systemName: quote.isActive ? "eye.fill" : "eye.slash")
+                                .font(.system(size: 16))
+                                .foregroundColor(isPremiumUser ? (quote.isActive ? Color(red: 0.659, green: 0.902, blue: 0.812) : .secondary) : .gray)
+                        }
                     }
                     .accessibilityLabel(quote.isActive ? "Hide quote" : "Show quote")
                     
                     // Edit button
                     Button(action: onEdit) {
-                        Image(systemName: "pencil")
-                            .font(.system(size: 16))
-                            .foregroundColor(.secondary)
+                        HStack(spacing: 4) {
+                            Image(systemName: "pencil")
+                                .font(.system(size: 16))
+                                .foregroundColor(isPremiumUser ? .secondary : .gray)
+                        }
                     }
                     .accessibilityLabel("Edit quote")
                     
                     // Delete button
                     Button(action: {
-                        showDeleteAlert = true
+                        if isPremiumUser {
+                            showDeleteAlert = true
+                        } else {
+                            onDelete()
+                        }
                     }) {
-                        Image(systemName: "trash")
-                            .font(.system(size: 16))
-                            .foregroundColor(.red)
+                        HStack(spacing: 4) {
+                            Image(systemName: "trash")
+                                .font(.system(size: 16))
+                                .foregroundColor(isPremiumUser ? .red : .gray)
+                        }
                     }
                     .accessibilityLabel("Delete quote")
                 }

@@ -663,6 +663,15 @@ class QuoteManager: ObservableObject {
         
         // Build initial quote bag after everything is loaded
         rebuildQuoteBag()
+        
+        // Listen for premium settings reset notification
+        NotificationCenter.default.addObserver(
+            forName: .premiumSettingsReset,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handlePremiumSettingsReset()
+        }
     }
     
     private func setupNotificationCategories() {
@@ -674,6 +683,24 @@ class QuoteManager: ObservableObject {
         )
         
         UNUserNotificationCenter.current().setNotificationCategories([category])
+    }
+    
+    // MARK: - Premium Settings Reset Handler
+    private func handlePremiumSettingsReset() {
+        // Reset background to default
+        selectedBackgroundImage = "background"
+        
+        // Reset category to General
+        selectedCategory = .general
+        
+        // Reset personal quotes toggle to off
+        includePersonalQuotes = false
+        
+        // Rebuild quote bag without personal quotes
+        rebuildQuoteBag()
+        
+        // Update the current quote to reflect changes
+        setDailyQuote()
     }
     
     private func loadQuotes() {
