@@ -147,6 +147,29 @@ struct ContentView: View {
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
                         }
                         .accessibilityIdentifier("love_button")
+                        
+                        // Pin button
+                        Button {
+                            let current = quoteManager.currentQuote
+                            if SharedQuoteManager.shared.isPinned() && SharedQuoteManager.shared.getPinnedQuote() == current {
+                                SharedQuoteManager.shared.unpinQuote()
+                            } else {
+                                SharedQuoteManager.shared.pinQuote(current)
+                            }
+                        } label: {
+                            let currentQuote = quoteManager.currentQuote
+                            let isCurrentPinned = SharedQuoteManager.shared.isPinned() && SharedQuoteManager.shared.getPinnedQuote() == currentQuote
+                            
+                            Image(systemName: isCurrentPinned ? "pin.fill" : "pin")
+                                .font(.title2)
+                                .foregroundColor(isCurrentPinned ? Color(red: 0.659, green: 0.902, blue: 0.812) : .black.opacity(0.6))
+                                .padding(12)
+                                .background(Color.white.opacity(0.9))
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
+                        }
+                        .accessibilityIdentifier("pin_button")
+                        .accessibilityLabel("Pin quote")
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 50)
