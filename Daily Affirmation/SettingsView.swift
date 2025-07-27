@@ -7,39 +7,73 @@ struct SettingsView: View {
     
     var body: some View {
         NavigationView {
+            ZStack {
+            // Background gradient
+            LinearGradient(
+                colors: [
+                    Color(red: 0.95, green: 0.97, blue: 1.0),
+                    Color(red: 0.98, green: 0.99, blue: 1.0)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+            
             VStack(spacing: 0) {
-                // Header - Fixed at top
-                HStack {
-                    Button(action: {}) {
-                        Text(quoteManager.localizedString("settings"))
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(.black)
-                    }
-                    .disabled(true)
-                    .buttonStyle(PlainButtonStyle())
-                    .accessibilityIdentifier("settings_title")
-                    .accessibilityLabel("Settings")
-                    .accessibility(addTraits: .isHeader)
-                    .accessibility(removeTraits: .isButton)
+                // Modern Header
+                ZStack {
+                    // Header gradient background
+                    RoundedRectangle(cornerRadius: 30)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.4, green: 0.8, blue: 0.8).opacity(0.1),
+                                    Color(red: 0.5, green: 0.7, blue: 0.9).opacity(0.05)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(height: 120)
                     
-                    Spacer()
-                    
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        Image(systemName: "xmark")
-                            .font(.title2)
-                            .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                    VStack(spacing: 8) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(quoteManager.localizedString("settings"))
+                                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                                    .foregroundColor(.black)
+                                
+                                Text("Personalize your experience")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.black.opacity(0.6))
+                            }
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                dismiss()
+                            }) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.white)
+                                        .frame(width: 44, height: 44)
+                                        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+                                    
+                                    Image(systemName: "xmark")
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundColor(.black.opacity(0.7))
+                                }
+                            }
+                            .accessibilityIdentifier("close_settings_button")
+                            .accessibilityLabel("Close settings")
+                            .accessibility(addTraits: .isButton)
+                        }
+                        .padding(.horizontal, 32)
+                        .padding(.top, 20)
                     }
-                    .accessibilityIdentifier("close_settings_button")
-                    .accessibilityLabel("Close settings")
-                    .accessibility(addTraits: .isButton)
                 }
-                .padding(.horizontal, 30)
-                .padding(.top, 20)
-                .padding(.bottom, 16)
-                .background(Color.white)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 32)
                 
                 // Settings content - Scrollable
                 ScrollView {
@@ -53,6 +87,7 @@ struct SettingsView: View {
                                 iconColor: Color(red: 1.0, green: 0.584, blue: 0.0)
                             )
                         }
+                        .buttonStyle(PlainButtonStyle())
                         .accessibilityIdentifier("notifications_section")
                         .accessibility(addTraits: .isButton)
                         
@@ -67,6 +102,7 @@ struct SettingsView: View {
                                 iconColor: Color(red: 1.0, green: 0.7, blue: 0.0)
                             )
                         }
+                        .buttonStyle(PlainButtonStyle())
                         .accessibilityIdentifier("premium_section")
                         .accessibility(addTraits: .isButton)
                         
@@ -79,6 +115,7 @@ struct SettingsView: View {
                                 iconColor: Color(red: 0.0, green: 0.478, blue: 1.0)
                             )
                         }
+                        .buttonStyle(PlainButtonStyle())
                         .accessibilityIdentifier("display_section")
                         .accessibility(addTraits: .isButton)
                         
@@ -87,10 +124,11 @@ struct SettingsView: View {
                             SettingsCard(
                                 icon: "heart.fill",
                                 title: quoteManager.localizedString("loved_quotes"),
-                                subtitle: "\(quoteManager.lovedQuotes.count) quotes",
+                                subtitle: "Your favorites",
                                 iconColor: Color.red
                             )
                         }
+                        .buttonStyle(PlainButtonStyle())
                         .accessibilityIdentifier("loved_quotes_section")
                         .accessibility(addTraits: .isButton)
                         
@@ -100,12 +138,12 @@ struct SettingsView: View {
                     .padding(.bottom, 40)
                 }
             }
-            .background(Color.white)
-            .navigationBarHidden(true)
         }
+        .navigationBarHidden(true)
         .preferredColorScheme(.light)
         .sheet(isPresented: $showSubscription) {
             SubscriptionView()
+        }
         }
     }
 }
@@ -117,25 +155,28 @@ struct SettingsCard: View {
     let iconColor: Color
     
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 20) {
             // Icon
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(iconColor)
-                .frame(width: 40, height: 40)
-                .background(iconColor.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+            ZStack {
+                Circle()
+                    .fill(iconColor.opacity(0.1))
+                    .frame(width: 60, height: 60)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundColor(iconColor)
+            }
             
             // Content
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(title)
-                    .font(.headline)
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.black)
                     .multilineTextAlignment(.leading)
                 
                 Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.black.opacity(0.6))
                     .multilineTextAlignment(.leading)
             }
             
@@ -143,16 +184,17 @@ struct SettingsCard: View {
             
             // Chevron
             Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.black.opacity(0.4))
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 20)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 20)
                 .fill(Color.white)
-                .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
         )
+        .contentShape(Rectangle())
     }
 }
 
@@ -229,7 +271,6 @@ struct NotificationSettingsDetailView: View {
                 .padding(.bottom, 40)
             }
         }
-        .background(Color.white)
         .navigationBarHidden(true)
         .sheet(isPresented: $showStartTimePicker) {
             if #available(iOS 16.0, *) {
@@ -665,28 +706,76 @@ struct DisplaySettingsView: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button(action: {
-                    dismiss()
-                }) {
-                    Image(systemName: "chevron.left")
-                        .font(.title2)
-                        .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+        ZStack {
+            // Background gradient
+            LinearGradient(
+                colors: [
+                    Color(red: 0.95, green: 0.97, blue: 1.0),
+                    Color(red: 0.98, green: 0.99, blue: 1.0)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Modern Header
+                ZStack {
+                    RoundedRectangle(cornerRadius: 30)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.0, green: 0.478, blue: 1.0).opacity(0.1),
+                                    Color(red: 0.0, green: 0.278, blue: 0.8).opacity(0.05)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(height: 120)
+                    
+                    VStack(spacing: 8) {
+                        HStack {
+                            Button(action: {
+                                dismiss()
+                            }) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.white)
+                                        .frame(width: 44, height: 44)
+                                        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+                                    
+                                    Image(systemName: "chevron.left")
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundColor(.black.opacity(0.7))
+                                }
+                            }
+                            .accessibilityLabel("Back")
+                            
+                            Spacer()
+                            
+                            VStack(alignment: .center, spacing: 4) {
+                                Text("Font Size")
+                                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                                    .foregroundColor(.black)
+                                
+                                Text("Text readability")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(.black.opacity(0.6))
+                            }
+                            
+                            Spacer()
+                            
+                            Circle()
+                                .fill(Color.clear)
+                                .frame(width: 44, height: 44)
+                        }
+                        .padding(.horizontal, 32)
+                        .padding(.top, 20)
+                    }
                 }
-                
-                Text(quoteManager.localizedString("font_size"))
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.black)
-                
-                Spacer()
-            }
-            .padding(.horizontal, 30)
-            .padding(.top, 20)
-            .padding(.bottom, 16)
-            .background(Color.white)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 32)
             
             // Content
             ScrollView {
@@ -748,7 +837,7 @@ struct DisplaySettingsView: View {
                 .padding(.bottom, 40)
             }
         }
-        .background(Color.white)
+        }
         .navigationBarHidden(true)
     }
 }
@@ -758,28 +847,76 @@ struct LovedQuotesDetailView: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button(action: {
-                    dismiss()
-                }) {
-                    Image(systemName: "chevron.left")
-                        .font(.title2)
-                        .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+        ZStack {
+            // Background gradient
+            LinearGradient(
+                colors: [
+                    Color(red: 0.95, green: 0.97, blue: 1.0),
+                    Color(red: 0.98, green: 0.99, blue: 1.0)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Modern Header
+                ZStack {
+                    RoundedRectangle(cornerRadius: 30)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.red.opacity(0.1),
+                                    Color.red.opacity(0.05)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(height: 120)
+                    
+                    VStack(spacing: 8) {
+                        HStack {
+                            Button(action: {
+                                dismiss()
+                            }) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.white)
+                                        .frame(width: 44, height: 44)
+                                        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+                                    
+                                    Image(systemName: "chevron.left")
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundColor(.black.opacity(0.7))
+                                }
+                            }
+                            .accessibilityLabel("Back")
+                            
+                            Spacer()
+                            
+                            VStack(alignment: .center, spacing: 4) {
+                                Text("Loved Quotes")
+                                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                                    .foregroundColor(.black)
+                                
+                                Text("Your favorites")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(.black.opacity(0.6))
+                            }
+                            
+                            Spacer()
+                            
+                            Circle()
+                                .fill(Color.clear)
+                                .frame(width: 44, height: 44)
+                        }
+                        .padding(.horizontal, 32)
+                        .padding(.top, 20)
+                    }
                 }
-                
-                Text(quoteManager.localizedString("loved_quotes"))
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.black)
-                
-                Spacer()
-            }
-            .padding(.horizontal, 30)
-            .padding(.top, 20)
-            .padding(.bottom, 16)
-            .background(Color.white)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 32)
             
             // Content
             if quoteManager.lovedQuotes.isEmpty {
@@ -827,12 +964,12 @@ struct LovedQuotesDetailView: View {
                                 }
                                 .accessibilityLabel("Remove from loved quotes")
                             }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 16)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 20)
                             .background(
-                                RoundedRectangle(cornerRadius: 16)
+                                RoundedRectangle(cornerRadius: 20)
                                     .fill(Color.white)
-                                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                                    .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
                             )
                         }
                     }
@@ -842,7 +979,7 @@ struct LovedQuotesDetailView: View {
                 }
             }
         }
-        .background(Color.white)
+        }
         .navigationBarHidden(true)
     }
 }
