@@ -298,20 +298,13 @@ struct QuoteCardWithGradientView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            let parallaxMultiplier: CGFloat = 0.5
-            let maxParallaxOffset: CGFloat = geometry.size.height * 0.1
-            let clampedDragOffset = max(-geometry.size.height, min(geometry.size.height, dragOffset))
-            let backgroundOffset = clampedDragOffset * parallaxMultiplier
-            let boundedBackgroundOffset = max(-maxParallaxOffset, min(maxParallaxOffset, backgroundOffset))
-            
             ZStack {
                 Image(quoteManager.selectedBackgroundImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: geometry.size.width, height: geometry.size.height * 1.2)
-                    .offset(y: boundedBackgroundOffset)
                     .clipped()
-                    .ignoresSafeArea(.container, edges: .bottom)
+                    .ignoresSafeArea(.all)
                     .allowsHitTesting(false)
 
             VStack {
