@@ -507,6 +507,14 @@ class QuoteManager: ObservableObject {
         }
     }
     
+    @Published var selectedBackgroundImage: String = "background" {
+        didSet {
+            if !isInitializing {
+                saveSettings()
+            }
+        }
+    }
+    
     @Published var lovedQuotes: Set<String> = [] {
         didSet {
             if !isInitializing {
@@ -900,6 +908,7 @@ class QuoteManager: ObservableObject {
         userDefaults.set(notificationCount, forKey: "notificationCount")
         userDefaults.set(notificationMode.rawValue, forKey: "notificationMode")
         userDefaults.set(fontSize.rawValue, forKey: "fontSize")
+        userDefaults.set(selectedBackgroundImage, forKey: "selectedBackgroundImage")
         userDefaults.set(includePersonalQuotes, forKey: "includePersonalQuotes")
         userDefaults.set(personalQuoteFrequencyMultiplier, forKey: "personalQuoteFrequencyMultiplier")
     }
@@ -910,6 +919,9 @@ class QuoteManager: ObservableObject {
         if let savedFontSize = FontSize(rawValue: userDefaults.string(forKey: "fontSize") ?? "") {
             fontSize = savedFontSize
         }
+        
+        let savedBackgroundImage = userDefaults.string(forKey: "selectedBackgroundImage") ?? "background"
+        selectedBackgroundImage = savedBackgroundImage
         
         // Load notification times if available
         if let savedStartTime = userDefaults.object(forKey: "startTime") as? Date {
