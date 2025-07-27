@@ -846,6 +846,13 @@ class QuoteManager: ObservableObject {
         
         if count == 1 {
             // Single notification at center of range
+            guard totalMinutes > 0 else {
+                // If no time range, use start time
+                if let startTime = createDateFromMinutes(startMinutes, using: calendar) {
+                    notificationTimes.append(startTime)
+                }
+                return notificationTimes
+            }
             let centerMinutes = startMinutes + totalMinutes / 2
             if let notificationTime = createDateFromMinutes(centerMinutes, using: calendar) {
                 notificationTimes.append(notificationTime)
@@ -856,6 +863,13 @@ class QuoteManager: ObservableObject {
             
             if actualCount == 1 {
                 // Single notification in the middle of range
+                guard totalMinutes > 0 else {
+                    // If no time range, use start time
+                    if let startTime = createDateFromMinutes(startMinutes, using: calendar) {
+                        notificationTimes.append(startTime)
+                    }
+                    return notificationTimes
+                }
                 let middleMinutes = startMinutes + totalMinutes / 2
                 if let notificationTime = createDateFromMinutes(middleMinutes, using: calendar) {
                     notificationTimes.append(notificationTime)
@@ -886,19 +900,32 @@ class QuoteManager: ObservableObject {
                 
                 // Distribute remaining notifications evenly in between
                 let remainingCount = actualCount - 2
-                if remainingCount > 0 {
+                if remainingCount > 0 && actualCount > 1 && totalMinutes > 0 {
                     // Calculate step size for even distribution
                     let step = Double(totalMinutes) / Double(actualCount - 1)
                     
+                    // Validate step calculation
+                    guard !step.isNaN && !step.isInfinite else {
+                        // If step calculation fails, fall back to start and end times only
+                        return notificationTimes.sorted()
+                    }
+                    
                     for i in 1..<(actualCount - 1) {
                         let targetMinutes = Double(startMinutes) + (Double(i) * step)
-                        var candidateMinute = Int(round(targetMinutes))
+                        
+                        // Safely convert targetMinutes to Int
+                        var candidateMinute = targetMinutes.safeInt(fallback: startMinutes)
+                        
+                        // Skip if conversion failed or value is out of range
+                        guard candidateMinute >= startMinutes && candidateMinute <= endMinutes else {
+                            continue
+                        }
                         
                         // Ensure uniqueness by adjusting if needed
                         while usedMinutes.contains(candidateMinute) {
                             candidateMinute += 1
                             if candidateMinute > endMinutes {
-                                candidateMinute = Int(targetMinutes) - 1
+                                candidateMinute = max(startMinutes, (targetMinutes - 1).safeInt(fallback: startMinutes))
                                 while usedMinutes.contains(candidateMinute) && candidateMinute > startMinutes {
                                     candidateMinute -= 1
                                 }
@@ -1800,6 +1827,22 @@ class QuoteManager: ObservableObject {
         case "not_now": return "Not Now"
         default: return key
         }
+    }
+}
+
+// MARK: - Safe Math Utilities
+extension Double {
+    /// Returns true if the value is a valid finite number (not NaN or infinite)
+    var isValidNumber: Bool {
+        return !isNaN && !isInfinite
+    }
+    
+    /// Safely converts to Int, returning a fallback value if invalid
+    func safeInt(fallback: Int = 0) -> Int {
+        guard isValidNumber else { return fallback }
+        let rounded = self.rounded()
+        guard rounded.isValidNumber else { return fallback }
+        return Int(rounded)
     }
 }
 
