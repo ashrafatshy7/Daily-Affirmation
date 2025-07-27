@@ -1,36 +1,23 @@
-//
-//  ContentView.swift
-//  testClaudeCLIxCode
-//
-//  Created by Ashraf Atshy on 07/07/2025.
-//
-
 import SwiftUI
-import UIKit
 
 struct ContentView: View {
     @StateObject private var quoteManager = QuoteManager()
     @State private var showSettings = false
     @State private var showCustomizeOptions = false
-    @State private var currentScreenOffset: CGFloat = 0
-    @State private var swipeIndicatorOpacity: Double = 1.0
-    @State private var showSwipeIndicator: Bool = true
-    @State private var dragOffset: CGFloat = 0
-    @State private var lastDragValue: CGFloat = 0
-    @State private var hasTriggeredSwipe: Bool = false
-    @State private var swipeDirection: SwipeDirection = .none
     @State private var showNotificationPermission = false
-    
-    enum SwipeDirection {
-        case none, up, down
-    }
-    
+    @State private var swipeIndicatorOpacity: Double = 1.0
+    @State private var showSwipeIndicator = true
+    @State private var dragOffset: CGFloat = 0
+    @State private var hasTriggeredSwipe = false
+    @State private var swipeDirection: SwipeDirection = .none
+
+    enum SwipeDirection { case none, up, down }
+
     var body: some View {
         GeometryReader { geometry in
             let screenHeight = geometry.size.height
-            
+
             ZStack {
-                // One swipeable stack per index
                 if #available(iOS 16.0, *) {
                     ZStack {
                         ForEach(-1...1, id: \.self) { screenIndex in
@@ -51,68 +38,48 @@ struct ContentView: View {
                         DragGesture()
                             .onChanged { value in
                                 dragOffset = value.translation.height
-                                
-                                if showSwipeIndicator && abs(value.translation.height) > 10 {
+                                if showSwipeIndicator && abs(dragOffset) > 10 {
                                     showSwipeIndicator = false
                                 }
-                                
-                                let minimumSwipeDistance: CGFloat = 80
-                                let currentDrag = value.translation.height
-                                
-                                if !hasTriggeredSwipe && abs(currentDrag) > minimumSwipeDistance {
-                                    if currentDrag < -minimumSwipeDistance && swipeDirection != .up {
-                                        swipeDirection = .up
-                                        hasTriggeredSwipe = true
-                                    } else if currentDrag > minimumSwipeDistance && swipeDirection != .down {
-                                        swipeDirection = .down
-                                        hasTriggeredSwipe = true
-                                    }
+                                let threshold: CGFloat = 80
+                                if !hasTriggeredSwipe && abs(dragOffset) > threshold {
+                                    swipeDirection = dragOffset < 0 ? .up : .down
+                                    hasTriggeredSwipe = true
                                 }
                             }
-                            .onEnded { value in
+                            .onEnded { _ in
                                 if hasTriggeredSwipe {
-                                    if swipeDirection == .up {
-                                        withAnimation(.spring(dampingFraction: 0.8, blendDuration: 0.3)) {
-                                            dragOffset = -screenHeight
-                                        }
-                                    } else if swipeDirection == .down {
-                                        withAnimation(.spring(dampingFraction: 0.8, blendDuration: 0.3)) {
-                                            dragOffset = screenHeight
-                                        }
+                                    let target = swipeDirection == .up ? -screenHeight : screenHeight
+                                    withAnimation(.easeOut(duration: 0.3)) {
+                                        dragOffset = target
                                     }
-                                    
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                         if swipeDirection == .up {
                                             quoteManager.nextQuote()
-                                        } else if swipeDirection == .down {
+                                        } else {
                                             quoteManager.previousQuote()
                                         }
-                                        
                                         dragOffset = 0
                                         hasTriggeredSwipe = false
                                         swipeDirection = .none
-                                        lastDragValue = 0
                                     }
                                 } else {
-                                    withAnimation(.spring(dampingFraction: 0.8, blendDuration: 0.25)) {
+                                    withAnimation(.easeOut(duration: 0.3)) {
                                         dragOffset = 0
                                     }
                                     hasTriggeredSwipe = false
                                     swipeDirection = .none
-                                    lastDragValue = 0
                                 }
                             }
                     )
-                } else {
-                    // Fallback on earlier versions
                 }
-                
-                // Fixed top navigation bar overlay
+
+                // Top bar
                 VStack {
                     HStack {
-                        Button(action: {
+                        Button {
                             showSettings.toggle()
-                        }) {
+                        } label: {
                             Image(systemName: "gearshape.fill")
                                 .font(.title2)
                                 .foregroundColor(.black)
@@ -122,37 +89,39 @@ struct ContentView: View {
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
                         }
                         .accessibilityIdentifier("settings_button")
-                        
+
                         Spacer()
-                        
-                        Button(action: {
-                            shareQuote()
-                        }) {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.title2)
-                                .foregroundColor(.black)
-                                .padding(12)
-                                .background(Color.white.opacity(0.9))
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
+
+                        if #available(iOS 16.0, *) {
+                            ShareLink(
+                                item: "\(quoteManager.currentQuote)\n\n\(quoteManager.localizedString("share_suffix"))"
+                            ) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.title2)
+                                    .foregroundColor(.black)
+                                    .padding(12)
+                                    .background(Color.white.opacity(0.9))
+                                    .clipShape(Circle())
+                                    .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
+                            }
+                            .accessibilityIdentifier("share_button")
                         }
-                        .accessibilityIdentifier("share_button")
                     }
                     .padding(.horizontal, 24)
                     .padding(.top, 50)
                     .padding(.bottom, 10)
-                    
+
                     Spacer()
                 }
                 .zIndex(10)
-                
-                // Fixed bottom buttons overlay
+
+                // Bottom bar
                 VStack {
                     Spacer()
                     HStack {
-                        Button(action: {
+                        Button {
                             showCustomizeOptions.toggle()
-                        }) {
+                        } label: {
                             Image(systemName: "paintbrush.fill")
                                 .font(.title2)
                                 .foregroundColor(.black.opacity(0.6))
@@ -162,13 +131,13 @@ struct ContentView: View {
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
                         }
                         .accessibilityIdentifier("customize_button")
-                        
+
                         Spacer()
-                        
-                        Button(action: {
-                            let currentQuote = quoteManager.currentQuote
-                            quoteManager.toggleLoveQuote(currentQuote)
-                        }) {
+
+                        Button {
+                            let current = quoteManager.currentQuote
+                            quoteManager.toggleLoveQuote(current)
+                        } label: {
                             Image(systemName: quoteManager.isQuoteLoved(quoteManager.currentQuote) ? "heart.fill" : "heart")
                                 .font(.title2)
                                 .foregroundColor(quoteManager.isQuoteLoved(quoteManager.currentQuote) ? .red : .black.opacity(0.6))
@@ -183,12 +152,11 @@ struct ContentView: View {
                     .padding(.bottom, 50)
                 }
                 .zIndex(10)
-                
-                // Fixed swipe indicator overlay
+
+                // Swipe indicator
                 if showSwipeIndicator {
                     VStack {
                         Spacer()
-                        
                         VStack(spacing: 12) {
                             Image(systemName: "chevron.up")
                                 .font(.title2)
@@ -206,7 +174,6 @@ struct ContentView: View {
                                         .blur(radius: 0.5)
                                 )
                         }
-                        .opacity(showSwipeIndicator ? 1 : 0)
                         .padding(.bottom, 80)
                     }
                 }
@@ -217,7 +184,6 @@ struct ContentView: View {
                     showSwipeIndicator = false
                 }
                 checkFirstLaunch()
-                // Clear notification badge when main content appears
                 UIApplication.shared.applicationIconBadgeNumber = 0
             }
         }
@@ -230,49 +196,14 @@ struct ContentView: View {
             CustomizeOptionsView(quoteManager: quoteManager)
         }
         .overlay(
-            showNotificationPermission ?
-            NotificationPermissionView(
-                quoteManager: quoteManager,
-                isPresented: $showNotificationPermission
-            ) : nil
+            showNotificationPermission
+                ? NotificationPermissionView(quoteManager: quoteManager, isPresented: $showNotificationPermission)
+                : nil
         )
     }
-    
-    private func shareQuote() {
-        let shareSuffix = quoteManager.localizedString("share_suffix")
-        let text = "\(quoteManager.currentQuote)\n\n\(shareSuffix)"
-        
-        let activityViewController = UIActivityViewController(activityItems: [text], applicationActivities: nil)
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first,
-              let rootViewController = window.rootViewController else {
-            return
-        }
-        
-        if UIDevice.current.userInterfaceIdiom == .pad && !ProcessInfo.processInfo.environment.keys.contains("XCTestConfigurationFilePath") {
-            if let popoverController = activityViewController.popoverPresentationController {
-                let sourceView = rootViewController.view ?? window
-                popoverController.sourceView = sourceView
-                popoverController.sourceRect = CGRect(x: sourceView.bounds.midX, y: sourceView.bounds.midY, width: 0, height: 0)
-                popoverController.permittedArrowDirections = []
-                popoverController.delegate = makePopoverDelegate()
-            }
-        }
-        
-        DispatchQueue.main.async {
-            if rootViewController.presentedViewController == nil {
-                rootViewController.present(activityViewController, animated: true, completion: nil)
-            }
-        }
-    }
-    
-    private func makePopoverDelegate() -> UIPopoverPresentationControllerDelegate {
-        return PopoverDelegate()
-    }
-    
+
     private func checkFirstLaunch() {
-        let hasShownPermission = UserDefaults.standard.bool(forKey: "hasShownNotificationPermission")
-        if !hasShownPermission {
+        if !UserDefaults.standard.bool(forKey: "hasShownNotificationPermission") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 showNotificationPermission = true
             }
@@ -280,79 +211,52 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Gradient + Text as one swipeable card
 struct QuoteCardWithGradientView: View {
     @ObservedObject var quoteManager: QuoteManager
     let screenIndex: Int
     let dragOffset: CGFloat
-    
+
     private var displayQuote: String {
-        if screenIndex == -1 {
-            return quoteManager.getPreviewQuote(offset: -1)
-        } else if screenIndex == 1 {
-            return quoteManager.getPreviewQuote(offset: 1)
-        } else {
-            return quoteManager.currentQuote
+        switch screenIndex {
+        case -1: return quoteManager.getPreviewQuote(offset: -1)
+        case 1:  return quoteManager.getPreviewQuote(offset: 1)
+        default: return quoteManager.currentQuote
         }
     }
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
                 Image(quoteManager.selectedBackgroundImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width, height: geometry.size.height * 1.2)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
                     .clipped()
                     .ignoresSafeArea(.all)
-                    .allowsHitTesting(false)
 
-            VStack {
-                Spacer()
-
-                Text(displayQuote)
-                  .font(.system(size: 32, weight: .semibold))
-                  .multilineTextAlignment(.center)
-                  .lineLimit(nil)
-                  .fixedSize(horizontal: false, vertical: true)
-                  .frame(maxWidth: UIScreen.main.bounds.width - 40)
-                  .padding(.horizontal, 20)
-                  .foregroundColor(.black)
-                  .lineSpacing(8)
-                  .scaleEffect(quoteManager.fontSize.multiplier)
-                  .shadow(color: .white.opacity(0.8), radius: 2, x: 0, y: 1)
-                  .accessibilityElement(children: .ignore)
-                                     .accessibilityIdentifier(
-                                         screenIndex == 0
-                                             ? "quote_text"
-                                             : "quote_text_preview_\(screenIndex)"
-                                     )
-                                     .accessibilityLabel("Daily quote")
-                                                         .accessibilityValue(displayQuote)
-                                                         .accessibility(addTraits: .isStaticText)
-                  
-
-                Spacer()
-
-
-                Spacer().frame(height: 50)
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 120)
-            .padding(.bottom, 140)
+                VStack {
+                    Spacer()
+                    Text(displayQuote)
+                        .font(.system(size: 32, weight: .semibold))
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 20)
+                        .lineSpacing(8)
+                        .scaleEffect(quoteManager.fontSize.multiplier)
+                        .shadow(color: .white.opacity(0.8), radius: 2, x: 0, y: 1)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityIdentifier(
+                            screenIndex == 0 ? "quote_text" : "quote_text_preview_\(screenIndex)"
+                        )
+                        .accessibilityLabel("Daily quote")
+                        .accessibilityValue(displayQuote)
+                        .accessibility(addTraits: .isStaticText)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-
-    }
-}
-
-private class PopoverDelegate: NSObject, UIPopoverPresentationControllerDelegate {
-    func adaptivePresentationStyle(for controller: UIPresentationController) -> UIModalPresentationStyle {
-        return .none
-    }
-    
-    func popoverPresentationControllerShouldDismissPopover(_ popoverPresentationController: UIPopoverPresentationController) -> Bool {
-        return true
     }
 }
 
