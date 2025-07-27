@@ -133,17 +133,17 @@ struct SettingsView: View {
                         .accessibility(addTraits: .isButton)
                         
                         // Testing Section (for development purposes)
-                        NavigationLink(destination: TestingSettingsView()) {
-                            SettingsCard(
-                                icon: "hammer.fill",
-                                title: "Testing Tools",
-                                subtitle: "Developer testing options",
-                                iconColor: Color.orange
-                            )
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .accessibilityIdentifier("testing_section")
-                        .accessibility(addTraits: .isButton)
+                     //   NavigationLink(destination: TestingSettingsView()) {
+                      //      SettingsCard(
+                       //         icon: "hammer.fill",
+                       //         title: "Testing Tools",
+                      //          subtitle: "Developer testing options",
+                       //         iconColor: Color.orange
+                      //      )
+                      //  }
+                    //    .buttonStyle(PlainButtonStyle())
+                    //    .accessibilityIdentifier("testing_section")
+                    //    .accessibility(addTraits: .isButton)
                         
                     }
                     .padding(.horizontal, 24)

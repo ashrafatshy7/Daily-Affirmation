@@ -315,27 +315,23 @@ struct QuoteCardWithGradientView: View {
                   .multilineTextAlignment(.center)
                   .lineLimit(nil)
                   .fixedSize(horizontal: false, vertical: true)
-                  .frame(maxWidth: UIScreen.main.bounds.width - 40)
+                  .frame(maxWidth: .infinity)
                   .padding(.horizontal, 20)
                   .foregroundColor(.black)
                   .lineSpacing(8)
                   .scaleEffect(quoteManager.fontSize.multiplier)
                   .shadow(color: .white.opacity(0.8), radius: 2, x: 0, y: 1)
                   .accessibilityElement(children: .ignore)
-                                     .accessibilityIdentifier(
-                                         screenIndex == 0
-                                             ? "quote_text"
-                                             : "quote_text_preview_\(screenIndex)"
-                                     )
-                                     .accessibilityLabel("Daily quote")
-                                                         .accessibilityValue(displayQuote)
-                                                         .accessibility(addTraits: .isStaticText)
+                  .accessibilityIdentifier(
+                      screenIndex == 0
+                          ? "quote_text"
+                          : "quote_text_preview_\(screenIndex)"
+                  )
+                  .accessibilityLabel("Daily quote")
+                  .accessibilityValue(displayQuote)
+                  .accessibility(addTraits: .isStaticText)
                   
-
                 Spacer()
-
-
-                Spacer().frame(height: 50)
             }
             .padding(.horizontal, 20)
             .padding(.top, 120)
