@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var hasTriggeredSwipe = false
     @State private var swipeDirection: SwipeDirection = .none
+    @State private var pinStateChanged = false
 
     enum SwipeDirection { case none, up, down }
 
@@ -151,18 +152,30 @@ struct ContentView: View {
                         // Pin button
                         Button {
                             let current = quoteManager.currentQuote
-                            if SharedQuoteManager.shared.isPinned() && SharedQuoteManager.shared.getPinnedQuote() == current {
+                            let isPinned = SharedQuoteManager.shared.isPinned()
+                            let pinnedQuote = SharedQuoteManager.shared.getPinnedQuote()
+                            let isCurrentQuotePinned = isPinned && pinnedQuote == current
+                            
+                            if isCurrentQuotePinned {
+                                // If current quote is pinned, unpin it
                                 SharedQuoteManager.shared.unpinQuote()
                             } else {
+                                // If current quote is not pinned, pin it (replacing any other pinned quote)
                                 SharedQuoteManager.shared.pinQuote(current)
                             }
+                            
+                            // Force view refresh by toggling state
+                            pinStateChanged.toggle()
                         } label: {
                             let currentQuote = quoteManager.currentQuote
-                            let isCurrentPinned = SharedQuoteManager.shared.isPinned() && SharedQuoteManager.shared.getPinnedQuote() == currentQuote
+                            let _ = pinStateChanged // Force dependency on state change
+                            let isPinned = SharedQuoteManager.shared.isPinned()
+                            let pinnedQuote = SharedQuoteManager.shared.getPinnedQuote()
+                            let isCurrentQuotePinned = isPinned && pinnedQuote == currentQuote
                             
-                            Image(systemName: isCurrentPinned ? "pin.fill" : "pin")
+                            Image(systemName: isCurrentQuotePinned ? "pin.fill" : "pin")
                                 .font(.title2)
-                                .foregroundColor(isCurrentPinned ? Color(red: 0.659, green: 0.902, blue: 0.812) : .black.opacity(0.6))
+                                .foregroundColor(isCurrentQuotePinned ? Color(red: 0.659, green: 0.902, blue: 0.812) : .black.opacity(0.6))
                                 .padding(12)
                                 .background(Color.white.opacity(0.9))
                                 .clipShape(Circle())

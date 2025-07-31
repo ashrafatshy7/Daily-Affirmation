@@ -35,8 +35,10 @@ struct AffirmationProvider: TimelineProvider {
         let timeline: Timeline<AffirmationEntry>
         
         if currentEntry.isPinned {
-            // If pinned, only update when manually refreshed
-            timeline = Timeline(entries: [entry], policy: .never)
+            // If pinned, update less frequently but still allow updates when reloadTimelines is called
+            let calendar = Calendar.current
+            let nextUpdate = calendar.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+            timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
         } else {
             // If not pinned, update daily at midnight
             let calendar = Calendar.current

@@ -2,6 +2,7 @@ import Foundation
 import UserNotifications
 import SwiftUI
 import Combine
+import WidgetKit
 
 // MARK: - Personal Quote Model
 struct PersonalQuote: Identifiable, Codable, Equatable {
@@ -751,6 +752,10 @@ class QuoteManager: ObservableObject {
         // Reset quote history and rebuild quote bag when category changes
         setDailyQuote()
         rebuildQuoteBag()
+        
+        // Sync the new current quote after category change
+        SharedQuoteManager.shared.setCurrentQuote(currentQuoteText)
+        WidgetCenter.shared.reloadTimelines(ofKind: "Daily_Affirmation_Widgets")
     }
     
     private func setDailyQuote() {
@@ -767,6 +772,14 @@ class QuoteManager: ObservableObject {
             let dailyQuote = quotes[currentIndex]
             quoteHistory = QuoteHistory(initialQuote: dailyQuote, availableQuotes: quotes, quoteManager: self)
             currentQuoteText = dailyQuote
+            
+            // Sync initial quote to shared storage
+            SharedQuoteManager.shared.setCurrentQuote(dailyQuote)
+            
+            // Only reload widgets on initial load, not during initialization
+            if !isInitializing {
+                WidgetCenter.shared.reloadTimelines(ofKind: "Daily_Affirmation_Widgets")
+            }
         } else {
             currentIndex = 0
             quoteHistory = nil
@@ -780,9 +793,11 @@ class QuoteManager: ObservableObject {
         
         if Thread.isMainThread {
             currentQuoteText = newQuote
+            SharedQuoteManager.shared.setCurrentQuote(newQuote)
         } else {
             DispatchQueue.main.sync {
                 self.currentQuoteText = newQuote
+                SharedQuoteManager.shared.setCurrentQuote(newQuote)
             }
         }
     }
@@ -792,9 +807,11 @@ class QuoteManager: ObservableObject {
         if let previousQuote = history.movePrevious() {
             if Thread.isMainThread {
                 currentQuoteText = previousQuote
+                SharedQuoteManager.shared.setCurrentQuote(previousQuote)
             } else {
                 DispatchQueue.main.sync {
                     self.currentQuoteText = previousQuote
+                    SharedQuoteManager.shared.setCurrentQuote(previousQuote)
                 }
             }
         }
