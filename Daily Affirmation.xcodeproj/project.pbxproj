@@ -6,7 +6,20 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D6A0BA182E36DCA100A0B25F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6A0BA172E36DCA100A0B25F /* WidgetKit.framework */; };
+		D6A0BA1A2E36DCA100A0B25F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6A0BA192E36DCA100A0B25F /* SwiftUI.framework */; };
+		D6A0BA292E36DCA200A0B25F /* Daily Affirmation WidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D6A0BA152E36DCA100A0B25F /* Daily Affirmation WidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
+		D6A0BA272E36DCA200A0B25F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D6B837FD2E1C757100A34476 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D6A0BA142E36DCA100A0B25F;
+			remoteInfo = "Daily Affirmation WidgetsExtension";
+		};
 		D6AA2EBD2E206D2300E647B3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D6B837FD2E1C757100A34476 /* Project object */;
@@ -23,13 +36,48 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		D6A0BA2A2E36DCA200A0B25F /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D6A0BA292E36DCA200A0B25F /* Daily Affirmation WidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		D6A0BA152E36DCA100A0B25F /* Daily Affirmation WidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Daily Affirmation WidgetsExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D6A0BA172E36DCA100A0B25F /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		D6A0BA192E36DCA100A0B25F /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		D6AA2EB92E206D2300E647B3 /* Daily AffirmationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Daily AffirmationTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6B838052E1C757100A34476 /* Daily Affirmation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Daily Affirmation.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6E4A9FF2E1FEA51002A8098 /* Daily AffirmationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Daily AffirmationUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D6A0BA2D2E36DCA200A0B25F /* Exceptions for "Daily Affirmation Widgets" folder in "Daily Affirmation WidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D6A0BA142E36DCA100A0B25F /* Daily Affirmation WidgetsExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		D6A0BA1B2E36DCA100A0B25F /* Daily Affirmation Widgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D6A0BA2D2E36DCA200A0B25F /* Exceptions for "Daily Affirmation Widgets" folder in "Daily Affirmation WidgetsExtension" target */,
+			);
+			path = "Daily Affirmation Widgets";
+			sourceTree = "<group>";
+		};
 		D6AA2EBA2E206D2300E647B3 /* Daily AffirmationTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Daily AffirmationTests";
@@ -53,6 +101,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D6A0BA122E36DCA100A0B25F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D6A0BA1A2E36DCA100A0B25F /* SwiftUI.framework in Frameworks */,
+				D6A0BA182E36DCA100A0B25F /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D6AA2EB62E206D2300E647B3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -77,6 +134,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D6A0BA162E36DCA100A0B25F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D6A0BA172E36DCA100A0B25F /* WidgetKit.framework */,
+				D6A0BA192E36DCA100A0B25F /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		D6B837FC2E1C757100A34476 = {
 			isa = PBXGroup;
 			children = (
@@ -84,6 +150,8 @@
 				D6B838072E1C757100A34476 /* Daily Affirmation */,
 				D6E4AA002E1FEA51002A8098 /* Daily AffirmationUITests */,
 				D6AA2EBA2E206D2300E647B3 /* Daily AffirmationTests */,
+				D6A0BA1B2E36DCA100A0B25F /* Daily Affirmation Widgets */,
+				D6A0BA162E36DCA100A0B25F /* Frameworks */,
 				D6B838062E1C757100A34476 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -94,6 +162,7 @@
 				D6B838052E1C757100A34476 /* Daily Affirmation.app */,
 				D6E4A9FF2E1FEA51002A8098 /* Daily AffirmationUITests.xctest */,
 				D6AA2EB92E206D2300E647B3 /* Daily AffirmationTests.xctest */,
+				D6A0BA152E36DCA100A0B25F /* Daily Affirmation WidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -101,6 +170,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D6A0BA142E36DCA100A0B25F /* Daily Affirmation WidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D6A0BA2E2E36DCA200A0B25F /* Build configuration list for PBXNativeTarget "Daily Affirmation WidgetsExtension" */;
+			buildPhases = (
+				D6A0BA112E36DCA100A0B25F /* Sources */,
+				D6A0BA122E36DCA100A0B25F /* Frameworks */,
+				D6A0BA132E36DCA100A0B25F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D6A0BA1B2E36DCA100A0B25F /* Daily Affirmation Widgets */,
+			);
+			name = "Daily Affirmation WidgetsExtension";
+			packageProductDependencies = (
+			);
+			productName = "Daily Affirmation WidgetsExtension";
+			productReference = D6A0BA152E36DCA100A0B25F /* Daily Affirmation WidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		D6AA2EB82E206D2300E647B3 /* Daily AffirmationTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D6AA2EBF2E206D2300E647B3 /* Build configuration list for PBXNativeTarget "Daily AffirmationTests" */;
@@ -131,10 +222,12 @@
 				D6B838012E1C757100A34476 /* Sources */,
 				D6B838022E1C757100A34476 /* Frameworks */,
 				D6B838032E1C757100A34476 /* Resources */,
+				D6A0BA2A2E36DCA200A0B25F /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D6A0BA282E36DCA200A0B25F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D6B838072E1C757100A34476 /* Daily Affirmation */,
@@ -180,6 +273,9 @@
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
+					D6A0BA142E36DCA100A0B25F = {
+						CreatedOnToolsVersion = 16.4;
+					};
 					D6AA2EB82E206D2300E647B3 = {
 						CreatedOnToolsVersion = 16.4;
 						TestTargetID = D6B838042E1C757100A34476;
@@ -209,11 +305,19 @@
 				D6B838042E1C757100A34476 /* Daily Affirmation */,
 				D6E4A9FE2E1FEA51002A8098 /* Daily AffirmationUITests */,
 				D6AA2EB82E206D2300E647B3 /* Daily AffirmationTests */,
+				D6A0BA142E36DCA100A0B25F /* Daily Affirmation WidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D6A0BA132E36DCA100A0B25F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D6AA2EB72E206D2300E647B3 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -238,6 +342,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D6A0BA112E36DCA100A0B25F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D6AA2EB52E206D2300E647B3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -262,6 +373,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		D6A0BA282E36DCA200A0B25F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D6A0BA142E36DCA100A0B25F /* Daily Affirmation WidgetsExtension */;
+			targetProxy = D6A0BA272E36DCA200A0B25F /* PBXContainerItemProxy */;
+		};
 		D6AA2EBE2E206D2300E647B3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D6B838042E1C757100A34476 /* Daily Affirmation */;
@@ -275,6 +391,60 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		D6A0BA2B2E36DCA200A0B25F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 29K7998WRR;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Daily Affirmation Widgets/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Daily Affirmation Widgets";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ashrafatshy.Daily-Affirmation.Daily-Affirmation-Widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D6A0BA2C2E36DCA200A0B25F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 29K7998WRR;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Daily Affirmation Widgets/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Daily Affirmation Widgets";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ashrafatshy.Daily-Affirmation.Daily-Affirmation-Widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		D6AA2EC02E206D2300E647B3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -539,6 +709,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D6A0BA2E2E36DCA200A0B25F /* Build configuration list for PBXNativeTarget "Daily Affirmation WidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D6A0BA2B2E36DCA200A0B25F /* Debug */,
+				D6A0BA2C2E36DCA200A0B25F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D6AA2EBF2E206D2300E647B3 /* Build configuration list for PBXNativeTarget "Daily AffirmationTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

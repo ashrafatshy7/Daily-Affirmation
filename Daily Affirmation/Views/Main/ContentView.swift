@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var hasTriggeredSwipe = false
     @State private var swipeDirection: SwipeDirection = .none
+    @State private var pinStateChanged = false
 
     enum SwipeDirection { case none, up, down }
 
@@ -147,6 +148,41 @@ struct ContentView: View {
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
                         }
                         .accessibilityIdentifier("love_button")
+                        
+                        // Pin button
+                        Button {
+                            let current = quoteManager.currentQuote
+                            let isPinned = SharedQuoteManager.shared.isPinned()
+                            let pinnedQuote = SharedQuoteManager.shared.getPinnedQuote()
+                            let isCurrentQuotePinned = isPinned && pinnedQuote == current
+                            
+                            if isCurrentQuotePinned {
+                                // If current quote is pinned, unpin it
+                                SharedQuoteManager.shared.unpinQuote()
+                            } else {
+                                // If current quote is not pinned, pin it (replacing any other pinned quote)
+                                SharedQuoteManager.shared.pinQuote(current)
+                            }
+                            
+                            // Force view refresh by toggling state
+                            pinStateChanged.toggle()
+                        } label: {
+                            let currentQuote = quoteManager.currentQuote
+                            let _ = pinStateChanged // Force dependency on state change
+                            let isPinned = SharedQuoteManager.shared.isPinned()
+                            let pinnedQuote = SharedQuoteManager.shared.getPinnedQuote()
+                            let isCurrentQuotePinned = isPinned && pinnedQuote == currentQuote
+                            
+                            Image(systemName: isCurrentQuotePinned ? "pin.fill" : "pin")
+                                .font(.title2)
+                                .foregroundColor(isCurrentQuotePinned ? Color(red: 0.659, green: 0.902, blue: 0.812) : .black.opacity(0.6))
+                                .padding(12)
+                                .background(Color.white.opacity(0.9))
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
+                        }
+                        .accessibilityIdentifier("pin_button")
+                        .accessibilityLabel("Pin quote")
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 50)
@@ -206,55 +242,6 @@ struct ContentView: View {
         if !UserDefaults.standard.bool(forKey: "hasShownNotificationPermission") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 showNotificationPermission = true
-            }
-        }
-    }
-}
-
-struct QuoteCardWithGradientView: View {
-    @ObservedObject var quoteManager: QuoteManager
-    let screenIndex: Int
-    let dragOffset: CGFloat
-
-    private var displayQuote: String {
-        switch screenIndex {
-        case -1: return quoteManager.getPreviewQuote(offset: -1)
-        case 1:  return quoteManager.getPreviewQuote(offset: 1)
-        default: return quoteManager.currentQuote
-        }
-    }
-
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                Image(quoteManager.selectedBackgroundImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .clipped()
-                    .ignoresSafeArea(.all)
-
-                VStack {
-                    Spacer()
-                    Text(displayQuote)
-                        .font(.system(size: 32, weight: .semibold))
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 20)
-                        .lineSpacing(8)
-                        .scaleEffect(quoteManager.fontSize.multiplier)
-                        .shadow(color: .white.opacity(0.8), radius: 2, x: 0, y: 1)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityIdentifier(
-                            screenIndex == 0 ? "quote_text" : "quote_text_preview_\(screenIndex)"
-                        )
-                        .accessibilityLabel("Daily quote")
-                        .accessibilityValue(displayQuote)
-                        .accessibility(addTraits: .isStaticText)
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
     }
