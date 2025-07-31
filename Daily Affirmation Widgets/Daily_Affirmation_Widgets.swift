@@ -64,28 +64,33 @@ struct AffirmationWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
     
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                // Background Image - fills entire widget
-                Image(entry.backgroundImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .clipped()
-                
-                // Content based on widget size
-                switch family {
-                case .systemSmall:
-                    SmallWidgetView(entry: entry)
-                case .systemMedium:
-                    MediumWidgetView(entry: entry)
-                case .systemLarge:
-                    LargeWidgetView(entry: entry)
-                default:
-                    MediumWidgetView(entry: entry)
+        ZStack {
+            // Background Image for iOS < 17.0 only
+            if #unavailable(iOS 17.0) {
+                GeometryReader { geometry in
+                    Image(entry.backgroundImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .clipped()
                 }
+                .ignoresSafeArea(.all)
+            }
+            
+            // Content based on widget size
+            switch family {
+            case .systemSmall:
+                SmallWidgetView(entry: entry)
+            case .systemMedium:
+                MediumWidgetView(entry: entry)
+            case .systemLarge:
+                LargeWidgetView(entry: entry)
+            default:
+                MediumWidgetView(entry: entry)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea(.all)
     }
 }
 
@@ -218,11 +223,13 @@ struct Daily_Affirmation_Widgets: Widget {
         StaticConfiguration(kind: kind, provider: AffirmationProvider()) { entry in
             if #available(iOS 17.0, *) {
                 AffirmationWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
+                    .containerBackground(for: .widget) {
+                        Image(entry.backgroundImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    }
             } else {
                 AffirmationWidgetEntryView(entry: entry)
-                    .padding()
-                    .background()
             }
         }
         .configurationDisplayName("Daily Affirmation")
