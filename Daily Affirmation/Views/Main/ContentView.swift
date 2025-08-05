@@ -11,6 +11,8 @@ struct ContentView: View {
     @State private var hasTriggeredSwipe = false
     @State private var swipeDirection: SwipeDirection = .none
     @State private var pinStateChanged = false
+    @State private var showPinReplacedAlert = false
+    @State private var previousPinnedQuote: String = ""
 
     enum SwipeDirection { case none, up, down }
 
@@ -180,6 +182,12 @@ struct ContentView: View {
                                 // If current quote is pinned, unpin it
                                 SharedQuoteManager.shared.unpinQuote()
                             } else {
+                                // Check if we're replacing an existing pin
+                                if isPinned, let existingPin = pinnedQuote, existingPin != current {
+                                    previousPinnedQuote = existingPin
+                                    showPinReplacedAlert = true
+                                }
+                                
                                 // If current quote is not pinned, pin it (replacing any other pinned quote)
                                 SharedQuoteManager.shared.pinQuote(current)
                             }
@@ -256,6 +264,11 @@ struct ContentView: View {
                 ? NotificationPermissionView(quoteManager: quoteManager, isPresented: $showNotificationPermission)
                 : nil
         )
+        .alert("Quote Pinned", isPresented: $showPinReplacedAlert) {
+            Button("OK") { }
+        } message: {
+            Text("Your new quote has been pinned and will appear in your widgets. The previous quote \"\(previousPinnedQuote)\" was replaced.")
+        }
     }
 
     private func checkFirstLaunch() {

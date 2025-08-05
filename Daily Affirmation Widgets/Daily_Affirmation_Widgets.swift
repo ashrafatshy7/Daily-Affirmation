@@ -13,6 +13,7 @@ struct AffirmationProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (AffirmationEntry) -> ()) {
+        print("🔶 WIDGET: getSnapshot called - context: \(context)")
         let entry = SharedQuoteManager.shared.getCurrentEntry()
         let widgetEntry = AffirmationEntry(
             date: entry.date,
@@ -20,10 +21,14 @@ struct AffirmationProvider: TimelineProvider {
             isPinned: entry.isPinned,
             backgroundImage: entry.backgroundImage
         )
+        print("🔶 WIDGET: getSnapshot created entry - quote: '\(widgetEntry.quote)', isPinned: \(widgetEntry.isPinned)")
         completion(widgetEntry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<AffirmationEntry>) -> ()) {
+        print("🔶 WIDGET: getTimeline called - context: \(context)")
+        print("🔶 WIDGET: Current time: \(Date())")
+        
         let currentEntry = SharedQuoteManager.shared.getCurrentEntry()
         let entry = AffirmationEntry(
             date: currentEntry.date,
@@ -32,20 +37,22 @@ struct AffirmationProvider: TimelineProvider {
             backgroundImage: currentEntry.backgroundImage
         )
         
+        print("🔶 WIDGET: getTimeline created entry - quote: '\(entry.quote)', isPinned: \(entry.isPinned)")
+        
         let timeline: Timeline<AffirmationEntry>
         
         if currentEntry.isPinned {
-            // If pinned, update less frequently but still allow updates when reloadTimelines is called
+            // If pinned, update every 1 minute for debugging
             let calendar = Calendar.current
-            let nextUpdate = calendar.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+            let nextUpdate = calendar.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
             timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+            print("🔶 WIDGET: Created PINNED timeline - next update: \(nextUpdate)")
         } else {
-            // If not pinned, update daily at midnight
+            // If not pinned, update every 5 minutes for debugging
             let calendar = Calendar.current
-            let tomorrow = calendar.date(byAdding: .day, value: 1, to: Date())!
-            let nextMidnight = calendar.startOfDay(for: tomorrow)
-            
-            timeline = Timeline(entries: [entry], policy: .after(nextMidnight))
+            let nextUpdate = calendar.date(byAdding: .minute, value: 5, to: Date()) ?? Date()
+            timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+            print("🔶 WIDGET: Created REGULAR timeline - next update: \(nextUpdate)")
         }
         
         completion(timeline)

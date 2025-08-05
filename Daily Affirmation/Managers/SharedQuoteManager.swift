@@ -22,13 +22,18 @@ class SharedQuoteManager {
     private let currentQuoteKey = "currentQuote"
     
     private var sharedUserDefaults: UserDefaults? {
+        print("🔧 App SharedQuoteManager: Attempting to create UserDefaults with App Group: \(appGroupIdentifier)")
         let defaults = UserDefaults(suiteName: appGroupIdentifier)
         if defaults == nil {
-            print("⚠️ SharedQuoteManager: Failed to create UserDefaults with App Group: \(appGroupIdentifier)")
-            print("⚠️ SharedQuoteManager: Falling back to standard UserDefaults")
-            return UserDefaults.standard
+            print("⚠️ App SharedQuoteManager: Failed to create UserDefaults with App Group: \(appGroupIdentifier)")
+            print("⚠️ App SharedQuoteManager: Falling back to standard UserDefaults")
+            let fallbackDefaults = UserDefaults.standard
+            print("🔧 App SharedQuoteManager: Fallback UserDefaults created successfully")
+            return fallbackDefaults
+        } else {
+            print("✅ App SharedQuoteManager: Successfully created UserDefaults with App Group")
+            return defaults
         }
-        return defaults
     }
     
     private init() {}
@@ -88,47 +93,74 @@ class SharedQuoteManager {
     }
     
     func pinQuote(_ quote: String) {
-        print("📌 SharedQuoteManager: Pinning quote: '\(quote)'")
+        print("📌 App SharedQuoteManager: Pinning quote: '\(quote)'")
+        print("📌 App SharedQuoteManager: Using UserDefaults: \(sharedUserDefaults?.description ?? "nil")")
         
         // Always clear any existing pin first to enforce single pin behavior
         if isPinned() {
-            print("📌 SharedQuoteManager: Clearing existing pin first")
+            print("📌 App SharedQuoteManager: Clearing existing pin first")
             sharedUserDefaults?.removeObject(forKey: pinnedQuoteKey)
             sharedUserDefaults?.set(false, forKey: isPinnedKey)
             sharedUserDefaults?.removeObject(forKey: pinnedDateKey)
         }
         
         // Set the new pin
+        print("📌 App SharedQuoteManager: Writing to key '\(pinnedQuoteKey)' = '\(quote)'")
+        print("📌 App SharedQuoteManager: Writing to key '\(isPinnedKey)' = true")
         sharedUserDefaults?.set(quote, forKey: pinnedQuoteKey)
         sharedUserDefaults?.set(true, forKey: isPinnedKey)
         sharedUserDefaults?.set(Date(), forKey: pinnedDateKey)
         
         // Force synchronization to ensure data is written immediately
         let syncSuccess = sharedUserDefaults?.synchronize() ?? false
-        print("📌 SharedQuoteManager: Data sync success: \(syncSuccess)")
+        print("📌 App SharedQuoteManager: Data sync success: \(syncSuccess)")
         
         // Verify the data was written
         let savedQuote = sharedUserDefaults?.string(forKey: pinnedQuoteKey)
         let savedPinned = sharedUserDefaults?.bool(forKey: isPinnedKey) ?? false
-        print("📌 SharedQuoteManager: Verification - Quote: '\(savedQuote ?? "nil")', Pinned: \(savedPinned)")
+        print("📌 App SharedQuoteManager: Verification - Quote: '\(savedQuote ?? "nil")', Pinned: \(savedPinned)")
+        
+        // Additional verification - read back immediately with a fresh UserDefaults instance
+        if let testDefaults = UserDefaults(suiteName: appGroupIdentifier) {
+            let testQuote = testDefaults.string(forKey: pinnedQuoteKey)
+            let testPinned = testDefaults.bool(forKey: isPinnedKey)
+            print("📌 App SharedQuoteManager: Fresh UserDefaults verification - Quote: '\(testQuote ?? "nil")', Pinned: \(testPinned)")
+        } else {
+            print("📌 App SharedQuoteManager: ⚠️ Could not create fresh UserDefaults for verification")
+        }
         
         // Reload widgets when pin state changes with multiple strategies
         #if canImport(WidgetKit)
-        print("📌 SharedQuoteManager: Scheduling widget reload...")
+        print("📌 App SharedQuoteManager: Scheduling widget reload...")
         
-        // Strategy 1: Immediate reload
-        WidgetCenter.shared.reloadAllTimelines()
+        // Wait a moment to ensure all data is fully written
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            print("📌 App SharedQuoteManager: Executing first widget reload")
+            WidgetCenter.shared.reloadAllTimelines()
+        }
         
         // Strategy 2: Delayed reload to ensure data persistence
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            print("📌 SharedQuoteManager: Executing delayed widget reload")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            print("📌 App SharedQuoteManager: Executing delayed widget reload")
             WidgetCenter.shared.reloadAllTimelines()
         }
         
         // Strategy 3: Specific widget reload after longer delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            print("📌 SharedQuoteManager: Executing specific widget reload")
+            print("📌 App SharedQuoteManager: Executing specific widget reload")
             WidgetCenter.shared.reloadTimelines(ofKind: "Daily_Affirmation_Widgets")
+        }
+        
+        // Strategy 4: Final reload after even longer delay to ensure propagation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            print("📌 App SharedQuoteManager: Executing final widget reload")
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+        
+        // Strategy 5: Ultra-aggressive reload for debugging
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            print("📌 App SharedQuoteManager: Executing ultra-delayed widget reload")
+            WidgetCenter.shared.reloadAllTimelines()
         }
         #endif
     }
@@ -157,15 +189,21 @@ class SharedQuoteManager {
         WidgetCenter.shared.reloadAllTimelines()
         
         // Strategy 2: Delayed reload to ensure data persistence
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            print("📌 SharedQuoteManager: Executing delayed widget reload after unpin")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            print("📌 SharedQuoteManager: Executing quick delayed widget reload after unpin")
             WidgetCenter.shared.reloadAllTimelines()
         }
         
         // Strategy 3: Specific widget reload after longer delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             print("📌 SharedQuoteManager: Executing specific widget reload after unpin")
             WidgetCenter.shared.reloadTimelines(ofKind: "Daily_Affirmation_Widgets")
+        }
+        
+        // Strategy 4: Final reload after even longer delay to ensure propagation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            print("📌 SharedQuoteManager: Executing final widget reload after unpin")
+            WidgetCenter.shared.reloadAllTimelines()
         }
         #endif
     }
@@ -182,17 +220,26 @@ class SharedQuoteManager {
     
     // MARK: - Widget Entry Creation
     func getCurrentEntry() -> SharedAffirmationEntry {
+        print("📱 App SharedQuoteManager: Getting current entry...")
+        
         let currentQuote: String
         let pinned = isPinned()
+        let pinnedQuote = getPinnedQuote()
+        let appCurrentQuote = getCurrentQuoteFromApp()
         
-        if pinned, let pinnedQuote = getPinnedQuote() {
+        print("📱 App SharedQuoteManager: isPinned: \(pinned), pinnedQuote: '\(pinnedQuote ?? "nil")', appCurrentQuote: '\(appCurrentQuote ?? "nil")'")
+        
+        if pinned, let pinnedQuote = pinnedQuote {
             currentQuote = pinnedQuote
+            print("📱 App SharedQuoteManager: Using pinned quote: '\(currentQuote)'")
         } else {
             // Use main app's current quote if available, otherwise fall back to daily quote
-            if let appCurrentQuote = getCurrentQuoteFromApp(), !appCurrentQuote.isEmpty {
+            if let appCurrentQuote = appCurrentQuote, !appCurrentQuote.isEmpty {
                 currentQuote = appCurrentQuote
+                print("📱 App SharedQuoteManager: Using app current quote: '\(currentQuote)'")
             } else {
                 currentQuote = getDailyQuote()
+                print("📱 App SharedQuoteManager: Using daily quote: '\(currentQuote)'")
             }
         }
         
