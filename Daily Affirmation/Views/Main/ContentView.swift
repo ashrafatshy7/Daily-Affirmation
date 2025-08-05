@@ -34,37 +34,57 @@ struct ContentView: View {
                     .clipped()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .contentShape(Rectangle())
-                    .defersSystemGestures(on: .vertical)
                     .gesture(
                         DragGesture()
                             .onChanged { value in
-                                dragOffset = value.translation.height
-                                if showSwipeIndicator && abs(dragOffset) > 10 {
-                                    showSwipeIndicator = false
-                                }
-                                let threshold: CGFloat = 80
-                                if !hasTriggeredSwipe && abs(dragOffset) > threshold {
-                                    swipeDirection = dragOffset < 0 ? .up : .down
-                                    hasTriggeredSwipe = true
+                                // Check if swipe started from bottom area (home indicator region)
+                                let bottomExclusionZone = geometry.safeAreaInsets.bottom + 100
+                                let isSwipeFromBottom = value.startLocation.y > screenHeight - bottomExclusionZone
+                                
+                                // Only process gesture if it doesn't start from bottom exclusion zone
+                                if !isSwipeFromBottom {
+                                    dragOffset = value.translation.height
+                                    if showSwipeIndicator && abs(dragOffset) > 10 {
+                                        showSwipeIndicator = false
+                                    }
+                                    let threshold: CGFloat = 80
+                                    if !hasTriggeredSwipe && abs(dragOffset) > threshold {
+                                        swipeDirection = dragOffset < 0 ? .up : .down
+                                        hasTriggeredSwipe = true
+                                    }
                                 }
                             }
-                            .onEnded { _ in
-                                if hasTriggeredSwipe {
-                                    let target = swipeDirection == .up ? -screenHeight : screenHeight
-                                    withAnimation(.easeOut(duration: 0.3)) {
-                                        dragOffset = target
-                                    }
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                        if swipeDirection == .up {
-                                            quoteManager.nextQuote()
-                                        } else {
-                                            quoteManager.previousQuote()
+                            .onEnded { value in
+                                // Check if swipe started from bottom area (home indicator region)
+                                let bottomExclusionZone = geometry.safeAreaInsets.bottom + 100
+                                let isSwipeFromBottom = value.startLocation.y > screenHeight - bottomExclusionZone
+                                
+                                // Only process gesture end if it doesn't start from bottom exclusion zone
+                                if !isSwipeFromBottom {
+                                    if hasTriggeredSwipe {
+                                        let target = swipeDirection == .up ? -screenHeight : screenHeight
+                                        withAnimation(.easeOut(duration: 0.3)) {
+                                            dragOffset = target
                                         }
-                                        dragOffset = 0
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                            if swipeDirection == .up {
+                                                quoteManager.nextQuote()
+                                            } else {
+                                                quoteManager.previousQuote()
+                                            }
+                                            dragOffset = 0
+                                            hasTriggeredSwipe = false
+                                            swipeDirection = .none
+                                        }
+                                    } else {
+                                        withAnimation(.easeOut(duration: 0.3)) {
+                                            dragOffset = 0
+                                        }
                                         hasTriggeredSwipe = false
                                         swipeDirection = .none
                                     }
                                 } else {
+                                    // Reset state for swipes from bottom area
                                     withAnimation(.easeOut(duration: 0.3)) {
                                         dragOffset = 0
                                     }
