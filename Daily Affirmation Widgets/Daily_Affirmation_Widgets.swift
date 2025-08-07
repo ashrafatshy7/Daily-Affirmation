@@ -7,7 +7,6 @@ struct AffirmationProvider: TimelineProvider {
         AffirmationEntry(
             date: Date(),
             quote: "I honor my intrinsic worth",
-            isPinned: false,
             backgroundImage: "background"
         )
     }
@@ -18,10 +17,9 @@ struct AffirmationProvider: TimelineProvider {
         let widgetEntry = AffirmationEntry(
             date: entry.date,
             quote: entry.quote,
-            isPinned: entry.isPinned,
             backgroundImage: entry.backgroundImage
         )
-        print("🔶 WIDGET: getSnapshot created entry - quote: '\(widgetEntry.quote)', isPinned: \(widgetEntry.isPinned)")
+        print("🔶 WIDGET: getSnapshot created entry - quote: '\(widgetEntry.quote)'")
         completion(widgetEntry)
     }
 
@@ -33,27 +31,18 @@ struct AffirmationProvider: TimelineProvider {
         let entry = AffirmationEntry(
             date: currentEntry.date,
             quote: currentEntry.quote,
-            isPinned: currentEntry.isPinned,
             backgroundImage: currentEntry.backgroundImage
         )
         
-        print("🔶 WIDGET: getTimeline created entry - quote: '\(entry.quote)', isPinned: \(entry.isPinned)")
+        print("🔶 WIDGET: getTimeline created entry - quote: '\(entry.quote)'")
         
         let timeline: Timeline<AffirmationEntry>
         
-        if currentEntry.isPinned {
-            // If pinned, update every 1 minute for debugging
-            let calendar = Calendar.current
-            let nextUpdate = calendar.date(byAdding: .minute, value: 1, to: Date()) ?? Date()
-            timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-            print("🔶 WIDGET: Created PINNED timeline - next update: \(nextUpdate)")
-        } else {
-            // If not pinned, update every 5 minutes for debugging
-            let calendar = Calendar.current
-            let nextUpdate = calendar.date(byAdding: .minute, value: 5, to: Date()) ?? Date()
-            timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-            print("🔶 WIDGET: Created REGULAR timeline - next update: \(nextUpdate)")
-        }
+        // Update every 5 minutes for debugging
+        let calendar = Calendar.current
+        let nextUpdate = calendar.date(byAdding: .minute, value: 5, to: Date()) ?? Date()
+        timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+        print("🔶 WIDGET: Created timeline - next update: \(nextUpdate)")
         
         completion(timeline)
     }
@@ -63,7 +52,6 @@ struct AffirmationProvider: TimelineProvider {
 struct AffirmationEntry: TimelineEntry {
     let date: Date
     let quote: String
-    let isPinned: Bool
     let backgroundImage: String
 }
 
@@ -107,6 +95,13 @@ struct AffirmationWidgetEntryView: View {
 struct SmallWidgetView: View {
     let entry: AffirmationEntry
     
+    private var widgetURL: URL? {
+        guard let encodedQuote = entry.quote.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            return nil
+        }
+        return URL(string: "dailyaffirmation://quote?text=\(encodedQuote)")
+    }
+    
     var body: some View {
         VStack {
             Spacer()
@@ -121,12 +116,20 @@ struct SmallWidgetView: View {
             
             Spacer()
         }
+        .widgetURL(widgetURL)
     }
 }
 
 // MARK: - Medium Widget (4x2)
 struct MediumWidgetView: View {
     let entry: AffirmationEntry
+    
+    private var widgetURL: URL? {
+        guard let encodedQuote = entry.quote.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            return nil
+        }
+        return URL(string: "dailyaffirmation://quote?text=\(encodedQuote)")
+    }
     
     var body: some View {
         ZStack {
@@ -145,31 +148,21 @@ struct MediumWidgetView: View {
                 Spacer()
             }
             
-            // Pin indicator in top-right corner
-            if entry.isPinned {
-                VStack {
-                    HStack {
-                        Spacer()
-                        Image(systemName: "pin.fill")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(Color(red: 0.659, green: 0.902, blue: 0.812))
-                            .padding(8)
-                            .background(Color.white.opacity(0.9))
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
-                    }
-                    .padding(.top, 8)
-                    .padding(.trailing, 8)
-                    Spacer()
-                }
-            }
         }
+        .widgetURL(widgetURL)
     }
 }
 
 // MARK: - Large Widget (4x4)
 struct LargeWidgetView: View {
     let entry: AffirmationEntry
+    
+    private var widgetURL: URL? {
+        guard let encodedQuote = entry.quote.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            return nil
+        }
+        return URL(string: "dailyaffirmation://quote?text=\(encodedQuote)")
+    }
     
     var body: some View {
         ZStack {
@@ -202,25 +195,8 @@ struct LargeWidgetView: View {
                     .padding(.bottom, 16)
             }
             
-            // Pin indicator in top-right corner
-            if entry.isPinned {
-                VStack {
-                    HStack {
-                        Spacer()
-                        Image(systemName: "pin.fill")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(Color(red: 0.659, green: 0.902, blue: 0.812))
-                            .padding(10)
-                            .background(Color.white.opacity(0.9))
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
-                    }
-                    .padding(.top, 12)
-                    .padding(.trailing, 12)
-                    Spacer()
-                }
-            }
         }
+        .widgetURL(widgetURL)
     }
 }
 
@@ -242,7 +218,7 @@ struct Daily_Affirmation_Widgets: Widget {
             }
         }
         .configurationDisplayName("Daily Affirmation")
-        .description("Get inspired with daily affirmations. Pin your favorites to keep them displayed.")
+        .description("Get inspired with daily affirmations.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
@@ -251,20 +227,20 @@ struct Daily_Affirmation_Widgets: Widget {
 #Preview(as: .systemSmall) {
     Daily_Affirmation_Widgets()
 } timeline: {
-    AffirmationEntry(date: .now, quote: "I honor my intrinsic worth", isPinned: false, backgroundImage: "background")
-    AffirmationEntry(date: .now, quote: "I embrace my inherent dignity", isPinned: true, backgroundImage: "background")
+    AffirmationEntry(date: .now, quote: "I honor my intrinsic worth", backgroundImage: "background")
+    AffirmationEntry(date: .now, quote: "I embrace my inherent dignity", backgroundImage: "background")
 }
 
 #Preview(as: .systemMedium) {
     Daily_Affirmation_Widgets()
 } timeline: {
-    AffirmationEntry(date: .now, quote: "I trust my value is constant", isPinned: false, backgroundImage: "background")
-    AffirmationEntry(date: .now, quote: "I respect myself wholeheartedly", isPinned: true, backgroundImage: "background")
+    AffirmationEntry(date: .now, quote: "I trust my value is constant", backgroundImage: "background")
+    AffirmationEntry(date: .now, quote: "I respect myself wholeheartedly", backgroundImage: "background")
 }
 
 #Preview(as: .systemLarge) {
     Daily_Affirmation_Widgets()
 } timeline: {
-    AffirmationEntry(date: .now, quote: "I am worthy of good things", isPinned: false, backgroundImage: "background")
-    AffirmationEntry(date: .now, quote: "I celebrate my own value", isPinned: true, backgroundImage: "background")
+    AffirmationEntry(date: .now, quote: "I am worthy of good things", backgroundImage: "background")
+    AffirmationEntry(date: .now, quote: "I celebrate my own value", backgroundImage: "background")
 }

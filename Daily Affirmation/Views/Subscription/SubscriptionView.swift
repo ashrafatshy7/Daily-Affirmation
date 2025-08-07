@@ -171,7 +171,7 @@ struct SubscriptionView: View {
             isPurchasing = true
             defer { isPurchasing = false }
             do {
-                if let txn = try await subscriptionManager.purchase(product) {
+                if let _ = try await subscriptionManager.purchase(product) {
                     dismiss()
                 }
             } catch {

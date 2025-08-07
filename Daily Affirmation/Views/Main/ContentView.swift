@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var quoteManager = QuoteManager()
+    @EnvironmentObject private var quoteManager: QuoteManager
     @State private var showSettings = false
     @State private var showCustomizeOptions = false
     @State private var showNotificationPermission = false
@@ -10,9 +10,6 @@ struct ContentView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var hasTriggeredSwipe = false
     @State private var swipeDirection: SwipeDirection = .none
-    @State private var pinStateChanged = false
-    @State private var showPinReplacedAlert = false
-    @State private var previousPinnedQuote: String = ""
 
     enum SwipeDirection { case none, up, down }
 
@@ -170,47 +167,6 @@ struct ContentView: View {
                                 .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
                         }
                         .accessibilityIdentifier("love_button")
-                        
-                        // Pin button
-                        Button {
-                            let current = quoteManager.currentQuote
-                            let isPinned = SharedQuoteManager.shared.isPinned()
-                            let pinnedQuote = SharedQuoteManager.shared.getPinnedQuote()
-                            let isCurrentQuotePinned = isPinned && pinnedQuote == current
-                            
-                            if isCurrentQuotePinned {
-                                // If current quote is pinned, unpin it
-                                SharedQuoteManager.shared.unpinQuote()
-                            } else {
-                                // Check if we're replacing an existing pin
-                                if isPinned, let existingPin = pinnedQuote, existingPin != current {
-                                    previousPinnedQuote = existingPin
-                                    showPinReplacedAlert = true
-                                }
-                                
-                                // If current quote is not pinned, pin it (replacing any other pinned quote)
-                                SharedQuoteManager.shared.pinQuote(current)
-                            }
-                            
-                            // Force view refresh by toggling state
-                            pinStateChanged.toggle()
-                        } label: {
-                            let currentQuote = quoteManager.currentQuote
-                            let _ = pinStateChanged // Force dependency on state change
-                            let isPinned = SharedQuoteManager.shared.isPinned()
-                            let pinnedQuote = SharedQuoteManager.shared.getPinnedQuote()
-                            let isCurrentQuotePinned = isPinned && pinnedQuote == currentQuote
-                            
-                            Image(systemName: isCurrentQuotePinned ? "pin.fill" : "pin")
-                                .font(.title2)
-                                .foregroundColor(isCurrentQuotePinned ? Color(red: 0.659, green: 0.902, blue: 0.812) : .black.opacity(0.6))
-                                .padding(12)
-                                .background(Color.white.opacity(0.9))
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
-                        }
-                        .accessibilityIdentifier("pin_button")
-                        .accessibilityLabel("Pin quote")
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 50)
@@ -264,11 +220,6 @@ struct ContentView: View {
                 ? NotificationPermissionView(quoteManager: quoteManager, isPresented: $showNotificationPermission)
                 : nil
         )
-        .alert("Quote Pinned", isPresented: $showPinReplacedAlert) {
-            Button("OK") { }
-        } message: {
-            Text("Your new quote has been pinned and will appear in your widgets. The previous quote \"\(previousPinnedQuote)\" was replaced.")
-        }
     }
 
     private func checkFirstLaunch() {

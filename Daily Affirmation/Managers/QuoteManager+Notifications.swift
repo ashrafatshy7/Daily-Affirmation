@@ -239,6 +239,7 @@ extension QuoteManager {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, error in
             DispatchQueue.main.async {
                 if let error = error {
+                    print("Error requesting notification permission: \(error)")
                     self?.dailyNotifications = false
                 } else if granted {
                     self?.scheduleNotification()
