@@ -45,7 +45,7 @@ struct CategorySelectionView: View {
                                     Circle()
                                         .fill(Color.white)
                                         .frame(width: 44, height: 44)
-                                        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+                                        .shadow(color: Color(red: 0.85, green: 0.9, blue: 0.95).opacity(0.3), radius: 10, x: 0, y: 4)
                                     
                                     Image(systemName: "chevron.left")
                                         .font(.system(size: 18, weight: .semibold))
@@ -157,10 +157,10 @@ struct ModernCategoryCard: View {
                     )
                     .frame(height: 100)
                     .shadow(
-                        color: isSelected ? getCategoryColor(category).opacity(0.3) : .black.opacity(0.08),
-                        radius: isPressed ? 8 : 12,
+                        color: isSelected ? getCategoryColor(category).opacity(0.25) : Color(red: 0.85, green: 0.9, blue: 0.95).opacity(0.4),
+                        radius: isPressed ? 10 : 15,
                         x: 0,
-                        y: isPressed ? 2 : 6
+                        y: isPressed ? 4 : 8
                     )
                     .opacity(isAccessible ? 1.0 : 0.7)
                 

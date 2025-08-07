@@ -47,7 +47,7 @@ struct PersonalQuotesView: View {
                                     Circle()
                                         .fill(Color.white)
                                         .frame(width: 44, height: 44)
-                                        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+                                        .shadow(color: Color(red: 0.85, green: 0.9, blue: 0.95).opacity(0.3), radius: 10, x: 0, y: 4)
                                     
                                     Image(systemName: "chevron.left")
                                         .font(.system(size: 18, weight: .semibold))
@@ -81,7 +81,7 @@ struct PersonalQuotesView: View {
                                     Circle()
                                         .fill(Color(red: 0.659, green: 0.902, blue: 0.812))
                                         .frame(width: 44, height: 44)
-                                        .shadow(color: Color(red: 0.659, green: 0.902, blue: 0.812).opacity(0.3), radius: 8, x: 0, y: 2)
+                                        .shadow(color: Color(red: 0.659, green: 0.902, blue: 0.812).opacity(0.2), radius: 12, x: 0, y: 4)
                                     
                                     Image(systemName: subscriptionManager.hasTimeRangeAccess ? "plus" : "lock.fill")
                                         .font(.system(size: 18, weight: .semibold))
@@ -122,7 +122,7 @@ struct PersonalQuotesView: View {
                     .background(
                         RoundedRectangle(cornerRadius: 20)
                             .fill(Color.white)
-                            .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+                            .shadow(color: Color(red: 0.85, green: 0.9, blue: 0.95).opacity(0.3), radius: 15, x: 0, y: 8)
                     )
                 }
                 .padding(.horizontal, 24)
@@ -139,51 +139,23 @@ struct PersonalQuotesView: View {
                 
                 // Content
                 if quoteManager.personalQuotes.isEmpty {
-                    // Empty state
-                    VStack(spacing: 32) {
+                    // Enhanced empty state
+                    VStack {
                         Spacer()
                         
-                        VStack(spacing: 20) {
-                            Image(systemName: "quote.bubble")
-                                .font(.system(size: 60))
-                                .foregroundColor(.secondary)
-                            
-                            VStack(spacing: 12) {
-                                Text("No Personal Quotes Yet")
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.black)
-                                
-                                Text("Add your own inspiring quotes to see them alongside our curated collection")
-                                    .font(.body)
-                                    .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.center)
-                                    .padding(.horizontal, 40)
-                                    .fixedSize(horizontal: false, vertical: true)
+                        EmptyStateView(
+                            icon: subscriptionManager.hasTimeRangeAccess ? "heart.text.square" : "lock.square",
+                            title: subscriptionManager.hasTimeRangeAccess ? "Start Your Collection" : "Unlock Personal Quotes",
+                            subtitle: subscriptionManager.hasTimeRangeAccess ? 
+                                "Create your personal motivation library with quotes that speak to your heart. Your words, your inspiration." : 
+                                "Add your own inspiring quotes and see them in your daily rotation alongside our curated collection.",
+                            actionTitle: subscriptionManager.hasTimeRangeAccess ? "Add Your First Quote" : "Get Premium Access"
+                        ) {
+                            if subscriptionManager.hasTimeRangeAccess {
+                                showAddQuote.toggle()
+                            } else {
+                                showSubscription.toggle()
                             }
-                            
-                            Button(action: {
-                                if subscriptionManager.hasTimeRangeAccess {
-                                    showAddQuote.toggle()
-                                } else {
-                                    showSubscription.toggle()
-                                }
-                            }) {
-                                HStack {
-                                    Image(systemName: subscriptionManager.hasTimeRangeAccess ? "plus" : "lock.fill")
-                                        .font(.system(size: 16, weight: .semibold))
-                                    Text(subscriptionManager.hasTimeRangeAccess ? "Add Your First Quote" : "Unlock Personal Quotes")
-                                        .font(.headline)
-                                        .fontWeight(.semibold)
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color(red: 0.659, green: 0.902, blue: 0.812))
-                                .cornerRadius(16)
-                            }
-                            .padding(.horizontal, 60)
-                            .padding(.top, 8)
                         }
                         
                         Spacer()
@@ -314,7 +286,7 @@ struct PersonalQuoteCard: View {
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.white)
-                .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+                .shadow(color: Color(red: 0.85, green: 0.9, blue: 0.95).opacity(0.3), radius: 15, x: 0, y: 8)
         )
         .opacity(quote.isActive ? 1.0 : 0.7)
         .alert("Delete Quote", isPresented: $showDeleteAlert) {
@@ -462,7 +434,7 @@ struct FrequencyControlSection: View {
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.white)
-                .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+                .shadow(color: Color(red: 0.85, green: 0.9, blue: 0.95).opacity(0.3), radius: 15, x: 0, y: 8)
         )
     }
 }

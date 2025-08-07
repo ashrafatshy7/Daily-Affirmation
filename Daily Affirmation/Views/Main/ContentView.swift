@@ -10,6 +10,8 @@ struct ContentView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var hasTriggeredSwipe = false
     @State private var swipeDirection: SwipeDirection = .none
+    @State private var showPersonalizedGreeting = false
+    @State private var personalizedGreetingOpacity: Double = 0.0
 
     enum SwipeDirection { case none, up, down }
 
@@ -106,7 +108,7 @@ struct ContentView: View {
                                 .padding(12)
                                 .background(Color.white.opacity(0.9))
                                 .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
+                                .shadow(color: Color(red: 0.8, green: 0.85, blue: 0.95).opacity(0.4), radius: 12, x: 0, y: 4)
                         }
                         .accessibilityIdentifier("settings_button")
 
@@ -148,7 +150,7 @@ struct ContentView: View {
                                 .padding(12)
                                 .background(Color.white.opacity(0.9))
                                 .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
+                                .shadow(color: Color(red: 0.8, green: 0.85, blue: 0.95).opacity(0.4), radius: 12, x: 0, y: 4)
                         }
                         .accessibilityIdentifier("customize_button")
 
@@ -164,7 +166,7 @@ struct ContentView: View {
                                 .padding(12)
                                 .background(Color.white.opacity(0.9))
                                 .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 2)
+                                .shadow(color: Color(red: 0.8, green: 0.85, blue: 0.95).opacity(0.4), radius: 12, x: 0, y: 4)
                         }
                         .accessibilityIdentifier("love_button")
                     }
@@ -197,12 +199,68 @@ struct ContentView: View {
                         .padding(.bottom, 80)
                     }
                 }
+                
+                // Personalized greeting overlay
+                if showPersonalizedGreeting {
+                    VStack {
+                        Spacer()
+                        VStack(spacing: 16) {
+                            Text(quoteManager.userType.personalizedGreeting)
+                                .font(.system(size: 20, weight: .medium, design: .rounded))
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [
+                                                    Color.black.opacity(0.7),
+                                                    Color.black.opacity(0.5)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .blur(radius: 1)
+                                )
+                                .shadow(color: Color(red: 0.2, green: 0.2, blue: 0.3).opacity(0.2), radius: 20, x: 0, y: 10)
+                        }
+                        .opacity(personalizedGreetingOpacity)
+                        .scaleEffect(personalizedGreetingOpacity)
+                        .padding(.bottom, 120)
+                        Spacer()
+                    }
+                }
             }
             .onAppear {
-                swipeIndicatorOpacity = 0.7
-                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                // Show personalized greeting
+                showPersonalizedGreeting = true
+                withAnimation(.easeInOut(duration: 0.6)) {
+                    personalizedGreetingOpacity = 1.0
+                }
+                
+                // Hide greeting after delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        personalizedGreetingOpacity = 0.0
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        showPersonalizedGreeting = false
+                    }
+                }
+                
+                // Show swipe indicator only for new users
+                if quoteManager.userType.shouldShowSwipeIndicator {
+                    swipeIndicatorOpacity = 0.7
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+                        showSwipeIndicator = false
+                    }
+                } else {
                     showSwipeIndicator = false
                 }
+                
                 checkFirstLaunch()
                 UIApplication.shared.applicationIconBadgeNumber = 0
             }

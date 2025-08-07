@@ -240,6 +240,40 @@ class QuoteManager: ObservableObject {
     
     internal var quoteBag = QuoteBag()
     
+    // MARK: - User Behavior Tracking & Personalization
+    @Published var userType: UserType = .new
+    @Published var totalAppOpens: Int = 0
+    @Published var consecutiveDays: Int = 0
+    @Published var lastOpenDate: Date = Date()
+    @Published var totalQuotesViewed: Int = 0
+    @Published var totalLovesGiven: Int = 0
+    @Published var hasCompletedOnboarding: Bool = false
+    
+    enum UserType: String, CaseIterable {
+        case new = "new"           // 0-3 days, < 10 quotes viewed
+        case returning = "returning" // 4-29 days, or 10-100 quotes viewed
+        case superUser = "superUser" // 30+ days, or 100+ quotes viewed, or 10+ loves
+        
+        var personalizedGreeting: String {
+            switch self {
+            case .new:
+                return "Welcome! Let's find your daily inspiration ✨"
+            case .returning:
+                return "Welcome back! Here's today's inspiration 🌟"
+            case .superUser:
+                return "Your daily dose of motivation is ready 🚀"
+            }
+        }
+        
+        var shouldShowSwipeIndicator: Bool {
+            return self == .new
+        }
+        
+        var shouldShowAdvancedFeatures: Bool {
+            return self == .superUser
+        }
+    }
+    
     enum FontSize: String, CaseIterable {
         case small = "small"
         case medium = "medium"
@@ -445,10 +479,12 @@ class QuoteManager: ObservableObject {
         if Thread.isMainThread {
             currentQuoteText = newQuote
             SharedQuoteManager.shared.setCurrentQuote(newQuote)
+            trackQuoteViewed()
         } else {
             DispatchQueue.main.sync {
                 self.currentQuoteText = newQuote
                 SharedQuoteManager.shared.setCurrentQuote(newQuote)
+                self.trackQuoteViewed()
             }
         }
     }
@@ -459,10 +495,12 @@ class QuoteManager: ObservableObject {
             if Thread.isMainThread {
                 currentQuoteText = previousQuote
                 SharedQuoteManager.shared.setCurrentQuote(previousQuote)
+                trackQuoteViewed()
             } else {
                 DispatchQueue.main.sync {
                     self.currentQuoteText = previousQuote
                     SharedQuoteManager.shared.setCurrentQuote(previousQuote)
+                    self.trackQuoteViewed()
                 }
             }
         }
