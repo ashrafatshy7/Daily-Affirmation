@@ -5,7 +5,6 @@ import WidgetKit
 // MARK: - Shared Data Models
 struct SharedAffirmationEntry {
     let quote: String
-    let isPinned: Bool
     let date: Date
     let backgroundImage: String
 }
@@ -16,19 +15,21 @@ class SharedQuoteManager {
     
     // App Groups identifier for shared data
     private let appGroupIdentifier = "group.com.ashrafatshy.Daily-Affirmation"
-    private let pinnedQuoteKey = "pinnedQuote"
-    private let isPinnedKey = "isPinned"
-    private let pinnedDateKey = "pinnedDate"
     private let currentQuoteKey = "currentQuote"
     
     private var sharedUserDefaults: UserDefaults? {
+        print("🔧 Widget SharedQuoteManager: Attempting to create UserDefaults with App Group: \(appGroupIdentifier)")
         let defaults = UserDefaults(suiteName: appGroupIdentifier)
         if defaults == nil {
             print("⚠️ Widget SharedQuoteManager: Failed to create UserDefaults with App Group: \(appGroupIdentifier)")
             print("⚠️ Widget SharedQuoteManager: Falling back to standard UserDefaults")
-            return UserDefaults.standard
+            let fallbackDefaults = UserDefaults.standard
+            print("🔧 Widget SharedQuoteManager: Fallback UserDefaults created successfully")
+            return fallbackDefaults
+        } else {
+            print("✅ Widget SharedQuoteManager: Successfully created UserDefaults with App Group")
+            return defaults
         }
-        return defaults
     }
     
     private init() {}
@@ -92,54 +93,6 @@ class SharedQuoteManager {
         return quotes[dailyIndex]
     }
     
-    // MARK: - Pin/Unpin Functionality
-    func getPinnedQuote() -> String? {
-        return sharedUserDefaults?.string(forKey: pinnedQuoteKey)
-    }
-    
-    func isPinned() -> Bool {
-        return sharedUserDefaults?.bool(forKey: isPinnedKey) ?? false
-    }
-    
-    func pinQuote(_ quote: String) {
-        // Always clear any existing pin first to enforce single pin behavior
-        if isPinned() {
-            sharedUserDefaults?.removeObject(forKey: pinnedQuoteKey)
-            sharedUserDefaults?.set(false, forKey: isPinnedKey)
-            sharedUserDefaults?.removeObject(forKey: pinnedDateKey)
-        }
-        
-        // Set the new pin
-        sharedUserDefaults?.set(quote, forKey: pinnedQuoteKey)
-        sharedUserDefaults?.set(true, forKey: isPinnedKey)
-        sharedUserDefaults?.set(Date(), forKey: pinnedDateKey)
-        
-        // Force synchronization to ensure data is written immediately
-        sharedUserDefaults?.synchronize()
-        
-        // Reload widgets when pin state changes with delay to ensure data is written
-        #if canImport(WidgetKit)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            WidgetCenter.shared.reloadAllTimelines()
-        }
-        #endif
-    }
-    
-    func unpinQuote() {
-        sharedUserDefaults?.removeObject(forKey: pinnedQuoteKey)
-        sharedUserDefaults?.set(false, forKey: isPinnedKey)
-        sharedUserDefaults?.removeObject(forKey: pinnedDateKey)
-        
-        // Force synchronization to ensure data is written immediately
-        sharedUserDefaults?.synchronize()
-        
-        // Reload widgets when pin state changes with delay to ensure data is written
-        #if canImport(WidgetKit)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            WidgetCenter.shared.reloadAllTimelines()
-        }
-        #endif
-    }
     
     // MARK: - Current Quote Synchronization
     func setCurrentQuote(_ quote: String) {
@@ -151,37 +104,34 @@ class SharedQuoteManager {
         return sharedUserDefaults?.string(forKey: currentQuoteKey)
     }
     
+    
     // MARK: - Widget Entry Creation
     func getCurrentEntry() -> SharedAffirmationEntry {
         print("🔶 Widget SharedQuoteManager: Getting current entry...")
+        print("🔶 Widget SharedQuoteManager: Timestamp: \(Date())")
         
         let currentQuote: String
-        let pinned = isPinned()
-        let pinnedQuote = getPinnedQuote()
         let appCurrentQuote = getCurrentQuoteFromApp()
         
-        print("🔶 Widget SharedQuoteManager: isPinned: \(pinned), pinnedQuote: '\(pinnedQuote ?? "nil")', appCurrentQuote: '\(appCurrentQuote ?? "nil")'")
+        print("🔶 Widget SharedQuoteManager: FINAL VALUES - appCurrentQuote: '\(appCurrentQuote ?? "nil")'")
         
-        if pinned, let pinnedQuote = pinnedQuote {
-            currentQuote = pinnedQuote
-            print("🔶 Widget SharedQuoteManager: Using pinned quote: '\(currentQuote)'")
+        // Use main app's current quote if available, otherwise fall back to daily quote
+        if let appCurrentQuote = appCurrentQuote, !appCurrentQuote.isEmpty {
+            currentQuote = appCurrentQuote
+            print("🔶 Widget SharedQuoteManager: Using app current quote: '\(currentQuote)'")
         } else {
-            // Use main app's current quote if available, otherwise fall back to daily quote
-            if let appCurrentQuote = appCurrentQuote, !appCurrentQuote.isEmpty {
-                currentQuote = appCurrentQuote
-                print("🔶 Widget SharedQuoteManager: Using app current quote: '\(currentQuote)'")
-            } else {
-                currentQuote = getDailyQuote()
-                print("🔶 Widget SharedQuoteManager: Using daily quote: '\(currentQuote)'")
-            }
+            currentQuote = getDailyQuote()
+            print("🔶 Widget SharedQuoteManager: Using daily quote: '\(currentQuote)'")
         }
         
-        return SharedAffirmationEntry(
+        let entry = SharedAffirmationEntry(
             quote: currentQuote,
-            isPinned: pinned,
             date: Date(),
             backgroundImage: "background"
         )
+        
+        print("🔶 Widget SharedQuoteManager: FINAL ENTRY - quote: '\(entry.quote)'")
+        return entry
     }
 }
 

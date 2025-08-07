@@ -472,6 +472,58 @@ class QuoteManager: ObservableObject {
         return currentQuoteText
     }
     
+    // MARK: - Deep Link Support
+    func setSpecificQuote(_ quote: String) {
+        // First, try to navigate to the quote if it already exists in history
+        if let history = quoteHistory, history.navigateToQuote(quote) {
+            // Quote found in history, navigation successful
+            if Thread.isMainThread {
+                currentQuoteText = quote
+                SharedQuoteManager.shared.setCurrentQuote(quote)
+            } else {
+                DispatchQueue.main.sync {
+                    self.currentQuoteText = quote
+                    SharedQuoteManager.shared.setCurrentQuote(quote)
+                }
+            }
+            return
+        }
+        
+        // Quote not in history yet, proceed with adding it
+        // Find the quote in our current quotes array
+        if let index = quotes.firstIndex(of: quote) {
+            // If found, set the current index to that quote
+            currentIndex = index
+            if Thread.isMainThread {
+                currentQuoteText = quote
+                SharedQuoteManager.shared.setCurrentQuote(quote)
+            } else {
+                DispatchQueue.main.sync {
+                    self.currentQuoteText = quote
+                    SharedQuoteManager.shared.setCurrentQuote(quote)
+                }
+            }
+            
+            // Add to history since it wasn't found there
+            quoteHistory?.addQuote(quote)
+        } else {
+            // If the quote is not in our current quotes array (edge case),
+            // still display it and update SharedQuoteManager, and add to history
+            if Thread.isMainThread {
+                currentQuoteText = quote
+                SharedQuoteManager.shared.setCurrentQuote(quote)
+            } else {
+                DispatchQueue.main.sync {
+                    self.currentQuoteText = quote
+                    SharedQuoteManager.shared.setCurrentQuote(quote)
+                }
+            }
+            
+            // Add the quote to history even if not in main quotes array
+            quoteHistory?.addQuote(quote)
+        }
+    }
+    
     func getPreviewQuote(offset: Int) -> String {
         guard let history = quoteHistory else { return currentQuoteText }
         return history.getPreviewQuote(offset: offset)

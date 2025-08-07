@@ -113,4 +113,25 @@ class QuoteHistory {
         
         return availableQuotes.randomElement() ?? "Stay inspired!"
     }
+    
+    // MARK: - Deep Link Support
+    func addQuote(_ quote: String) {
+        // Add quote to history and move to it
+        history.append(quote)
+        currentIndex = history.count - 1
+        // Clear cached next quote since we've moved to a specific quote
+        cachedNextQuote = nil
+    }
+    
+    func navigateToQuote(_ quote: String) -> Bool {
+        // Check if quote already exists in history
+        if let existingIndex = history.firstIndex(of: quote) {
+            // Navigate to existing quote
+            currentIndex = existingIndex
+            // Clear cached next quote since we've moved to a specific position
+            cachedNextQuote = nil
+            return true
+        }
+        return false
+    }
 }

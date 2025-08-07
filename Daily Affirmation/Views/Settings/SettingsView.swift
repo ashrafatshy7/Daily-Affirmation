@@ -132,7 +132,6 @@ struct SettingsView: View {
                         .accessibilityIdentifier("loved_quotes_section")
                         .accessibility(addTraits: .isButton)
                         
-                   
                         
                     }
                     .padding(.horizontal, 24)
@@ -1089,6 +1088,7 @@ struct LovedQuotesSection: View {
         }
     }
 }
+
 
 
 extension DateFormatter {
