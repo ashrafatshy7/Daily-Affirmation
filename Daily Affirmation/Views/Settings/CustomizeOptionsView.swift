@@ -1,138 +1,98 @@
 import SwiftUI
 
+// MARK: - Customize (Redesigned)
+// A friendlier layout with live preview, simple tiles, and fewer modal jumps.
+
 struct CustomizeOptionsView: View {
     @ObservedObject var quoteManager: QuoteManager
     @Environment(\.dismiss) private var dismiss
+
     @State private var showPersonalQuotes = false
     @State private var showBackgroundThemes = false
     @State private var showQuoteCategories = false
-    
+
     var body: some View {
-        ZStack {
-            // Background gradient
-            LinearGradient(
-                colors: [
-                    Color(red: 0.95, green: 0.97, blue: 1.0),
-                    Color(red: 0.98, green: 0.99, blue: 1.0)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                // Hero Header
-                ZStack {
-                    // Header gradient background
-                    RoundedRectangle(cornerRadius: 30)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.4, green: 0.8, blue: 0.8).opacity(0.1),
-                                    Color(red: 0.5, green: 0.7, blue: 0.9).opacity(0.05)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(height: 120)
-                    
-                    VStack(spacing: 8) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Customize")
-                                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                                    .foregroundColor(.black)
-                                
-                                Text("Make it yours")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(.black.opacity(0.6))
-                            }
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                dismiss()
-                            }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.white)
-                                        .frame(width: 44, height: 44)
-                                        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
-                                    
-                                    Image(systemName: "xmark")
-                                        .font(.system(size: 18, weight: .semibold))
-                                        .foregroundColor(.black.opacity(0.7))
-                                }
-                            }
-                            .accessibilityLabel("Close")
-                        }
-                        .padding(.horizontal, 32)
-                        .padding(.top, 20)
-                    }
+        VStack(spacing: 0) {
+            // Header
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Customize")
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    Text("Make it feel like you")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 32)
-                
-                // Modern Card Grid
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 20) {
-                        // Two-column grid for first two cards
-                        HStack(spacing: 16) {
-                            // Personal Quotes Card
-                            ModernFeatureCard(
-                                icon: "quote.bubble.fill",
+                Spacer()
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+                        .frame(width: 36, height: 36)
+                        .background(Color.secondary.opacity(0.15))
+                        .clipShape(Circle())
+                }
+                .accessibilityLabel("Close")
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 16) {
+                    // Live preview
+                    LivePreviewCard(
+                        backgroundName: quoteManager.selectedBackgroundImage,
+                        sampleText: "Believe in yourself."
+                    )
+
+                    // Tiles grid
+                    VStack(spacing: 12) {
+                        HStack(spacing: 12) {
+                            FeatureTile(
                                 title: "Personal Quotes",
-                                description: "Your custom quotes",
-                                gradientColors: [
-                                    Color(red: 0.659, green: 0.902, blue: 0.812),
-                                    Color(red: 0.459, green: 0.802, blue: 0.712)
-                                ],
-                                action: {
-                                    showPersonalQuotes.toggle()
-                                }
-                            )
-                            .accessibilityIdentifier("personal_quotes_section")
-                            
-                            // Background Themes Card
-                            ModernFeatureCard(
-                                icon: "paintbrush.pointed.fill",
-                                title: "Background Themes",
-                                description: "Beautiful themes",
-                                gradientColors: [
-                                    Color(red: 1.0, green: 0.584, blue: 0.0),
-                                    Color(red: 1.0, green: 0.384, blue: 0.2)
-                                ],
-                                action: {
-                                    showBackgroundThemes.toggle()
-                                }
-                            )
-                            .accessibilityIdentifier("background_themes_section")
+                                subtitle: "Create and edit",
+                                systemImage: "quote.bubble.fill",
+                                tint: .blue
+                            ) { showPersonalQuotes = true }
+
+                            FeatureTile(
+                                title: "Backgrounds",
+                                subtitle: "Pick a vibe",
+                                systemImage: "paintbrush.pointed.fill",
+                                tint: .orange
+                            ) { showBackgroundThemes = true }
                         }
-                        
-                        // Quote Categories Card (Full Width)
-                        ModernFeatureCard(
-                            icon: getCategoryIcon(quoteManager.selectedCategory),
-                            title: "Quote Categories",
-                            description: "\(quoteManager.selectedCategory.displayName)",
-                            gradientColors: [
-                                getCategoryColor(quoteManager.selectedCategory),
-                                getCategoryColor(quoteManager.selectedCategory).opacity(0.8)
-                            ],
-                            isFullWidth: true,
-                            action: {
-                                showQuoteCategories.toggle()
-                            }
-                        )
-                        .accessibilityIdentifier("quote_categories_section")
+
+                        FeatureTile(
+                            title: "Categories",
+                            subtitle: quoteManager.selectedCategory.displayName,
+                            systemImage: categoryIcon(quoteManager.selectedCategory),
+                            tint: .purple,
+                            isFullWidth: true
+                        ) { showQuoteCategories = true }
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 40)
+
+                    // Helpful tip
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "sparkles")
+                            .foregroundColor(.secondary)
+                        Text("Changes appear instantly across the app.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(UIColor.secondarySystemBackground))
+                    )
                 }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
             }
         }
+        .background(Color(UIColor.systemGroupedBackground).ignoresSafeArea())
         .navigationBarHidden(true)
-        .preferredColorScheme(.light)
         .sheet(isPresented: $showPersonalQuotes) {
             PersonalQuotesView(quoteManager: quoteManager)
         }
@@ -143,8 +103,8 @@ struct CustomizeOptionsView: View {
             CategorySelectionView(quoteManager: quoteManager)
         }
     }
-    
-    private func getCategoryIcon(_ category: QuoteCategory) -> String {
+
+    private func categoryIcon(_ category: QuoteCategory) -> String {
         switch category {
         case .general: return "star.fill"
         case .love: return "heart.fill"
@@ -153,115 +113,95 @@ struct CustomizeOptionsView: View {
         case .loveYourself: return "figure.arms.open"
         }
     }
-    
-    private func getCategoryColor(_ category: QuoteCategory) -> Color {
-        switch category {
-        case .general: return Color(red: 0.0, green: 0.478, blue: 1.0)
-        case .love: return Color.red
-        case .positivity: return Color(red: 1.0, green: 0.584, blue: 0.0)
-        case .stopOverthinking: return Color(red: 0.659, green: 0.902, blue: 0.812)
-        case .loveYourself: return Color.purple
+}
+
+// MARK: - Reusable (Customize)
+
+private struct LivePreviewCard: View {
+    let backgroundName: String
+    let sampleText: String
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            if UIImage(named: backgroundName) != nil {
+                Image(backgroundName)
+                    .resizable()
+                    .aspectRatio(16/9, contentMode: .fill)
+                    .frame(maxWidth: .infinity)
+                    .clipped()
+            } else {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(LinearGradient(colors: [.accentColor.opacity(0.25), .accentColor.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .frame(height: 180)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(sampleText)
+                    .font(.title3.weight(.semibold))
+                    .foregroundColor(.white)
+                    .shadow(radius: 6)
+                Text("This is how your quotes will look")
+                    .font(.footnote)
+                    .foregroundColor(.white.opacity(0.9))
+            }
+            .padding(16)
         }
+        .frame(height: 180)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(UIColor.secondarySystemBackground))
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
     }
 }
 
-struct ModernFeatureCard: View {
-    let icon: String
+private struct FeatureTile: View {
     let title: String
-    let description: String
-    let gradientColors: [Color]
+    let subtitle: String
+    let systemImage: String
+    let tint: Color
     var isFullWidth: Bool = false
     let action: () -> Void
-    
+
     @State private var isPressed = false
-    
+
     var body: some View {
         Button(action: action) {
-            ZStack {
-                // Background with gradient
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(
-                        LinearGradient(
-                            colors: gradientColors,
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(height: isFullWidth ? 120 : 140)
-                    .shadow(
-                        color: gradientColors.first?.opacity(0.3) ?? .clear,
-                        radius: isPressed ? 8 : 12,
-                        x: 0,
-                        y: isPressed ? 2 : 6
-                    )
-                
-                // Content
-                VStack(spacing: 12) {
-                    HStack {
-                        // Icon
-                        ZStack {
-                            Circle()
-                                .fill(Color.white.opacity(0.2))
-                                .frame(width: 50, height: 50)
-                            
-                            Image(systemName: icon)
-                                .font(.system(size: 24, weight: .semibold))
-                                .foregroundColor(.white)
-                        }
-                        
-                        if !isFullWidth {
-                            Spacer()
-                        }
-                        
-                        if isFullWidth {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(title)
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .multilineTextAlignment(.leading)
-                                
-                                Text(description)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.white.opacity(0.9))
-                                    .multilineTextAlignment(.leading)
-                            }
-                            
-                            Spacer()
-                            
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.white.opacity(0.8))
-                        }
-                    }
-                    
-                    if !isFullWidth {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(title)
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.white)
-                                .multilineTextAlignment(.center)
-                            
-                            Text(description)
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.white.opacity(0.9))
-                                .multilineTextAlignment(.center)
-                        }
-                    }
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(tint.opacity(0.15))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: systemImage)
+                        .foregroundColor(tint)
                 }
-                .padding(isFullWidth ? 20 : 16)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(.primary)
+                    Text(subtitle)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").foregroundColor(.secondary)
             }
+            .padding(14)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color(UIColor.systemBackground))
+            )
+            .scaleEffect(isPressed ? 0.98 : 1)
         }
-        .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isPressed ? 0.95 : 1.0)
-        .animation(.easeInOut(duration: 0.1), value: isPressed)
-        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity) { isPressing in
-            isPressed = isPressing
-        } perform: {
-            // Haptic feedback
-            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-            impactFeedback.impactOccurred()
-            action()
-        }
+        .buttonStyle(.plain)
+        .simultaneousGesture(LongPressGesture(minimumDuration: 0.0).onChanged { _ in
+            withAnimation(.easeInOut(duration: 0.08)) { isPressed = true }
+        }.onEnded { _ in
+            withAnimation(.easeInOut(duration: 0.08)) { isPressed = false }
+        })
+        .frame(maxWidth: isFullWidth ? .infinity : nil)
     }
 }
 
