@@ -1,6 +1,7 @@
 //Daily Affirmation Widgets
 import Foundation
 import WidgetKit
+import UIKit
 
 // MARK: - Shared Data Models
 struct SharedAffirmationEntry {
@@ -20,15 +21,34 @@ class SharedQuoteManager {
     
     private var sharedUserDefaults: UserDefaults? {
         print("🔧 Widget SharedQuoteManager: Attempting to create UserDefaults with App Group: \(appGroupIdentifier)")
+        print("🔧 Widget SharedQuoteManager: Device: \(UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone")")
+        
         let defaults = UserDefaults(suiteName: appGroupIdentifier)
         if defaults == nil {
             print("⚠️ Widget SharedQuoteManager: Failed to create UserDefaults with App Group: \(appGroupIdentifier)")
+            print("⚠️ Widget SharedQuoteManager: This is expected if App Groups are not configured")
             print("⚠️ Widget SharedQuoteManager: Falling back to standard UserDefaults")
             let fallbackDefaults = UserDefaults.standard
             print("🔧 Widget SharedQuoteManager: Fallback UserDefaults created successfully")
+            
+            // Test if we can access standard UserDefaults
+            let testKey = "widget_test_key"
+            fallbackDefaults.set("test_value", forKey: testKey)
+            let testValue = fallbackDefaults.string(forKey: testKey)
+            print("🔧 Widget SharedQuoteManager: Standard UserDefaults test - set/get: \(testValue == "test_value" ? "SUCCESS" : "FAILED")")
+            fallbackDefaults.removeObject(forKey: testKey)
+            
             return fallbackDefaults
         } else {
             print("✅ Widget SharedQuoteManager: Successfully created UserDefaults with App Group")
+            
+            // Test if we can access App Group UserDefaults
+            let testKey = "widget_appgroup_test_key"
+            defaults?.set("test_value", forKey: testKey)
+            let testValue = defaults?.string(forKey: testKey)
+            print("🔧 Widget SharedQuoteManager: App Group UserDefaults test - set/get: \(testValue == "test_value" ? "SUCCESS" : "FAILED")")
+            defaults?.removeObject(forKey: testKey)
+            
             return defaults
         }
     }
@@ -37,32 +57,45 @@ class SharedQuoteManager {
     
     // MARK: - Quote Loading
     private func loadQuotes() -> [String] {
+        print("🔶 Widget SharedQuoteManager: Loading quotes...")
+        
         // Try to load from main app bundle first, then fall back to widget bundle
         var url: URL?
         
         // Get main app bundle identifier
         let mainAppBundleId = "com.ashrafatshy.Daily-Affirmation"
+        print("🔶 Widget SharedQuoteManager: Trying main app bundle: \(mainAppBundleId)")
         if let mainAppBundle = Bundle(identifier: mainAppBundleId) {
             url = mainAppBundle.url(forResource: "quotes", withExtension: "json")
+            print("🔶 Widget SharedQuoteManager: Main app bundle URL: \(url?.absoluteString ?? "nil")")
         }
         
         // Fallback to widget bundle if main app bundle not found
         if url == nil {
+            print("🔶 Widget SharedQuoteManager: Fallback to widget bundle")
             url = Bundle.main.url(forResource: "quotes", withExtension: "json")
+            print("🔶 Widget SharedQuoteManager: Widget bundle URL: \(url?.absoluteString ?? "nil")")
         }
         
         guard let quotesUrl = url,
               let data = try? Data(contentsOf: quotesUrl) else {
+            print("🔶 Widget SharedQuoteManager: Failed to load quotes, using defaults")
             return defaultQuotes
         }
         
+        print("🔶 Widget SharedQuoteManager: Successfully loaded quotes data (\(data.count) bytes)")
+        
         // Try to decode categorized structure first
         if let categorizedQuotes = try? JSONDecoder().decode(QuoteCategories.self, from: data) {
-            return categorizedQuotes.categories["General"] ?? defaultQuotes
+            let generalQuotes = categorizedQuotes.categories["General"] ?? defaultQuotes
+            print("🔶 Widget SharedQuoteManager: Loaded \(generalQuotes.count) categorized quotes")
+            return generalQuotes
         } else if let quotesArray = try? JSONDecoder().decode([String].self, from: data) {
+            print("🔶 Widget SharedQuoteManager: Loaded \(quotesArray.count) array quotes")
             return quotesArray
         }
         
+        print("🔶 Widget SharedQuoteManager: Failed to decode quotes, using defaults")
         return defaultQuotes
     }
     
@@ -102,7 +135,9 @@ class SharedQuoteManager {
     }
     
     func getCurrentQuoteFromApp() -> String? {
-        return sharedUserDefaults?.string(forKey: currentQuoteKey)
+        let quote = sharedUserDefaults?.string(forKey: currentQuoteKey)
+        print("🔶 Widget SharedQuoteManager: getCurrentQuoteFromApp() -> '\(quote ?? "nil")'")
+        return quote
     }
     
     // MARK: - Background Image Synchronization
@@ -114,7 +149,7 @@ class SharedQuoteManager {
     
     func getCurrentBackgroundFromApp() -> String? {
         let background = sharedUserDefaults?.string(forKey: currentBackgroundKey)
-        print("🔶 Widget SharedQuoteManager: Retrieved current background: '\(background ?? "nil")'")
+        print("🔶 Widget SharedQuoteManager: getCurrentBackgroundFromApp() -> '\(background ?? "nil")'")
         return background
     }
     
@@ -123,6 +158,8 @@ class SharedQuoteManager {
     func getCurrentEntry() -> SharedAffirmationEntry {
         print("🔶 Widget SharedQuoteManager: Getting current entry...")
         print("🔶 Widget SharedQuoteManager: Timestamp: \(Date())")
+        print("🔶 Widget SharedQuoteManager: Device: \(UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone")")
+        print("🔶 Widget SharedQuoteManager: Bundle ID: \(Bundle.main.bundleIdentifier ?? "unknown")")
         
         let currentQuote: String
         let appCurrentQuote = getCurrentQuoteFromApp()

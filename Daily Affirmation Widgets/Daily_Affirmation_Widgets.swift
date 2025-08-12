@@ -75,9 +75,12 @@ struct AffirmationWidgetEntryView: View {
     
     var body: some View {
         let _ = print("🔶 WIDGET VIEW: Rendering widget")
+        let _ = print("🔶 WIDGET VIEW: - Device: \(UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone")")
         let _ = print("🔶 WIDGET VIEW: - family: \(family)")
         let _ = print("🔶 WIDGET VIEW: - quote: '\(entry.quote)'")
+        let _ = print("🔶 WIDGET VIEW: - quote.isEmpty: \(entry.quote.isEmpty)")
         let _ = print("🔶 WIDGET VIEW: - backgroundImage: '\(entry.backgroundImage)'")
+        let _ = print("🔶 WIDGET VIEW: - backgroundImage exists: \(UIImage(named: entry.backgroundImage) != nil)")
         let _ = print("🔶 WIDGET VIEW: - date: \(entry.date)")
         ZStack {
             // Background Image for iOS < 17.0 only
@@ -103,15 +106,20 @@ struct AffirmationWidgetEntryView: View {
             }
             
             // Content based on widget size
-            switch family {
-            case .systemSmall:
-                SmallWidgetView(entry: entry)
-            case .systemMedium:
-                MediumWidgetView(entry: entry)
-            case .systemLarge:
-                LargeWidgetView(entry: entry)
-            default:
-                MediumWidgetView(entry: entry)
+            Group {
+                switch family {
+                case .systemSmall:
+                    SmallWidgetView(entry: entry)
+                case .systemMedium:
+                    MediumWidgetView(entry: entry)
+                case .systemLarge:
+                    LargeWidgetView(entry: entry)
+                default:
+                    MediumWidgetView(entry: entry)
+                }
+            }
+            .onAppear {
+                print("🔶 WIDGET VIEW: Widget appeared on screen")
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -131,6 +139,8 @@ struct SmallWidgetView: View {
     }
     
     var body: some View {
+        let _ = print("🔶 WIDGET VIEW: SmallWidgetView rendering")
+        
         VStack {
             Spacer()
             
@@ -143,6 +153,14 @@ struct SmallWidgetView: View {
                 .padding(.horizontal, 12)
             
             Spacer()
+            
+            // Emergency visibility indicator for debugging
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                Text("iPad Widget")
+                    .font(.caption2)
+                    .foregroundColor(.white.opacity(0.5))
+                    .padding(.bottom, 4)
+            }
         }
         .widgetURL(widgetURL)
     }
@@ -160,6 +178,8 @@ struct MediumWidgetView: View {
     }
     
     var body: some View {
+        let _ = print("🔶 WIDGET VIEW: MediumWidgetView rendering")
+        
         ZStack {
             // Centered quote text
             VStack {
@@ -174,6 +194,14 @@ struct MediumWidgetView: View {
                     .padding(.horizontal, 20)
                 
                 Spacer()
+                
+                // Emergency visibility indicator for debugging
+                if UIDevice.current.userInterfaceIdiom == .pad {
+                    Text("iPad Medium Widget")
+                        .font(.caption2)
+                        .foregroundColor(.white.opacity(0.5))
+                        .padding(.bottom, 4)
+                }
             }
             
         }
@@ -193,6 +221,8 @@ struct LargeWidgetView: View {
     }
     
     var body: some View {
+        let _ = print("🔶 WIDGET VIEW: LargeWidgetView rendering")
+        
         ZStack {
             VStack {
                 Spacer()
@@ -215,12 +245,20 @@ struct LargeWidgetView: View {
                 
                 Spacer()
                 
-                // Bottom inspirational element
-                Text("Daily Inspiration")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white.opacity(0.8))
-                    .shadow(color: .black.opacity(0.5), radius: 1, x: 0, y: 0.5)
-                    .padding(.bottom, 16)
+                // Bottom inspirational element with iPad indicator
+                VStack(spacing: 4) {
+                    Text("Daily Inspiration")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.8))
+                        .shadow(color: .black.opacity(0.5), radius: 1, x: 0, y: 0.5)
+                    
+                    if UIDevice.current.userInterfaceIdiom == .pad {
+                        Text("iPad Large Widget")
+                            .font(.caption2)
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                }
+                .padding(.bottom, 16)
             }
             
         }
