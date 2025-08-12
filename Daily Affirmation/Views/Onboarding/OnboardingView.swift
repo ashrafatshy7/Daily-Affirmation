@@ -1,16 +1,6 @@
 import SwiftUI
 
-/// An improved onboarding experience for the Daily‑Affirmation app.
-///
-/// The onboarding is presented as a series of pages highlighting key
-/// features of the app.  It includes a persistent page indicator and
-/// a contextual Next button.  The final page embeds a premium
-/// subscription screen so users can subscribe without leaving the
-/// onboarding flow.  An exit (X) button is only shown on this last
-/// page so users see the premium offering before dismissing the
-/// onboarding.  The layout and colours adapt to light and dark
-/// appearances and use system accent colours for better
-/// accessibility and contrast.
+
 struct OnboardingView: View {
     @State private var currentPage: Int = 0
     @Environment(\.dismiss) private var dismiss
