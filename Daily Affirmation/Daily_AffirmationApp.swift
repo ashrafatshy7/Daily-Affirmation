@@ -33,7 +33,9 @@ struct Daily_AffirmationApp: App {
                     quoteManager.checkAndRequestRatingOnAppLaunch()
                     
                     // Reload widgets when app launches to sync latest data
-                    WidgetCenter.shared.reloadTimelines(ofKind: "Daily_Affirmation_Widgets")
+                    print("📱 App: Reloading widgets...")
+                    WidgetCenter.shared.reloadAllTimelines()
+                    print("📱 App: Widget reload triggered")
                 }
                 .onOpenURL { url in
                     handleDeepLink(url)

@@ -211,7 +211,9 @@ class QuoteManager: ObservableObject {
                 saveSettings()
                 // Sync background to SharedQuoteManager for widgets
                 SharedQuoteManager.shared.setCurrentBackground(selectedBackgroundImage)
-                WidgetCenter.shared.reloadTimelines(ofKind: "Daily_Affirmation_Widgets")
+                print("📱 QuoteManager: Background changed to '\(selectedBackgroundImage)', reloading widgets...")
+                WidgetCenter.shared.reloadAllTimelines()
+                print("📱 QuoteManager: Widget reload triggered")
             }
         }
     }
