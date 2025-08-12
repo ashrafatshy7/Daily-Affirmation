@@ -8,6 +8,7 @@
 import SwiftUI
 import UIKit
 import UserNotifications
+import WidgetKit
 
 @main
 struct Daily_AffirmationApp: App {
@@ -27,6 +28,12 @@ struct Daily_AffirmationApp: App {
                     }
                     // Clear notification badge when app opens
                     clearNotificationBadge()
+                    
+                    // Check if we should request app rating
+                    quoteManager.checkAndRequestRatingOnAppLaunch()
+                    
+                    // Reload widgets when app launches to sync latest data
+                    WidgetCenter.shared.reloadTimelines(ofKind: "Daily_Affirmation_Widgets")
                 }
                 .onOpenURL { url in
                     handleDeepLink(url)

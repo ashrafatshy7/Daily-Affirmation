@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "20250811_2352_Mountain Ridge Clouds_simple_compose_01k2dee3y1fhc8bz69rp096ckj.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

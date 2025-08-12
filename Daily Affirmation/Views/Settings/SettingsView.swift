@@ -38,6 +38,9 @@ struct SettingsView: View {
                         notificationsContent
                     }
 
+                    // Premium card
+                    premiumCard
+
                     // Appearance / Font
                     SectionCard(title: quoteManager.localizedString("font_size"), subtitle: "Make text easier to read", isExpanded: $isAppearanceExpanded) {
                         appearanceContent
@@ -47,9 +50,6 @@ struct SettingsView: View {
                     SectionCard(title: quoteManager.localizedString("loved_quotes"), subtitle: "Manage your saved quotes", isExpanded: $isFavoritesExpanded) {
                         lovedQuotesContent
                     }
-
-                    // Premium upsell
-                    premiumCard
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)
@@ -90,28 +90,31 @@ struct SettingsView: View {
 
     // MARK: - Quick Actions
     private var quickActions: some View {
-        HStack(spacing: 12) {
-            // Notifications toggle
-            IconToggle(
-                title: quoteManager.localizedString("daily_notifications"),
-                systemImage: "bell.fill",
-                isOn: $quoteManager.dailyNotifications,
-                tint: .orange
-            )
-            // Loved count
-            IconButton(
-                title: "Favorites",
-                systemImage: "heart.fill",
-                tint: .red
-            ) {
-                isFavoritesExpanded = true
-            }
-        }
+        EmptyView()
     }
 
     // MARK: - Notifications Content
     private var notificationsContent: some View {
         VStack(spacing: 16) {
+            // Daily notifications toggle
+            HStack(spacing: 12) {
+                Image(systemName: "bell.fill")
+                    .foregroundColor(.orange)
+                    .frame(width: 20)
+                Text(quoteManager.localizedString("daily_notifications"))
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+                Spacer()
+                Toggle("", isOn: $quoteManager.dailyNotifications)
+                    .labelsHidden()
+                    .tint(.orange)
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(UIColor.secondarySystemBackground))
+            )
+            
             // Mode picker
             VStack(alignment: .leading, spacing: 8) {
                 Text(quoteManager.localizedString("notification_mode"))
@@ -160,9 +163,6 @@ struct SettingsView: View {
                     }
                 }
             }
-
-            // Permission hint
-            PermissionHint()
         }
     }
 
@@ -216,28 +216,32 @@ struct SettingsView: View {
 
     // MARK: - Premium Card
     private var premiumCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                Image(systemName: "crown.fill")
-                    .foregroundColor(.yellow)
-                Text("Premium")
-                    .font(.headline)
-                Spacer()
-                Button("Learn more") {
-                    showSubscription = true
+        Button {
+            showSubscription = true
+        } label: {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 10) {
+                    Image(systemName: "crown.fill")
+                        .foregroundColor(.yellow)
+                    Text("Premium")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.secondary)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.yellow)
+                Text("Unlock time-range notifications and more themes.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
-            Text("Unlock time-range notifications and more themes.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(UIColor.systemBackground))
+                    .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
+            )
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(UIColor.secondarySystemGroupedBackground))
-        )
+        .buttonStyle(.plain)
     }
 }
 
@@ -399,28 +403,103 @@ private struct ModeSegmentedControl<Label: View>: View {
 private struct TimeInlineRow: View {
     let title: String
     @Binding var time: Date
+    @State private var isExpanded = false
+    @State private var selectedHour: Int = 9
+    @State private var selectedMinute: Int = 0
+    
+    private let hours = Array(0...23)
+    private let minutes = Array(0...59)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.footnote)
                 .foregroundColor(.secondary)
-            HStack {
-                Image(systemName: "clock")
-                    .foregroundColor(.accentColor)
-                DatePicker("", selection: $time, displayedComponents: .hourAndMinute)
-                    .datePickerStyle(.compact)
-                    .labelsHidden()
-                Spacer()
-                Text(DateFormatter.timeFormatter.string(from: time))
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(.primary)
+                
+            VStack(spacing: 0) {
+                // Time display button
+                Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        isExpanded.toggle()
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "clock")
+                            .foregroundColor(.accentColor)
+                        Text(DateFormatter.timeFormatter.string(from: time))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: isExpanded ? 12 : 12)
+                            .fill(Color(UIColor.secondarySystemBackground))
+                    )
+                }
+                .buttonStyle(.plain)
+                
+                // Inline time picker
+                if isExpanded {
+                    VStack(spacing: 16) {
+                        Divider()
+                            .padding(.horizontal, 12)
+                        
+                        HStack(spacing: 0) {
+                            // Hour Picker
+                            Picker("Hour", selection: $selectedHour) {
+                                ForEach(hours, id: \.self) { hour in
+                                    Text(String(format: "%02d", hour))
+                                        .font(.system(size: 18, weight: .medium, design: .rounded))
+                                        .tag(hour)
+                                }
+                            }
+                            .pickerStyle(.wheel)
+                            .frame(width: 70, height: 120)
+                            .clipped()
+                            
+                            Text(":")
+                                .font(.system(size: 20, weight: .light))
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 16)
+                            
+                            // Minute Picker
+                            Picker("Minute", selection: $selectedMinute) {
+                                ForEach(minutes, id: \.self) { minute in
+                                    Text(String(format: "%02d", minute))
+                                        .font(.system(size: 18, weight: .medium, design: .rounded))
+                                        .tag(minute)
+                                }
+                            }
+                            .pickerStyle(.wheel)
+                            .frame(width: 70, height: 120)
+                            .clipped()
+                        }
+                        .onChange(of: selectedHour) { _ in updateTime() }
+                        .onChange(of: selectedMinute) { _ in updateTime() }
+                    }
+                    .padding(.bottom, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(UIColor.secondarySystemBackground))
+                    )
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
             }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(UIColor.secondarySystemBackground))
-            )
+        }
+        .onAppear {
+            let calendar = Calendar.current
+            selectedHour = calendar.component(.hour, from: time)
+            selectedMinute = calendar.component(.minute, from: time)
+        }
+    }
+    
+    private func updateTime() {
+        let calendar = Calendar.current
+        if let newTime = calendar.date(bySettingHour: selectedHour, minute: selectedMinute, second: 0, of: Date()) {
+            time = newTime
         }
     }
 }
@@ -644,6 +723,7 @@ struct LovedQuotesDetailView: View {
         .navigationBarHidden(true)
     }
 }
+
 
 #Preview {
     SettingsView(quoteManager: QuoteManager())

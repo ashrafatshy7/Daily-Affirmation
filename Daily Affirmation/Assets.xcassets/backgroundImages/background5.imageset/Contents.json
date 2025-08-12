@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "20250811_2333_Tranquil Mountain Lake_simple_compose_01k2ddawb4fsx8tk2n93304xkh.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

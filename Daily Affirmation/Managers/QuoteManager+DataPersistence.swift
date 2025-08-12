@@ -12,6 +12,7 @@ extension QuoteManager {
         userDefaults.set(notificationCount, forKey: "notificationCount")
         userDefaults.set(notificationMode.rawValue, forKey: "notificationMode")
         userDefaults.set(fontSize.rawValue, forKey: "fontSize")
+        userDefaults.set(textColor.rawValue, forKey: "textColor")
         userDefaults.set(selectedBackgroundImage, forKey: "selectedBackgroundImage")
         userDefaults.set(includePersonalQuotes, forKey: "includePersonalQuotes")
         userDefaults.set(personalQuoteFrequencyMultiplier, forKey: "personalQuoteFrequencyMultiplier")
@@ -30,6 +31,10 @@ extension QuoteManager {
         
         if let savedFontSize = FontSize(rawValue: userDefaults.string(forKey: "fontSize") ?? "") {
             fontSize = savedFontSize
+        }
+        
+        if let savedTextColor = TextColor(rawValue: userDefaults.string(forKey: "textColor") ?? "") {
+            textColor = savedTextColor
         }
         
         let savedBackgroundImage = userDefaults.string(forKey: "selectedBackgroundImage") ?? "background"
@@ -106,6 +111,11 @@ extension QuoteManager {
         
         // Update user behavior on app launch
         updateUserBehavior()
+        
+        // Sync current background to SharedQuoteManager for widgets (after initialization)
+        if !isInitializing {
+            SharedQuoteManager.shared.setCurrentBackground(selectedBackgroundImage)
+        }
         
         // If notifications were enabled, check permission and schedule
         if dailyNotifications {

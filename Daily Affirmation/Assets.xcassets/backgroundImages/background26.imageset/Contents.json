@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "20250812_0001_Sunset Tree on Hill_simple_compose_01k2deyrhtf9wryb3tqykwtf5p.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

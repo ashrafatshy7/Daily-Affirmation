@@ -72,7 +72,7 @@
          </BuildableReference>
       </BuildableProductRunnable>
       <StoreKitConfigurationFileReference
-         identifier = "../../Daily Affirmation/Products.storekit">
+         identifier = "../../Daily Affirmation/Resources/Products.storekit">
       </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction

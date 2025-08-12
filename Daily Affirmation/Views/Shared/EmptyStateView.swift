@@ -14,10 +14,10 @@ struct EmptyStateView: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [
-                                Color(red: 0.4, green: 0.8, blue: 0.8).opacity(0.1),
-                                Color(red: 0.5, green: 0.7, blue: 0.9).opacity(0.05)
-                            ],
+                            gradient: Gradient(colors: [
+                                Color.accentColor.opacity(0.15),
+                                Color.accentColor.opacity(0.08)
+                            ]),
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -26,19 +26,19 @@ struct EmptyStateView: View {
                 
                 Image(systemName: icon)
                     .font(.system(size: 44, weight: .medium))
-                    .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                    .foregroundColor(.accentColor)
             }
             
             // Content
             VStack(spacing: 12) {
                 Text(title)
                     .font(.system(size: 24, weight: .bold, design: .rounded))
-                    .foregroundColor(.black)
+                    .foregroundColor(.primary)
                     .multilineTextAlignment(.center)
                 
                 Text(subtitle)
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.black.opacity(0.6))
+                    .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                     .lineLimit(3)
@@ -58,18 +58,9 @@ struct EmptyStateView: View {
                 .padding(.vertical, 14)
                 .background(
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.4, green: 0.8, blue: 0.8),
-                                    Color(red: 0.3, green: 0.7, blue: 0.7)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .fill(Color.accentColor)
                 )
-                .shadow(color: Color(red: 0.4, green: 0.8, blue: 0.8).opacity(0.3), radius: 12, x: 0, y: 6)
+                .shadow(color: Color.accentColor.opacity(0.3), radius: 12, x: 0, y: 6)
             }
             .scaleEffect(1.0)
             .animation(.easeInOut(duration: 0.1), value: false)

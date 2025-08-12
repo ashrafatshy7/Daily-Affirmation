@@ -38,54 +38,33 @@ struct CustomizeOptionsView: View {
             .padding(.vertical, 12)
 
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 16) {
-                    // Live preview
-                    LivePreviewCard(
-                        backgroundName: quoteManager.selectedBackgroundImage,
-                        sampleText: "Believe in yourself."
-                    )
-
-                    // Tiles grid
-                    VStack(spacing: 12) {
-                        HStack(spacing: 12) {
-                            FeatureTile(
-                                title: "Personal Quotes",
-                                subtitle: "Create and edit",
-                                systemImage: "quote.bubble.fill",
-                                tint: .blue
-                            ) { showPersonalQuotes = true }
-
-                            FeatureTile(
-                                title: "Backgrounds",
-                                subtitle: "Pick a vibe",
-                                systemImage: "paintbrush.pointed.fill",
-                                tint: .orange
-                            ) { showBackgroundThemes = true }
-                        }
+                VStack(spacing: 20) {
+                    // Single-column tiles layout
+                    VStack(spacing: 16) {
+                        FeatureTile(
+                            title: "Personal Quotes",
+                            subtitle: "Create your own inspiring collection",
+                            systemImage: "quote.bubble.fill",
+                            tint: .blue,
+                            isFullWidth: true
+                        ) { showPersonalQuotes = true }
 
                         FeatureTile(
-                            title: "Categories",
-                            subtitle: quoteManager.selectedCategory.displayName,
+                            title: "Background Themes",
+                            subtitle: "Transform your visual experience",
+                            systemImage: "paintbrush.pointed.fill",
+                            tint: .orange,
+                            isFullWidth: true
+                        ) { showBackgroundThemes = true }
+
+                        FeatureTile(
+                            title: "Quote Categories",
+                            subtitle: "Discover quotes that resonate with you",
                             systemImage: categoryIcon(quoteManager.selectedCategory),
                             tint: .purple,
                             isFullWidth: true
                         ) { showQuoteCategories = true }
                     }
-
-                    // Helpful tip
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: "sparkles")
-                            .foregroundColor(.secondary)
-                        Text("Changes appear instantly across the app.")
-                            .font(.footnote)
-                            .foregroundColor(.secondary)
-                        Spacer()
-                    }
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(UIColor.secondarySystemBackground))
-                    )
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 20)
@@ -117,45 +96,6 @@ struct CustomizeOptionsView: View {
 
 // MARK: - Reusable (Customize)
 
-private struct LivePreviewCard: View {
-    let backgroundName: String
-    let sampleText: String
-
-    var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            if UIImage(named: backgroundName) != nil {
-                Image(backgroundName)
-                    .resizable()
-                    .aspectRatio(16/9, contentMode: .fill)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
-            } else {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(LinearGradient(colors: [.accentColor.opacity(0.25), .accentColor.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(height: 180)
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text(sampleText)
-                    .font(.title3.weight(.semibold))
-                    .foregroundColor(.white)
-                    .shadow(radius: 6)
-                Text("This is how your quotes will look")
-                    .font(.footnote)
-                    .foregroundColor(.white.opacity(0.9))
-            }
-            .padding(16)
-        }
-        .frame(height: 180)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(UIColor.secondarySystemBackground))
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
-    }
-}
-
 private struct FeatureTile: View {
     let title: String
     let subtitle: String
@@ -165,42 +105,97 @@ private struct FeatureTile: View {
     let action: () -> Void
 
     @State private var isPressed = false
+    @State private var isHovered = false
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(alignment: .center, spacing: 16) {
+                // Enhanced icon with gradient background
                 ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(tint.opacity(0.15))
-                        .frame(width: 44, height: 44)
+                    // Dynamic gradient background
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    tint.opacity(0.25),
+                                    tint.opacity(0.15)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 64, height: 64)
+                        .shadow(
+                            color: tint.opacity(0.3),
+                            radius: isPressed ? 4 : 8,
+                            x: 0,
+                            y: isPressed ? 2 : 4
+                        )
+                    
                     Image(systemName: systemImage)
+                        .font(.system(size: 26, weight: .semibold))
                         .foregroundColor(tint)
+                        .scaleEffect(isPressed ? 0.9 : 1.0)
                 }
-                VStack(alignment: .leading, spacing: 2) {
+                
+                // Enhanced text content
+                VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.subheadline.weight(.semibold))
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
+                        .lineLimit(1)
+                    
                     Text(subtitle)
-                        .font(.footnote)
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.secondary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
                 }
+                
                 Spacer()
-                Image(systemName: "chevron.right").foregroundColor(.secondary)
+                
+                // Enhanced chevron with subtle animation
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(tint.opacity(0.8))
+                    .scaleEffect(isPressed ? 0.9 : 1.0)
+                    .offset(x: isPressed ? -2 : 0)
             }
-            .padding(14)
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 20)
+            .frame(maxWidth: .infinity, minHeight: 84)
             .background(
-                RoundedRectangle(cornerRadius: 14)
+                RoundedRectangle(cornerRadius: 20)
                     .fill(Color(UIColor.systemBackground))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        tint.opacity(isPressed ? 0.3 : 0.1),
+                                        tint.opacity(isPressed ? 0.1 : 0.05)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1.5
+                            )
+                    )
+                    .shadow(
+                        color: Color.primary.opacity(isPressed ? 0.15 : 0.08),
+                        radius: isPressed ? 8 : 12,
+                        x: 0,
+                        y: isPressed ? 4 : 6
+                    )
             )
-            .scaleEffect(isPressed ? 0.98 : 1)
+            .scaleEffect(isPressed ? 0.98 : 1.0)
         }
         .buttonStyle(.plain)
-        .simultaneousGesture(LongPressGesture(minimumDuration: 0.0).onChanged { _ in
-            withAnimation(.easeInOut(duration: 0.08)) { isPressed = true }
-        }.onEnded { _ in
-            withAnimation(.easeInOut(duration: 0.08)) { isPressed = false }
-        })
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isPressed = pressing
+            }
+        }, perform: {})
         .frame(maxWidth: isFullWidth ? .infinity : nil)
     }
 }

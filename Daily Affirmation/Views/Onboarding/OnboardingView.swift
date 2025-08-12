@@ -1,19 +1,33 @@
 import SwiftUI
 
+/// An improved onboarding experience for the Daily‑Affirmation app.
+///
+/// The onboarding is presented as a series of pages highlighting key
+/// features of the app.  It includes a persistent page indicator and
+/// a contextual Next button.  The final page embeds a premium
+/// subscription screen so users can subscribe without leaving the
+/// onboarding flow.  An exit (X) button is only shown on this last
+/// page so users see the premium offering before dismissing the
+/// onboarding.  The layout and colours adapt to light and dark
+/// appearances and use system accent colours for better
+/// accessibility and contrast.
 struct OnboardingView: View {
-    @State private var currentPage = 0
-    @State private var showingSubscription = false
+    @State private var currentPage: Int = 0
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var quoteManager: QuoteManager
 
-    let totalPages = 3
+    /// Total number of onboarding pages.  The last page is the premium
+    /// subscription page.
+    private let totalPages: Int = 3
 
     var body: some View {
         ZStack {
-            // Gradient background
+            // Gradient background for good contrast
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color(red: 0.1, green: 0.1, blue: 0.2),
-                    Color(red: 0.2, green: 0.3, blue: 0.5)
+                    Color.accentColor.opacity(0.3),
+                    Color.accentColor.opacity(0.15),
+                    Color.accentColor.opacity(0.05)
                 ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -21,150 +35,116 @@ struct OnboardingView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // X button – only visible on final page
+                // Show an X button only on the last page
                 HStack {
                     Spacer()
-                    Button(action: {
-                        UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
-                        dismiss()
-                    }) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(width: 36, height: 36)
-                            .background(Color.black.opacity(0.3))
-                            .clipShape(Circle())
+                    if currentPage == totalPages - 1 {
+                        Button(action: finishOnboarding) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.primary)
+                                .frame(width: 36, height: 36)
+                                .background(Color.secondary.opacity(0.2))
+                                .clipShape(Circle())
+                        }
+                        .accessibilityLabel("Close onboarding")
+                        .padding(.top, 20)
+                        .padding(.trailing, 24)
                     }
-                    .opacity(currentPage == totalPages - 1 ? 1.0 : 0.0)
-                    .disabled(currentPage != totalPages - 1)
-                    .padding(.trailing, 24)
-                    .padding(.top, 16)
                 }
 
-                // Pages
+                Spacer()
+
+                // TabView containing the pages; last page is the premium screen
                 TabView(selection: $currentPage) {
                     OnboardingPageView(
                         icon: "sparkles",
-                        title: "Daily Inspiration\nAt Your Fingertips",
-                        subtitle: "Transform your mindset with powerful quotes delivered exactly when you need them most",
+                        title: "Daily Inspiration",
+                        subtitle: "Transform your mindset with powerful quotes delivered exactly when you need them most.",
                         features: [
-                            "🌅 Fresh inspiration every morning",
-                            "💡 Thousands of motivational quotes",
-                            "❤️ Save your favorite quotes"
+                            "Fresh inspiration every morning",
+                            "Thousands of motivational quotes",
+                            "Save your favorite quotes"
                         ]
                     )
                     .tag(0)
 
                     OnboardingPageView(
                         icon: "bell.badge",
-                        title: "Smart Notifications\nThat Actually Help",
-                        subtitle: "Never miss your daily dose of motivation with intelligent timing that fits your lifestyle",
+                        title: "Smart Notifications",
+                        subtitle: "Never miss your daily dose of motivation with intelligent timing that fits your lifestyle.",
                         features: [
-                            "⏰ Perfect timing for maximum impact",
-                            "🎯 Personalized to your schedule",
-                            "🔕 No spam, just inspiration"
+                            "Perfect timing for maximum impact",
+                            "Personalized to your schedule",
+                            "No spam, just inspiration"
                         ]
                     )
                     .tag(1)
 
-                    OnboardingPageView(
-                        icon: "clock.arrow.2.circlepath",
-                        title: "Unlock Your Full\nPotential",
-                        subtitle: "Upgrade to Premium and get multiple daily inspirations throughout your chosen time range",
-                        features: [
-                            "⚡ Up to 10 notifications per day",
-                            "⏱️ Custom time range control",
-                            "🎪 Perfect distribution throughout your day",
-                            "🎨 Beautiful background themes"  // ← New theme entry
-                        ],
-                        isPremiumFeature: true
-                    )
+                    // Final page: embed premium subscription
+                    PremiumOnboardingPageView(onCompletion: {
+                        finishOnboarding()
+                    })
                     .tag(2)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
-                .animation(.easeInOut(duration: 0.5), value: currentPage)
+                .animation(.easeInOut(duration: 0.4), value: currentPage)
+                .frame(height: 520)
 
                 Spacer()
 
-                // Page indicator
-                HStack(spacing: 12) {
+                // Custom page indicator
+                HStack(spacing: 8) {
                     ForEach(0..<totalPages, id: \.self) { index in
                         Circle()
-                            .fill(currentPage == index ? Color.white : Color.white.opacity(0.3))
+                            .fill(index == currentPage ? Color.accentColor : Color.accentColor.opacity(0.3))
                             .frame(width: 8, height: 8)
-                            .scaleEffect(currentPage == index ? 1.2 : 1.0)
-                            .animation(.spring(response: 0.3), value: currentPage)
+                            .animation(.easeInOut(duration: 0.2), value: currentPage)
                     }
                 }
-                .padding(.bottom, 40)
+                .padding(.vertical, 16)
+                .accessibilityLabel("Page indicator")
+                .accessibilityValue("Page \(currentPage + 1) of \(totalPages)")
 
-                // Continue / Unlock buttons
+                // Next button for all but the last page
                 if currentPage < totalPages - 1 {
-                    Button(action: {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            currentPage += 1
-                        }
-                    }) {
-                        HStack {
-                            Text("Continue")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color(red: 0.4, green: 0.8, blue: 0.8))
-                        )
-                        .shadow(color: Color(red: 0.4, green: 0.8, blue: 0.8).opacity(0.3), radius: 12, x: 0, y: 6)
+                    Button(action: nextPage) {
+                        Text("Next")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color.secondary.opacity(0.1))
+                            .cornerRadius(14)
+                            .shadow(color: Color.primary.opacity(0.1), radius: 8, x: 0, y: 4)
+                            .padding(.horizontal, 40)
+                            .padding(.bottom, 30)
                     }
-                    .padding(.horizontal, 32)
-                } else {
-                    Button(action: {
-                        showingSubscription = true
-                    }) {
-                        HStack {
-                            Image(systemName: "crown.fill")
-                                .font(.system(size: 18))
-                            Text("Unlock Premium Features")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            Color(red: 1.0, green: 0.7, blue: 0.0),
-                                            Color(red: 1.0, green: 0.5, blue: 0.0)
-                                        ],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                        )
-                        .shadow(color: Color.orange.opacity(0.3), radius: 12, x: 0, y: 6)
-                    }
-                    .padding(.horizontal, 32)
+                    .accessibilityIdentifier("onboarding_next_button")
                 }
             }
         }
-        .fullScreenCover(isPresented: $showingSubscription) {
-            OnboardingSubscriptionView()
-                .onDisappear {
-                    UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
-                    dismiss()
-                }
+    }
+
+    private func nextPage() {
+        if currentPage < totalPages - 1 {
+            withAnimation {
+                currentPage += 1
+            }
         }
+    }
+
+    private func finishOnboarding() {
+        UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
+        
+        // Request app rating after onboarding completion
+        quoteManager.checkAndRequestRatingAfterOnboarding()
+        
+        dismiss()
     }
 }
 
+/// Single onboarding page with icon, title, subtitle, and bullet points.
 struct OnboardingPageView: View {
     let icon: String
     let title: String
@@ -173,70 +153,62 @@ struct OnboardingPageView: View {
     var isPremiumFeature: Bool = false
 
     var body: some View {
-        VStack(spacing: 40) {
+        VStack(spacing: 24) {
             Spacer()
-
-            // Icon + premium badge
-            ZStack {
-                Circle()
-                    .fill(Color.white.opacity(0.1))
-                    .frame(width: 120, height: 120)
+            ZStack(alignment: .topTrailing) {
                 Image(systemName: icon)
-                    .font(.system(size: 50, weight: .light))
-                    .foregroundColor(.white)
+                    .font(.system(size: 56, weight: .semibold))
+                    .foregroundColor(.accentColor)
+
                 if isPremiumFeature {
-                    VStack {
-                        HStack {
-                            Spacer()
-                            Image(systemName: "crown.fill")
-                                .font(.system(size: 20))
-                                .foregroundColor(.yellow)
-                                .background(
-                                    Circle()
-                                        .fill(Color.white)
-                                        .frame(width: 32, height: 32)
-                                )
-                            Spacer()
-                        }
-                        Spacer()
-                    }
-                    .offset(x: 35, y: -35)
+                    Text("Premium")
+                        .font(.caption2.bold())
+                        .foregroundColor(.black)
+                        .padding(.vertical, 2)
+                        .padding(.horizontal, 6)
+                        .background(Color.yellow.opacity(0.8))
+                        .clipShape(Capsule())
+                        .offset(x: 18, y: -12)
                 }
             }
-            .frame(height: 120)
 
-            // Title & subtitle
-            VStack(spacing: 16) {
+            VStack(spacing: 8) {
                 Text(title)
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
                     .multilineTextAlignment(.center)
+                    .foregroundColor(.primary)
+
                 Text(subtitle)
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundColor(.white.opacity(0.8))
+                    .font(.system(size: 17))
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 24)
             }
 
-            // Feature bullets
-            VStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 12) {
                 ForEach(features, id: \.self) { feature in
-                    HStack {
+                    HStack(alignment: .top, spacing: 8) {
+                        Circle()
+                            .fill(Color.accentColor)
+                            .frame(width: 6, height: 6)
+                            .padding(.top, 6)
                         Text(feature)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white.opacity(0.9))
-                        Spacer()
+                            .font(.system(size: 16))
+                            .foregroundColor(.primary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    .padding(.horizontal, 40)
                 }
             }
+            .padding(.horizontal, 40)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             Spacer()
         }
-        .frame(maxWidth: .infinity)
     }
 }
 
-#Preview {
-    OnboardingView()
+struct OnboardingView_Previews: PreviewProvider {
+    static var previews: some View {
+        OnboardingView()
+    }
 }
