@@ -1,6 +1,12 @@
 import SwiftUI
 import StoreKit
 
+/// A premium subscription page that offers time‑range notifications and
+/// other bonus features.  Styled to match the onboarding screens,
+/// using the accent colour for highlights and dynamic primary/secondary
+/// colours for text.  Users can select a subscription option and
+/// purchase it via StoreKit.  Restore purchases and links to terms
+/// and privacy are provided.
 struct SubscriptionView: View {
     @StateObject private var subscriptionManager = SubscriptionManager.shared
     @Environment(\.dismiss) private var dismiss
@@ -13,16 +19,17 @@ struct SubscriptionView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 30) {
-                    // Header
+                    // Header: icon and description
                     VStack(spacing: 16) {
                         Image(systemName: "bell.badge.fill")
                             .font(.system(size: 60))
-                            .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                            .foregroundColor(.accentColor)
 
                         Text("Unlock Time Range Notifications")
                             .font(.title2)
                             .fontWeight(.bold)
                             .multilineTextAlignment(.center)
+                            .foregroundColor(.primary)
 
                         Text("Get up to 10 daily inspirations throughout your chosen time period instead of just one notification per day.")
                             .font(.body)
@@ -32,7 +39,7 @@ struct SubscriptionView: View {
                     }
                     .padding(.top, 20)
 
-                    // Features
+                    // Features list using backwards-compatible wrapper
                     VStack(alignment: .leading, spacing: 16) {
                         FeatureRow(
                             icon: "clock.fill",
@@ -52,15 +59,15 @@ struct SubscriptionView: View {
                         FeatureRow(
                             icon: "paintbrush.pointed.fill",
                             title: "Background Themes",
-                            description: "Choose from free and premium backgrounds to customize your experience"
-                        )  // ← New feature row
+                            description: "Choose from free and premium backgrounds to customise your experience"
+                        )
                     }
                     .padding(.horizontal, 24)
 
-                    // Subscription Options
+                    // Subscription options list using backwards-compatible wrapper
                     VStack(spacing: 12) {
                         if subscriptionManager.isLoading {
-                            ProgressView("Loading subscription options.")
+                            ProgressView("Loading subscription options…")
                                 .frame(height: 100)
                         } else {
                             ForEach(subscriptionManager.products, id: \.id) { product in
@@ -76,11 +83,11 @@ struct SubscriptionView: View {
                     }
                     .padding(.horizontal, 24)
 
-                    // Subscribe button & terms
+                    // Subscribe and terms
                     VStack(spacing: 16) {
                         Button(action: {
-                            if let p = selectedProduct {
-                                purchaseProduct(p)
+                            if let product = selectedProduct {
+                                purchaseProduct(product)
                             }
                         }) {
                             HStack {
@@ -99,10 +106,10 @@ struct SubscriptionView: View {
                             .frame(height: 56)
                             .background(
                                 RoundedRectangle(cornerRadius: 16)
-                                    .fill(selectedProduct != nil ? Color(red: 0.4, green: 0.8, blue: 0.8) : Color.gray)
+                                    .fill(selectedProduct != nil ? Color.accentColor : Color.gray)
                             )
                             .shadow(
-                                color: selectedProduct != nil ? Color(red: 0.4, green: 0.8, blue: 0.8).opacity(0.3) : Color.clear,
+                                color: selectedProduct != nil ? Color.accentColor.opacity(0.3) : Color.clear,
                                 radius: 8, x: 0, y: 4
                             )
                         }
@@ -113,7 +120,7 @@ struct SubscriptionView: View {
                             restorePurchases()
                         }
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.accentColor)
 
                         VStack(spacing: 8) {
                             Text("• Subscription automatically renews unless cancelled")
@@ -123,11 +130,11 @@ struct SubscriptionView: View {
                             HStack(spacing: 16) {
                                 Link("Terms of Use", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
                                     .font(.caption)
-                                    .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                                    .foregroundColor(.accentColor)
 
                                 Link("Privacy Policy", destination: URL(string: "https://daily-affirmation-gamma.vercel.app")!)
                                     .font(.caption)
-                                    .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                                    .foregroundColor(.accentColor)
                             }
                             .padding(.top, 8)
                         }
@@ -144,9 +151,7 @@ struct SubscriptionView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Close") {
-                            dismiss()
-                        }
+                        Button("Close") { dismiss() }
                     }
                 }
                 .alert("Error", isPresented: $showingError) {
@@ -166,6 +171,7 @@ struct SubscriptionView: View {
         }
     }
 
+    /// Purchase the selected product and handle the result.
     private func purchaseProduct(_ product: Product) {
         Task {
             isPurchasing = true
@@ -181,6 +187,7 @@ struct SubscriptionView: View {
         }
     }
 
+    /// Restore previous purchases and dismiss on success.
     private func restorePurchases() {
         Task {
             do {
@@ -196,7 +203,10 @@ struct SubscriptionView: View {
     }
 }
 
-struct FeatureRow: View {
+// MARK: - Supporting row types and wrappers
+
+/// Internal row type describing a single feature; defined privately to avoid naming conflicts.
+private struct SubscriptionFeatureRow: View {
     let icon: String
     let title: String
     let description: String
@@ -205,7 +215,7 @@ struct FeatureRow: View {
         HStack(alignment: .top, spacing: 16) {
             Image(systemName: icon)
                 .font(.system(size: 24))
-                .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                .foregroundColor(.accentColor)
                 .frame(width: 30)
 
             VStack(alignment: .leading, spacing: 4) {
@@ -222,7 +232,8 @@ struct FeatureRow: View {
     }
 }
 
-struct SubscriptionOptionView: View {
+/// Internal row type representing a subscription option; defined privately to avoid naming conflicts.
+private struct SubscriptionOptionRow: View {
     let product: Product
     let isSelected: Bool
     let isPurchasing: Bool
@@ -233,12 +244,11 @@ struct SubscriptionOptionView: View {
             HStack {
                 ZStack {
                     Circle()
-                        .stroke(isSelected ? Color(red: 0.4, green: 0.8, blue: 0.8) : Color.gray.opacity(0.5),
-                                lineWidth: 2)
+                        .stroke(isSelected ? Color.accentColor : Color.gray.opacity(0.5), lineWidth: 2)
                         .frame(width: 20, height: 20)
                     if isSelected {
                         Circle()
-                            .fill(Color(red: 0.4, green: 0.8, blue: 0.8))
+                            .fill(Color.accentColor)
                             .frame(width: 12, height: 12)
                     }
                 }
@@ -255,7 +265,7 @@ struct SubscriptionOptionView: View {
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(Color(red: 0.4, green: 0.8, blue: 0.8))
+                                .background(Color.accentColor)
                                 .cornerRadius(8)
                         }
                     }
@@ -265,9 +275,9 @@ struct SubscriptionOptionView: View {
                             .foregroundColor(.secondary)
                     }
                     if product.id == "time_range_weekly" {
-                        Text("3-day free trial")
+                        Text("3‑day free trial")
                             .font(.caption)
-                            .foregroundColor(Color(red: 0.4, green: 0.8, blue: 0.8))
+                            .foregroundColor(.accentColor)
                     }
                 }
 
@@ -288,21 +298,17 @@ struct SubscriptionOptionView: View {
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.white)
+                    .fill(Color(UIColor.systemBackground))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(isSelected
-                                    ? Color(red: 0.4, green: 0.8, blue: 0.8)
-                                    : Color.secondary.opacity(0.3),
-                                    lineWidth: isSelected ? 3 : 1
-                            )
+                            .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.3),
+                                    lineWidth: isSelected ? 3 : 1)
                     )
-                    .shadow(color: isSelected
-                            ? Color(red: 0.4, green: 0.8, blue: 0.8).opacity(0.2)
-                            : Color.black.opacity(0.1),
-                            radius: isSelected ? 8 : 2,
-                            x: 0,
-                            y: isSelected ? 4 : 1
+                    .shadow(
+                        color: isSelected ? Color.accentColor.opacity(0.2) : Color.black.opacity(0.1),
+                        radius: isSelected ? 8 : 2,
+                        x: 0,
+                        y: isSelected ? 4 : 1
                     )
             )
         }
@@ -325,5 +331,33 @@ struct SubscriptionOptionView: View {
         case .year: return period.value == 1 ? "year" : "\(period.value) years"
         @unknown default: return ""
         }
+    }
+}
+
+/// Compatibility wrapper around `SubscriptionFeatureRow` to allow legacy code to reference `FeatureRow`.
+private struct FeatureRow: View {
+    let icon: String
+    let title: String
+    let description: String
+
+    var body: some View {
+        SubscriptionFeatureRow(icon: icon, title: title, description: description)
+    }
+}
+
+/// Compatibility wrapper around `SubscriptionOptionRow` to allow legacy code to reference `SubscriptionOptionView`.
+private struct SubscriptionOptionView: View {
+    let product: Product
+    let isSelected: Bool
+    let isPurchasing: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        SubscriptionOptionRow(
+            product: product,
+            isSelected: isSelected,
+            isPurchasing: isPurchasing,
+            onTap: onTap
+        )
     }
 }

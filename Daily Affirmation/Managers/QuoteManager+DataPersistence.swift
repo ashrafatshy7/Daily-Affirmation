@@ -12,10 +12,18 @@ extension QuoteManager {
         userDefaults.set(notificationCount, forKey: "notificationCount")
         userDefaults.set(notificationMode.rawValue, forKey: "notificationMode")
         userDefaults.set(fontSize.rawValue, forKey: "fontSize")
+        userDefaults.set(textColor.rawValue, forKey: "textColor")
         userDefaults.set(selectedBackgroundImage, forKey: "selectedBackgroundImage")
         userDefaults.set(includePersonalQuotes, forKey: "includePersonalQuotes")
         userDefaults.set(personalQuoteFrequencyMultiplier, forKey: "personalQuoteFrequencyMultiplier")
         userDefaults.set(selectedCategory.rawValue, forKey: "selectedCategory")
+        userDefaults.set(userType.rawValue, forKey: "userType")
+        userDefaults.set(totalAppOpens, forKey: "totalAppOpens")
+        userDefaults.set(consecutiveDays, forKey: "consecutiveDays")
+        userDefaults.set(lastOpenDate, forKey: "lastOpenDate")
+        userDefaults.set(totalQuotesViewed, forKey: "totalQuotesViewed")
+        userDefaults.set(totalLovesGiven, forKey: "totalLovesGiven")
+        userDefaults.set(hasCompletedOnboarding, forKey: "hasCompletedOnboarding")
     }
     
     func loadSettings() {
@@ -23,6 +31,10 @@ extension QuoteManager {
         
         if let savedFontSize = FontSize(rawValue: userDefaults.string(forKey: "fontSize") ?? "") {
             fontSize = savedFontSize
+        }
+        
+        if let savedTextColor = TextColor(rawValue: userDefaults.string(forKey: "textColor") ?? "") {
+            textColor = savedTextColor
         }
         
         let savedBackgroundImage = userDefaults.string(forKey: "selectedBackgroundImage") ?? "background"
@@ -80,6 +92,31 @@ extension QuoteManager {
             selectedCategory = .general
         }
         
+        // Load personalization data
+        if let savedUserType = UserType(rawValue: userDefaults.string(forKey: "userType") ?? "") {
+            userType = savedUserType
+        } else {
+            userType = .new
+        }
+        
+        totalAppOpens = userDefaults.integer(forKey: "totalAppOpens")
+        consecutiveDays = userDefaults.integer(forKey: "consecutiveDays")
+        totalQuotesViewed = userDefaults.integer(forKey: "totalQuotesViewed")
+        totalLovesGiven = userDefaults.integer(forKey: "totalLovesGiven")
+        hasCompletedOnboarding = userDefaults.bool(forKey: "hasCompletedOnboarding")
+        
+        if let savedLastOpenDate = userDefaults.object(forKey: "lastOpenDate") as? Date {
+            lastOpenDate = savedLastOpenDate
+        }
+        
+        // Update user behavior on app launch
+        updateUserBehavior()
+        
+        // Sync current background to SharedQuoteManager for widgets (after initialization)
+        if !isInitializing {
+            SharedQuoteManager.shared.setCurrentBackground(selectedBackgroundImage)
+        }
+        
         // If notifications were enabled, check permission and schedule
         if dailyNotifications {
             checkNotificationPermissionAndSchedule()
@@ -90,19 +127,25 @@ extension QuoteManager {
     func toggleLoveQuote(_ quote: String) {
         if Thread.isMainThread {
             var newLovedQuotes = self.lovedQuotes
-            if newLovedQuotes.contains(quote) {
+            let wasLoved = newLovedQuotes.contains(quote)
+            if wasLoved {
                 newLovedQuotes.remove(quote)
             } else {
                 newLovedQuotes.insert(quote)
+                // Track love engagement only when adding (not removing)
+                trackLoveGiven()
             }
             self.lovedQuotes = newLovedQuotes
         } else {
             DispatchQueue.main.sync {
                 var newLovedQuotes = self.lovedQuotes
-                if newLovedQuotes.contains(quote) {
+                let wasLoved = newLovedQuotes.contains(quote)
+                if wasLoved {
                     newLovedQuotes.remove(quote)
                 } else {
                     newLovedQuotes.insert(quote)
+                    // Track love engagement only when adding (not removing)
+                    self.trackLoveGiven()
                 }
                 self.lovedQuotes = newLovedQuotes
             }
@@ -373,6 +416,71 @@ extension QuoteManager {
         // Double-check that the data is really gone
         if userDefaults.array(forKey: "lovedQuotes") != nil {
             // Data persists, which could be expected in some testing scenarios
+        }
+    }
+    
+    // MARK: - User Behavior Tracking
+    func updateUserBehavior() {
+        // Track app open
+        totalAppOpens += 1
+        
+        // Calculate consecutive days
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let lastOpen = calendar.startOfDay(for: lastOpenDate)
+        
+        if calendar.dateComponents([.day], from: lastOpen, to: today).day == 1 {
+            // Opened yesterday, increment consecutive days
+            consecutiveDays += 1
+        } else if !calendar.isDate(lastOpenDate, inSameDayAs: Date()) {
+            // Reset streak if more than 1 day gap and not same day
+            consecutiveDays = 1
+        }
+        
+        lastOpenDate = Date()
+        
+        // Update user type based on behavior
+        updateUserType()
+        
+        // Save the updated data
+        if !isInitializing {
+            saveSettings()
+        }
+    }
+    
+    func trackQuoteViewed() {
+        totalQuotesViewed += 1
+        updateUserType()
+        if !isInitializing {
+            saveSettings()
+        }
+    }
+    
+    func trackLoveGiven() {
+        totalLovesGiven += 1
+        updateUserType()
+        if !isInitializing {
+            saveSettings()
+        }
+    }
+    
+    private func updateUserType() {
+        let previousUserType = userType
+        
+        // Determine user type based on behavior patterns
+        if totalLovesGiven >= 10 || totalQuotesViewed >= 100 || consecutiveDays >= 30 {
+            userType = .superUser
+        } else if consecutiveDays >= 4 || totalQuotesViewed >= 10 || totalAppOpens >= 5 {
+            userType = .returning
+        } else {
+            userType = .new
+        }
+        
+        // Trigger UI update if user type changed
+        if previousUserType != userType && !isInitializing {
+            DispatchQueue.main.async {
+                self.objectWillChange.send()
+            }
         }
     }
 }

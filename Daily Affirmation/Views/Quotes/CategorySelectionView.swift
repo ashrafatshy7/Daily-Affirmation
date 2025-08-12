@@ -8,12 +8,13 @@ struct CategorySelectionView: View {
     
     var body: some View {
         ZStack {
-            // Background gradient
+            // Background matches onboarding style
             LinearGradient(
-                colors: [
-                    Color(red: 0.95, green: 0.97, blue: 1.0),
-                    Color(red: 0.98, green: 0.99, blue: 1.0)
-                ],
+                gradient: Gradient(colors: [
+                    Color.accentColor.opacity(0.30),
+                    Color.accentColor.opacity(0.15),
+                    Color.accentColor.opacity(0.05)
+                ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -22,13 +23,13 @@ struct CategorySelectionView: View {
             VStack(spacing: 0) {
                 // Modern Header
                 ZStack {
-                    // Header gradient background
+                    // Subtle header panel using accent tint
                     RoundedRectangle(cornerRadius: 30)
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color(red: 0.4, green: 0.8, blue: 0.8).opacity(0.1),
-                                    Color(red: 0.5, green: 0.7, blue: 0.9).opacity(0.05)
+                                    Color.accentColor.opacity(0.12),
+                                    Color.accentColor.opacity(0.06)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -38,19 +39,13 @@ struct CategorySelectionView: View {
                     
                     VStack(spacing: 8) {
                         HStack {
-                            Button(action: {
-                                dismiss()
-                            }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.white)
-                                        .frame(width: 44, height: 44)
-                                        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
-                                    
-                                    Image(systemName: "chevron.left")
-                                        .font(.system(size: 18, weight: .semibold))
-                                        .foregroundColor(.black.opacity(0.7))
-                                }
+                            Button(action: { dismiss() }) {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 36, height: 36)
+                                    .background(Color.secondary.opacity(0.2))
+                                    .clipShape(Circle())
                             }
                             .accessibilityLabel("Back")
                             
@@ -59,11 +54,11 @@ struct CategorySelectionView: View {
                             VStack(alignment: .center, spacing: 4) {
                                 Text("Categories")
                                     .font(.system(size: 28, weight: .bold, design: .rounded))
-                                    .foregroundColor(.black)
+                                    .foregroundColor(.primary)
                                 
                                 Text("Choose your vibe")
                                     .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(.black.opacity(0.6))
+                                    .foregroundColor(.secondary)
                             }
                             
                             Spacer()
@@ -109,7 +104,6 @@ struct CategorySelectionView: View {
             }
         }
         .navigationBarHidden(true)
-        .preferredColorScheme(.light)
         .sheet(isPresented: $showSubscription) {
             SubscriptionView()
         }
@@ -157,10 +151,10 @@ struct ModernCategoryCard: View {
                     )
                     .frame(height: 100)
                     .shadow(
-                        color: isSelected ? getCategoryColor(category).opacity(0.3) : .black.opacity(0.08),
-                        radius: isPressed ? 8 : 12,
+                        color: isSelected ? getCategoryColor(category).opacity(0.25) : Color(red: 0.85, green: 0.9, blue: 0.95).opacity(0.4),
+                        radius: isPressed ? 10 : 15,
                         x: 0,
-                        y: isPressed ? 2 : 6
+                        y: isPressed ? 4 : 8
                     )
                     .opacity(isAccessible ? 1.0 : 0.7)
                 

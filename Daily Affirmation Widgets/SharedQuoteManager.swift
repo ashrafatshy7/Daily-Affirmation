@@ -16,6 +16,7 @@ class SharedQuoteManager {
     // App Groups identifier for shared data
     private let appGroupIdentifier = "group.com.ashrafatshy.Daily-Affirmation"
     private let currentQuoteKey = "currentQuote"
+    private let currentBackgroundKey = "currentBackground"
     
     private var sharedUserDefaults: UserDefaults? {
         print("🔧 Widget SharedQuoteManager: Attempting to create UserDefaults with App Group: \(appGroupIdentifier)")
@@ -104,6 +105,19 @@ class SharedQuoteManager {
         return sharedUserDefaults?.string(forKey: currentQuoteKey)
     }
     
+    // MARK: - Background Image Synchronization
+    func setCurrentBackground(_ backgroundImage: String) {
+        print("🔶 Widget SharedQuoteManager: Setting current background: '\(backgroundImage)'")
+        sharedUserDefaults?.set(backgroundImage, forKey: currentBackgroundKey)
+        sharedUserDefaults?.synchronize()
+    }
+    
+    func getCurrentBackgroundFromApp() -> String? {
+        let background = sharedUserDefaults?.string(forKey: currentBackgroundKey)
+        print("🔶 Widget SharedQuoteManager: Retrieved current background: '\(background ?? "nil")'")
+        return background
+    }
+    
     
     // MARK: - Widget Entry Creation
     func getCurrentEntry() -> SharedAffirmationEntry {
@@ -113,24 +127,39 @@ class SharedQuoteManager {
         let currentQuote: String
         let appCurrentQuote = getCurrentQuoteFromApp()
         
-        print("🔶 Widget SharedQuoteManager: FINAL VALUES - appCurrentQuote: '\(appCurrentQuote ?? "nil")'")
+        print("🔶 Widget SharedQuoteManager: appCurrentQuote: '\(appCurrentQuote ?? "nil")'")
         
-        // Use main app's current quote if available, otherwise fall back to daily quote
-        if let appCurrentQuote = appCurrentQuote, !appCurrentQuote.isEmpty {
+        // Cold start detection - check if app has been opened
+        let hasAppBeenOpened = UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
+        print("🔶 Widget SharedQuoteManager: hasAppBeenOpened: \(hasAppBeenOpened)")
+        
+        // Use main app's current quote if available and app has been opened
+        if let appCurrentQuote = appCurrentQuote, !appCurrentQuote.isEmpty, hasAppBeenOpened {
             currentQuote = appCurrentQuote
             print("🔶 Widget SharedQuoteManager: Using app current quote: '\(currentQuote)'")
         } else {
-            currentQuote = getDailyQuote()
-            print("🔶 Widget SharedQuoteManager: Using daily quote: '\(currentQuote)'")
+            // Fallback to daily quote with cold start message
+            let dailyQuote = getDailyQuote()
+            if hasAppBeenOpened {
+                currentQuote = dailyQuote
+                print("🔶 Widget SharedQuoteManager: Using daily quote: '\(currentQuote)'")
+            } else {
+                currentQuote = dailyQuote.isEmpty ? "Welcome! Open the app to start your daily inspiration journey ✨" : dailyQuote
+                print("🔶 Widget SharedQuoteManager: Using cold start quote: '\(currentQuote)'")
+            }
         }
+        
+        // Get current background from shared storage, fallback to "background"
+        let currentBackground = getCurrentBackgroundFromApp() ?? "background"
+        print("🔶 Widget SharedQuoteManager: Using background: '\(currentBackground)'")
         
         let entry = SharedAffirmationEntry(
             quote: currentQuote,
             date: Date(),
-            backgroundImage: "background"
+            backgroundImage: currentBackground
         )
         
-        print("🔶 Widget SharedQuoteManager: FINAL ENTRY - quote: '\(entry.quote)'")
+        print("🔶 Widget SharedQuoteManager: FINAL ENTRY - quote: '\(entry.quote)', background: '\(entry.backgroundImage)'")
         return entry
     }
 }

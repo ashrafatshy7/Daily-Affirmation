@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "20250811_2340_Golden Mountain Clouds_simple_compose_01k2ddrdyafpqtq3swt26gjrh7.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

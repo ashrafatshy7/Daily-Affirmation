@@ -195,10 +195,23 @@ class QuoteManager: ObservableObject {
         }
     }
     
-    @Published var selectedBackgroundImage: String = "background" {
+    @Published var textColor: TextColor = .white {
         didSet {
             if !isInitializing {
                 saveSettings()
+            }
+        }
+    }
+    
+    @Published var selectedBackgroundImage: String = "background" {
+        didSet {
+            if !isInitializing {
+                // Auto-set text color based on background default
+                textColor = getDefaultTextColor(for: selectedBackgroundImage)
+                saveSettings()
+                // Sync background to SharedQuoteManager for widgets
+                SharedQuoteManager.shared.setCurrentBackground(selectedBackgroundImage)
+                WidgetCenter.shared.reloadTimelines(ofKind: "Daily_Affirmation_Widgets")
             }
         }
     }
@@ -240,6 +253,40 @@ class QuoteManager: ObservableObject {
     
     internal var quoteBag = QuoteBag()
     
+    // MARK: - User Behavior Tracking & Personalization
+    @Published var userType: UserType = .new
+    @Published var totalAppOpens: Int = 0
+    @Published var consecutiveDays: Int = 0
+    @Published var lastOpenDate: Date = Date()
+    @Published var totalQuotesViewed: Int = 0
+    @Published var totalLovesGiven: Int = 0
+    @Published var hasCompletedOnboarding: Bool = false
+    
+    enum UserType: String, CaseIterable {
+        case new = "new"           // 0-3 days, < 10 quotes viewed
+        case returning = "returning" // 4-29 days, or 10-100 quotes viewed
+        case superUser = "superUser" // 30+ days, or 100+ quotes viewed, or 10+ loves
+        
+        var personalizedGreeting: String {
+            switch self {
+            case .new:
+                return "Welcome! Let's find your daily inspiration ✨"
+            case .returning:
+                return "Welcome back! Here's today's inspiration 🌟"
+            case .superUser:
+                return "Your daily dose of motivation is ready 🚀"
+            }
+        }
+        
+        var shouldShowSwipeIndicator: Bool {
+            return self == .new
+        }
+        
+        var shouldShowAdvancedFeatures: Bool {
+            return self == .superUser
+        }
+    }
+    
     enum FontSize: String, CaseIterable {
         case small = "small"
         case medium = "medium"
@@ -262,6 +309,53 @@ class QuoteManager: ObservableObject {
         }
     }
     
+    enum TextColor: String, CaseIterable {
+        case white = "white"
+        case black = "black"
+        
+        func displayName(using quoteManager: QuoteManager) -> String {
+            switch self {
+            case .white: return "White Text"
+            case .black: return "Black Text"
+            }
+        }
+    }
+    
+    // MARK: - Background to Text Color Mapping
+    private static let backgroundTextColorMap: [String: TextColor] = [
+        "background": .white,
+        "background1": .white,
+        "background2": .black,
+        "background3": .white,
+        "background4": .black,
+        "background5": .white,
+        "background6": .white,
+        "background7": .white,
+        "background8": .white,
+        "background9": .white,
+        "background10": .white,
+        "background11": .white,
+        "background12": .white,
+        "background13": .white,
+        "background14": .white,
+        "background15": .white,
+        "background16": .white,
+        "background17": .white,
+        "background18": .white,
+        "background19": .white,
+        "background20": .white,
+        "background21": .white,
+        "background22": .white,
+        "background23": .white,
+        "background24": .black,
+        "background25": .white,
+        "background26": .white
+    ]
+    
+    func getDefaultTextColor(for backgroundName: String) -> TextColor {
+        return Self.backgroundTextColorMap[backgroundName] ?? .white
+    }
+    
     // MARK: - Helper Methods
     
     private func safeCurrentIndex() -> Int {
@@ -272,6 +366,7 @@ class QuoteManager: ObservableObject {
     // MARK: - Static Helper Methods
     
     internal var userDefaults: UserDefaults
+    private let ratingManager = AppStoreRatingManager.shared
     
     init(loadFromDefaults: Bool = true, userDefaults: UserDefaults? = nil) {
         // Auto-detect test environment and use shared test storage
@@ -313,6 +408,10 @@ class QuoteManager: ObservableObject {
         
         // Build initial quote bag after everything is loaded
         rebuildQuoteBag()
+        
+        // Sync initial background and quote to SharedQuoteManager for widgets
+        SharedQuoteManager.shared.setCurrentBackground(selectedBackgroundImage)
+        SharedQuoteManager.shared.setCurrentQuote(currentQuoteText)
         
         // Listen for premium settings reset notification
         NotificationCenter.default.addObserver(
@@ -445,10 +544,12 @@ class QuoteManager: ObservableObject {
         if Thread.isMainThread {
             currentQuoteText = newQuote
             SharedQuoteManager.shared.setCurrentQuote(newQuote)
+            trackQuoteViewed()
         } else {
             DispatchQueue.main.sync {
                 self.currentQuoteText = newQuote
                 SharedQuoteManager.shared.setCurrentQuote(newQuote)
+                self.trackQuoteViewed()
             }
         }
     }
@@ -459,10 +560,12 @@ class QuoteManager: ObservableObject {
             if Thread.isMainThread {
                 currentQuoteText = previousQuote
                 SharedQuoteManager.shared.setCurrentQuote(previousQuote)
+                trackQuoteViewed()
             } else {
                 DispatchQueue.main.sync {
                     self.currentQuoteText = previousQuote
                     SharedQuoteManager.shared.setCurrentQuote(previousQuote)
+                    self.trackQuoteViewed()
                 }
             }
         }
@@ -538,6 +641,25 @@ class QuoteManager: ObservableObject {
     // MARK: - Localization
     func localizedString(_ key: String) -> String {
         return LocalizationHelper.localizedString(key)
+    }
+    
+    // MARK: - App Store Rating Management
+    func checkAndRequestRatingAfterOnboarding() {
+        if ratingManager.shouldRequestRatingAfterOnboarding() {
+            // Delay rating request slightly to let notification permission dialog show first
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                self.ratingManager.requestRating()
+            }
+        }
+    }
+    
+    func checkAndRequestRatingOnAppLaunch() {
+        if ratingManager.shouldRequestRatingOnAppLaunch(for: self) {
+            // Delay rating request to let app fully load
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.ratingManager.requestRating()
+            }
+        }
     }
 }
 

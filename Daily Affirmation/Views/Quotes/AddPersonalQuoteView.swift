@@ -42,12 +42,13 @@ struct AddPersonalQuoteView: View {
     
     var body: some View {
         ZStack {
-            // Background gradient
+            // Background matches onboarding style
             LinearGradient(
-                colors: [
-                    Color(red: 0.95, green: 0.97, blue: 1.0),
-                    Color(red: 0.98, green: 0.99, blue: 1.0)
-                ],
+                gradient: Gradient(colors: [
+                    Color.accentColor.opacity(0.30),
+                    Color.accentColor.opacity(0.15),
+                    Color.accentColor.opacity(0.05)
+                ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -56,13 +57,13 @@ struct AddPersonalQuoteView: View {
             VStack(spacing: 0) {
                 // Modern Header
                 ZStack {
-                    // Header gradient background
+                    // Subtle header panel using accent tint
                     RoundedRectangle(cornerRadius: 30)
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color(red: 0.659, green: 0.902, blue: 0.812).opacity(0.1),
-                                    Color(red: 0.459, green: 0.802, blue: 0.712).opacity(0.05)
+                                    Color.accentColor.opacity(0.12),
+                                    Color.accentColor.opacity(0.06)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -72,19 +73,13 @@ struct AddPersonalQuoteView: View {
                     
                     VStack(spacing: 8) {
                         HStack {
-                            Button(action: {
-                                dismiss()
-                            }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.white)
-                                        .frame(width: 44, height: 44)
-                                        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
-                                    
-                                    Image(systemName: "xmark")
-                                        .font(.system(size: 18, weight: .semibold))
-                                        .foregroundColor(.black.opacity(0.7))
-                                }
+                            Button(action: { dismiss() }) {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 36, height: 36)
+                                    .background(Color.secondary.opacity(0.2))
+                                    .clipShape(Circle())
                             }
                             .accessibilityLabel("Cancel")
                             
@@ -93,11 +88,11 @@ struct AddPersonalQuoteView: View {
                             VStack(alignment: .center, spacing: 4) {
                                 Text(editingQuote != nil ? "Edit Quote" : "Add Quote")
                                     .font(.system(size: 28, weight: .bold, design: .rounded))
-                                    .foregroundColor(.black)
+                                    .foregroundColor(.primary)
                                 
                                 Text("Your inspiration")
                                     .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(.black.opacity(0.6))
+                                    .foregroundColor(.secondary)
                             }
                             
                             Spacer()
@@ -107,9 +102,8 @@ struct AddPersonalQuoteView: View {
                             }) {
                                 ZStack {
                                     Circle()
-                                        .fill(isValidQuote && !isSaving ? Color(red: 0.659, green: 0.902, blue: 0.812) : Color.gray.opacity(0.3))
+                                        .fill(isValidQuote && !isSaving ? Color.accentColor : Color.gray.opacity(0.3))
                                         .frame(width: 44, height: 44)
-                                        .shadow(color: isValidQuote && !isSaving ? Color(red: 0.659, green: 0.902, blue: 0.812).opacity(0.3) : Color.clear, radius: 8, x: 0, y: 2)
                                     
                                     if isSaving {
                                         ProgressView()
@@ -140,11 +134,11 @@ struct AddPersonalQuoteView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Your Quote")
                                     .font(.system(size: 20, weight: .bold))
-                                    .foregroundColor(.black)
+                                    .foregroundColor(.primary)
                                 
                                 Text("Add a quote that motivates and inspires you")
                                     .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(.black.opacity(0.6))
+                                    .foregroundColor(.secondary)
                             }
                             
                             TextEditor(text: $quoteText)
@@ -152,14 +146,14 @@ struct AddPersonalQuoteView: View {
                                 .font(.body)
                                 .padding(16)
                                 .frame(minHeight: 120)
-                                .background(Color.white)
+                                .background(Color(UIColor.systemBackground))
                                 .cornerRadius(16)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16)
                                         .stroke(
                                             isTextFieldFocused ? 
                                             Color(red: 0.659, green: 0.902, blue: 0.812) : 
-                                            Color.secondary.opacity(0.2), 
+                                            Color.secondary.opacity(0.25), 
                                             lineWidth: isTextFieldFocused ? 2 : 1
                                         )
                                 )
@@ -213,8 +207,12 @@ struct AddPersonalQuoteView: View {
                         .padding(.vertical, 20)
                         .background(
                             RoundedRectangle(cornerRadius: 20)
-                                .fill(Color.white)
-                                .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+                                .fill(Color(UIColor.systemBackground))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .stroke(Color.secondary.opacity(0.25), lineWidth: 1)
+                                )
+                                .shadow(color: Color.primary.opacity(0.06), radius: 8, x: 0, y: 4)
                         )
                         .padding(.horizontal, 24)
                         
@@ -225,7 +223,7 @@ struct AddPersonalQuoteView: View {
             }
         }
         .navigationBarHidden(true)
-        .preferredColorScheme(.light)
+        // Use system appearance like onboarding
         .onAppear {
             isTextFieldFocused = true
         }

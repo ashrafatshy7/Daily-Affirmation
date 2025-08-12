@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "20250811_2341_Golden Autumn Reflection_simple_compose_01k2ddr50we91bdzevhaj5bdkv.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

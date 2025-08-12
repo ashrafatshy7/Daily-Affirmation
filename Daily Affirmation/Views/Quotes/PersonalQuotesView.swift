@@ -10,12 +10,13 @@ struct PersonalQuotesView: View {
     
     var body: some View {
         ZStack {
-            // Background gradient
+            // Background matches onboarding style
             LinearGradient(
-                colors: [
-                    Color(red: 0.95, green: 0.97, blue: 1.0),
-                    Color(red: 0.98, green: 0.99, blue: 1.0)
-                ],
+                gradient: Gradient(colors: [
+                    Color.accentColor.opacity(0.30),
+                    Color.accentColor.opacity(0.15),
+                    Color.accentColor.opacity(0.05)
+                ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -24,13 +25,13 @@ struct PersonalQuotesView: View {
             VStack(spacing: 0) {
                 // Modern Header
                 ZStack {
-                    // Header gradient background
+                    // Subtle header panel using accent tint
                     RoundedRectangle(cornerRadius: 30)
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color(red: 0.659, green: 0.902, blue: 0.812).opacity(0.1),
-                                    Color(red: 0.459, green: 0.802, blue: 0.712).opacity(0.05)
+                                    Color.accentColor.opacity(0.12),
+                                    Color.accentColor.opacity(0.06)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -40,19 +41,13 @@ struct PersonalQuotesView: View {
                     
                     VStack(spacing: 8) {
                         HStack {
-                            Button(action: {
-                                dismiss()
-                            }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.white)
-                                        .frame(width: 44, height: 44)
-                                        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
-                                    
-                                    Image(systemName: "chevron.left")
-                                        .font(.system(size: 18, weight: .semibold))
-                                        .foregroundColor(.black.opacity(0.7))
-                                }
+                            Button(action: { dismiss() }) {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 36, height: 36)
+                                    .background(Color.secondary.opacity(0.2))
+                                    .clipShape(Circle())
                             }
                             .accessibilityLabel("Back")
                             
@@ -61,11 +56,11 @@ struct PersonalQuotesView: View {
                             VStack(alignment: .center, spacing: 4) {
                                 Text("Personal Quotes")
                                     .font(.system(size: 28, weight: .bold, design: .rounded))
-                                    .foregroundColor(.black)
+                                    .foregroundColor(.primary)
                                 
                                 Text("Your inspiration")
                                     .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(.black.opacity(0.6))
+                                    .foregroundColor(.secondary)
                             }
                             
                             Spacer()
@@ -79,9 +74,8 @@ struct PersonalQuotesView: View {
                             }) {
                                 ZStack {
                                     Circle()
-                                        .fill(Color(red: 0.659, green: 0.902, blue: 0.812))
+                                        .fill(subscriptionManager.hasTimeRangeAccess ? Color.accentColor : Color.gray.opacity(0.4))
                                         .frame(width: 44, height: 44)
-                                        .shadow(color: Color(red: 0.659, green: 0.902, blue: 0.812).opacity(0.3), radius: 8, x: 0, y: 2)
                                     
                                     Image(systemName: subscriptionManager.hasTimeRangeAccess ? "plus" : "lock.fill")
                                         .font(.system(size: 18, weight: .semibold))
@@ -100,15 +94,15 @@ struct PersonalQuotesView: View {
                 .padding(.bottom, 32)
                 
                 // Settings toggle for including personal quotes
-                VStack(spacing: 16) {
+                        VStack(spacing: 16) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Include in Daily Rotation")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.black)
+                                        .font(.system(size: 18, weight: .bold))
+                                        .foregroundColor(.primary)
                             Text("Show personal quotes alongside built-in quotes")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.black.opacity(0.6))
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.secondary)
                         }
                         
                         Spacer()
@@ -120,9 +114,13 @@ struct PersonalQuotesView: View {
                     .padding(.horizontal, 24)
                     .padding(.vertical, 20)
                     .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.white)
-                            .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color(UIColor.systemBackground))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .stroke(Color.secondary.opacity(0.25), lineWidth: 1)
+                                    )
+                                    .shadow(color: Color.primary.opacity(0.06), radius: 8, x: 0, y: 4)
                     )
                 }
                 .padding(.horizontal, 24)
@@ -139,51 +137,23 @@ struct PersonalQuotesView: View {
                 
                 // Content
                 if quoteManager.personalQuotes.isEmpty {
-                    // Empty state
-                    VStack(spacing: 32) {
+                    // Enhanced empty state
+                    VStack {
                         Spacer()
                         
-                        VStack(spacing: 20) {
-                            Image(systemName: "quote.bubble")
-                                .font(.system(size: 60))
-                                .foregroundColor(.secondary)
-                            
-                            VStack(spacing: 12) {
-                                Text("No Personal Quotes Yet")
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.black)
-                                
-                                Text("Add your own inspiring quotes to see them alongside our curated collection")
-                                    .font(.body)
-                                    .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.center)
-                                    .padding(.horizontal, 40)
-                                    .fixedSize(horizontal: false, vertical: true)
+                        EmptyStateView(
+                            icon: subscriptionManager.hasTimeRangeAccess ? "heart.text.square" : "lock.square",
+                            title: subscriptionManager.hasTimeRangeAccess ? "Start Your Collection" : "Unlock Personal Quotes",
+                            subtitle: subscriptionManager.hasTimeRangeAccess ? 
+                                "Create your personal motivation library with quotes that speak to your heart. Your words, your inspiration." : 
+                                "Add your own inspiring quotes and see them in your daily rotation alongside our curated collection.",
+                            actionTitle: subscriptionManager.hasTimeRangeAccess ? "Add Your First Quote" : "Get Premium Access"
+                        ) {
+                            if subscriptionManager.hasTimeRangeAccess {
+                                showAddQuote.toggle()
+                            } else {
+                                showSubscription.toggle()
                             }
-                            
-                            Button(action: {
-                                if subscriptionManager.hasTimeRangeAccess {
-                                    showAddQuote.toggle()
-                                } else {
-                                    showSubscription.toggle()
-                                }
-                            }) {
-                                HStack {
-                                    Image(systemName: subscriptionManager.hasTimeRangeAccess ? "plus" : "lock.fill")
-                                        .font(.system(size: 16, weight: .semibold))
-                                    Text(subscriptionManager.hasTimeRangeAccess ? "Add Your First Quote" : "Unlock Personal Quotes")
-                                        .font(.headline)
-                                        .fontWeight(.semibold)
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color(red: 0.659, green: 0.902, blue: 0.812))
-                                .cornerRadius(16)
-                            }
-                            .padding(.horizontal, 60)
-                            .padding(.top, 8)
                         }
                         
                         Spacer()
@@ -228,7 +198,7 @@ struct PersonalQuotesView: View {
             }
         }
         .navigationBarHidden(true)
-        .preferredColorScheme(.light)
+        // Use system appearance like onboarding
         .sheet(isPresented: $showAddQuote) {
             AddPersonalQuoteView(quoteManager: quoteManager)
         }
@@ -255,7 +225,7 @@ struct PersonalQuoteCard: View {
             // Quote text
             Text(quote.displayText)
                 .font(.body)
-                .foregroundColor(quote.isActive ? .black : .secondary)
+                .foregroundColor(quote.isActive ? .primary : .secondary)
                 .multilineTextAlignment(.leading)
                 .lineLimit(nil)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -313,8 +283,12 @@ struct PersonalQuoteCard: View {
         .padding(.vertical, 20)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white)
-                .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+                .fill(Color(UIColor.systemBackground))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.secondary.opacity(0.25), lineWidth: 1)
+                )
+                .shadow(color: Color.primary.opacity(0.06), radius: 8, x: 0, y: 4)
         )
         .opacity(quote.isActive ? 1.0 : 0.7)
         .alert("Delete Quote", isPresented: $showDeleteAlert) {
@@ -462,7 +436,7 @@ struct FrequencyControlSection: View {
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.white)
-                .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+                .shadow(color: Color(red: 0.85, green: 0.9, blue: 0.95).opacity(0.3), radius: 15, x: 0, y: 8)
         )
     }
 }

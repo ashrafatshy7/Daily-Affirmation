@@ -12,19 +12,28 @@ struct AffirmationProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (AffirmationEntry) -> ()) {
-        print("🔶 WIDGET: getSnapshot called - context: \(context)")
+        print("🔶 WIDGET: getSnapshot called")
+        print("🔶 WIDGET: Context - isPreview: \(context.isPreview), displaySize: \(context.displaySize)")
+        print("🔶 WIDGET: Context - family: \(context.family)")
+        
         let entry = SharedQuoteManager.shared.getCurrentEntry()
         let widgetEntry = AffirmationEntry(
             date: entry.date,
             quote: entry.quote,
             backgroundImage: entry.backgroundImage
         )
-        print("🔶 WIDGET: getSnapshot created entry - quote: '\(widgetEntry.quote)'")
+        print("🔶 WIDGET: getSnapshot created entry")
+        print("🔶 WIDGET: - quote: '\(widgetEntry.quote)'")
+        print("🔶 WIDGET: - backgroundImage: '\(widgetEntry.backgroundImage)'")
+        print("🔶 WIDGET: - date: \(widgetEntry.date)")
+        
         completion(widgetEntry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<AffirmationEntry>) -> ()) {
-        print("🔶 WIDGET: getTimeline called - context: \(context)")
+        print("🔶 WIDGET: getTimeline called")
+        print("🔶 WIDGET: Context - isPreview: \(context.isPreview), displaySize: \(context.displaySize)")
+        print("🔶 WIDGET: Context - family: \(context.family)")
         print("🔶 WIDGET: Current time: \(Date())")
         
         let currentEntry = SharedQuoteManager.shared.getCurrentEntry()
@@ -34,15 +43,19 @@ struct AffirmationProvider: TimelineProvider {
             backgroundImage: currentEntry.backgroundImage
         )
         
-        print("🔶 WIDGET: getTimeline created entry - quote: '\(entry.quote)'")
+        print("🔶 WIDGET: getTimeline created entry")
+        print("🔶 WIDGET: - quote: '\(entry.quote)'")
+        print("🔶 WIDGET: - backgroundImage: '\(entry.backgroundImage)'")
+        print("🔶 WIDGET: - date: \(entry.date)")
         
         let timeline: Timeline<AffirmationEntry>
         
-        // Update every 5 minutes for debugging
+        // Update every 5 minutes for debugging, then switch to hourly updates
         let calendar = Calendar.current
         let nextUpdate = calendar.date(byAdding: .minute, value: 5, to: Date()) ?? Date()
         timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-        print("🔶 WIDGET: Created timeline - next update: \(nextUpdate)")
+        print("🔶 WIDGET: Created timeline with policy: .after(\(nextUpdate))")
+        print("🔶 WIDGET: Timeline has \(timeline.entries.count) entries")
         
         completion(timeline)
     }
@@ -61,15 +74,30 @@ struct AffirmationWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
     
     var body: some View {
+        let _ = print("🔶 WIDGET VIEW: Rendering widget")
+        let _ = print("🔶 WIDGET VIEW: - family: \(family)")
+        let _ = print("🔶 WIDGET VIEW: - quote: '\(entry.quote)'")
+        let _ = print("🔶 WIDGET VIEW: - backgroundImage: '\(entry.backgroundImage)'")
+        let _ = print("🔶 WIDGET VIEW: - date: \(entry.date)")
         ZStack {
             // Background Image for iOS < 17.0 only
             if #unavailable(iOS 17.0) {
                 GeometryReader { geometry in
-                    Image(entry.backgroundImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
+                    if UIImage(named: entry.backgroundImage) != nil {
+                        Image(entry.backgroundImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .clipped()
+                    } else {
+                        // Fallback gradient if image not found
+                        LinearGradient(
+                            colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.4)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                         .frame(width: geometry.size.width, height: geometry.size.height)
-                        .clipped()
+                    }
                 }
                 .ignoresSafeArea(.all)
             }
@@ -106,8 +134,8 @@ struct SmallWidgetView: View {
         VStack {
             Spacer()
             
-            Text(entry.quote)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+            Text(entry.quote.isEmpty ? "Stay inspired!" : entry.quote)
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
                 .multilineTextAlignment(.center)
                 .lineLimit(4)
                 .foregroundColor(.white)
@@ -137,8 +165,8 @@ struct MediumWidgetView: View {
             VStack {
                 Spacer()
                 
-                Text(entry.quote)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                Text(entry.quote.isEmpty ? "Stay inspired!" : entry.quote)
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
                     .foregroundColor(.white)
@@ -176,8 +204,8 @@ struct LargeWidgetView: View {
                     .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
                 
                 // Quote text
-                Text(entry.quote)
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                Text(entry.quote.isEmpty ? "Stay inspired!" : entry.quote)
+                    .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .multilineTextAlignment(.center)
                     .lineLimit(4)
                     .foregroundColor(.white)
@@ -209,9 +237,18 @@ struct Daily_Affirmation_Widgets: Widget {
             if #available(iOS 17.0, *) {
                 AffirmationWidgetEntryView(entry: entry)
                     .containerBackground(for: .widget) {
-                        Image(entry.backgroundImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
+                        if UIImage(named: entry.backgroundImage) != nil {
+                            Image(entry.backgroundImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } else {
+                            // Fallback gradient if image not found
+                            LinearGradient(
+                                colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.4)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        }
                     }
             } else {
                 AffirmationWidgetEntryView(entry: entry)
