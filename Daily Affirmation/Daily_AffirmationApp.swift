@@ -45,6 +45,7 @@ struct Daily_AffirmationApp: App {
                 }
                 .fullScreenCover(isPresented: $showingOnboarding) {
                     OnboardingView()
+                        .environmentObject(quoteManager)
                 }
                 .onChange(of: scenePhase) { phase in
                     if phase == .active {

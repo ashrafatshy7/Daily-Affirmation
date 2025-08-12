@@ -156,10 +156,12 @@ class SharedQuoteManager {
     
     // MARK: - Widget Entry Creation
     func getCurrentEntry() -> SharedAffirmationEntry {
+        print("🔶 Widget SharedQuoteManager: ============ ENTRY CREATION START ============")
         print("🔶 Widget SharedQuoteManager: Getting current entry...")
         print("🔶 Widget SharedQuoteManager: Timestamp: \(Date())")
         print("🔶 Widget SharedQuoteManager: Device: \(UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone")")
         print("🔶 Widget SharedQuoteManager: Bundle ID: \(Bundle.main.bundleIdentifier ?? "unknown")")
+        print("🔶 Widget SharedQuoteManager: Screen bounds: \(UIScreen.main.bounds)")
         
         let currentQuote: String
         let appCurrentQuote = getCurrentQuoteFromApp()
@@ -186,9 +188,9 @@ class SharedQuoteManager {
             }
         }
         
-        // Get current background from shared storage, fallback to "background"
-        let currentBackground = getCurrentBackgroundFromApp() ?? "background"
-        print("🔶 Widget SharedQuoteManager: Using background: '\(currentBackground)'")
+        // Always use "background" for widget - ignore app selection
+        let currentBackground = "background"
+        print("🔶 Widget SharedQuoteManager: Using background: '\(currentBackground)' (fixed for widget)")
         
         let entry = SharedAffirmationEntry(
             quote: currentQuote,
@@ -196,7 +198,20 @@ class SharedQuoteManager {
             backgroundImage: currentBackground
         )
         
-        print("🔶 Widget SharedQuoteManager: FINAL ENTRY - quote: '\(entry.quote)', background: '\(entry.backgroundImage)'")
+        // Validate background image exists in widget bundle
+        let backgroundExists = UIImage(named: currentBackground) != nil
+        print("🔶 Widget SharedQuoteManager: Background image '\(currentBackground)' exists: \(backgroundExists)")
+        
+        if !backgroundExists {
+            print("⚠️  Widget SharedQuoteManager: Background image NOT FOUND - widget may appear blank!")
+            print("⚠️  Widget SharedQuoteManager: Available images in bundle:")
+            let bundlePath = Bundle.main.bundlePath
+            let resourcesPath = bundlePath + "/Assets.car"
+            print("⚠️  Widget SharedQuoteManager: Bundle resources path: \(resourcesPath)")
+        }
+        
+        print("🔶 Widget SharedQuoteManager: FINAL ENTRY - quote: '\(entry.quote)', background: '\(entry.backgroundImage)', backgroundExists: \(backgroundExists)")
+        print("🔶 Widget SharedQuoteManager: ============ ENTRY CREATION END ============")
         return entry
     }
 }

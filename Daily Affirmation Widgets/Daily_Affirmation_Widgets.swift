@@ -73,6 +73,22 @@ struct AffirmationWidgetEntryView: View {
     var entry: AffirmationProvider.Entry
     @Environment(\.widgetFamily) var family
     
+    private var backgroundImageExists: Bool {
+        UIImage(named: entry.backgroundImage) != nil
+    }
+    
+    // Always use the optimized background.png image
+    private var backgroundImage: some View {
+        GeometryReader { geometry in
+            Image("background")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .clipped()
+        }
+        .ignoresSafeArea(.all)
+    }
+    
     var body: some View {
         let _ = print("🔶 WIDGET VIEW: Rendering widget")
         let _ = print("🔶 WIDGET VIEW: - Device: \(UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone")")
@@ -80,29 +96,12 @@ struct AffirmationWidgetEntryView: View {
         let _ = print("🔶 WIDGET VIEW: - quote: '\(entry.quote)'")
         let _ = print("🔶 WIDGET VIEW: - quote.isEmpty: \(entry.quote.isEmpty)")
         let _ = print("🔶 WIDGET VIEW: - backgroundImage: '\(entry.backgroundImage)'")
-        let _ = print("🔶 WIDGET VIEW: - backgroundImage exists: \(UIImage(named: entry.backgroundImage) != nil)")
         let _ = print("🔶 WIDGET VIEW: - date: \(entry.date)")
+        
         ZStack {
-            // Background Image for iOS < 17.0 only
+            // For iOS 16 and earlier, show background. iOS 17+ uses containerBackground
             if #unavailable(iOS 17.0) {
-                GeometryReader { geometry in
-                    if UIImage(named: entry.backgroundImage) != nil {
-                        Image(entry.backgroundImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: geometry.size.width, height: geometry.size.height)
-                            .clipped()
-                    } else {
-                        // Fallback gradient if image not found
-                        LinearGradient(
-                            colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.4)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                    }
-                }
-                .ignoresSafeArea(.all)
+                backgroundImage
             }
             
             // Content based on widget size
@@ -123,6 +122,7 @@ struct AffirmationWidgetEntryView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
         .ignoresSafeArea(.all)
     }
 }
@@ -130,6 +130,10 @@ struct AffirmationWidgetEntryView: View {
 // MARK: - Small Widget (2x2)
 struct SmallWidgetView: View {
     let entry: AffirmationEntry
+    
+    private var backgroundImageExists: Bool {
+        UIImage(named: entry.backgroundImage) != nil
+    }
     
     private var widgetURL: URL? {
         guard let encodedQuote = entry.quote.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
@@ -149,19 +153,14 @@ struct SmallWidgetView: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(4)
                 .foregroundColor(.white)
-                .shadow(color: .black.opacity(0.7), radius: 2, x: 0, y: 1)
+                .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 1)
+                .shadow(color: .black.opacity(0.6), radius: 6, x: 0, y: 0)
                 .padding(.horizontal, 12)
             
             Spacer()
             
-            // Emergency visibility indicator for debugging
-            if UIDevice.current.userInterfaceIdiom == .pad {
-                Text("iPad Widget")
-                    .font(.caption2)
-                    .foregroundColor(.white.opacity(0.5))
-                    .padding(.bottom, 4)
-            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .widgetURL(widgetURL)
     }
 }
@@ -169,6 +168,10 @@ struct SmallWidgetView: View {
 // MARK: - Medium Widget (4x2)
 struct MediumWidgetView: View {
     let entry: AffirmationEntry
+    
+    private var backgroundImageExists: Bool {
+        UIImage(named: entry.backgroundImage) != nil
+    }
     
     private var widgetURL: URL? {
         guard let encodedQuote = entry.quote.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
@@ -190,19 +193,14 @@ struct MediumWidgetView: View {
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
                     .foregroundColor(.white)
-                    .shadow(color: .black.opacity(0.7), radius: 2, x: 0, y: 1)
+                    .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 1)
+                    .shadow(color: .black.opacity(0.6), radius: 6, x: 0, y: 0)
                     .padding(.horizontal, 20)
                 
                 Spacer()
                 
-                // Emergency visibility indicator for debugging
-                if UIDevice.current.userInterfaceIdiom == .pad {
-                    Text("iPad Medium Widget")
-                        .font(.caption2)
-                        .foregroundColor(.white.opacity(0.5))
-                        .padding(.bottom, 4)
-                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             
         }
         .widgetURL(widgetURL)
@@ -212,6 +210,10 @@ struct MediumWidgetView: View {
 // MARK: - Large Widget (4x4)
 struct LargeWidgetView: View {
     let entry: AffirmationEntry
+    
+    private var backgroundImageExists: Bool {
+        UIImage(named: entry.backgroundImage) != nil
+    }
     
     private var widgetURL: URL? {
         guard let encodedQuote = entry.quote.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
@@ -239,27 +241,14 @@ struct LargeWidgetView: View {
                     .multilineTextAlignment(.center)
                     .lineLimit(4)
                     .foregroundColor(.white)
-                    .shadow(color: .black.opacity(0.7), radius: 2, x: 0, y: 1)
+                    .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 1)
+                    .shadow(color: .black.opacity(0.6), radius: 6, x: 0, y: 0)
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
                 
                 Spacer()
-                
-                // Bottom inspirational element with iPad indicator
-                VStack(spacing: 4) {
-                    Text("Daily Inspiration")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.white.opacity(0.8))
-                        .shadow(color: .black.opacity(0.5), radius: 1, x: 0, y: 0.5)
-                    
-                    if UIDevice.current.userInterfaceIdiom == .pad {
-                        Text("iPad Large Widget")
-                            .font(.caption2)
-                            .foregroundColor(.white.opacity(0.5))
-                    }
-                }
-                .padding(.bottom, 16)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             
         }
         .widgetURL(widgetURL)
@@ -275,18 +264,9 @@ struct Daily_Affirmation_Widgets: Widget {
             if #available(iOS 17.0, *) {
                 AffirmationWidgetEntryView(entry: entry)
                     .containerBackground(for: .widget) {
-                        if UIImage(named: entry.backgroundImage) != nil {
-                            Image(entry.backgroundImage)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } else {
-                            // Fallback gradient if image not found
-                            LinearGradient(
-                                colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.4)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        }
+                        Image("background")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
                     }
             } else {
                 AffirmationWidgetEntryView(entry: entry)
